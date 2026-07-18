@@ -55,7 +55,6 @@ export function dashboardReducer(state, action) {
         lembretesVencidasUpdated: Date.now(),
         lembretesHojeUpdated: Date.now(),
         ticktickUpdated: Date.now(),
-        notionUpdated: Date.now(),
       };
 
     case 'UPDATE_ITEM_TEXT':

@@ -35,7 +35,7 @@ function useChecklistHandlers(dispatch, listKey, editKey, openKey, newTextKey, n
   };
 }
 
-export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeuDia, hubspot, dealsWithoutTasks, calendar, reminders }) {
+export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeuDia, hubspot, dealsWithoutTasks, calendar, reminders, notion }) {
   const confirm = useConfirm();
   const manhaHandlers = useChecklistHandlers(dispatch, 'manha', 'manhaEdit', 'manhaOpen', 'newManhaText', 'newManhaLink', confirm);
   const noiteHandlers = useChecklistHandlers(dispatch, 'noite', 'noiteEdit', 'noiteOpen', 'newNoiteText', 'newNoiteLink', confirm);
@@ -154,9 +154,9 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           title="Hoje · Notion"
           titleColor="#8a7a2f"
           itemColor="#8a7a2f"
-          tasks={state.notionHoje}
-          onRefresh={() => refresh('notionUpdated')}
-          updatedLabel={formatClock(state.notionUpdated)}
+          tasks={notion.tasks}
+          onRefresh={notion.refresh}
+          updatedLabel={notion.updatedAt ? formatClock(notion.updatedAt) : '—'}
         />
       </div>
     </div>

@@ -53,11 +53,6 @@ export function createSeedState() {
       { id: 2, label: 'Revisar PR do time' },
       { id: 3, label: 'Responder e-mails pendentes' },
     ],
-    notionHoje: [
-      { id: 1, label: 'Atualizar roadmap Q3' },
-      { id: 2, label: 'Escrever ata da reunião' },
-      { id: 3, label: 'Planejar sprint' },
-    ],
 
     downloadsCount: 61,
     backlogCount: 128,
@@ -71,7 +66,6 @@ export function createSeedState() {
     backlogUpdated: now,
     fotosUpdated: now,
     ticktickUpdated: now,
-    notionUpdated: now,
 
     manhaEdit: false,
     noiteEdit: false,

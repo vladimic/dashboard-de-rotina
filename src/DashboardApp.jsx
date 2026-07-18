@@ -3,6 +3,7 @@ import { useHubspotTasks } from './hooks/useHubspotTasks';
 import { useHubspotDealsWithoutTasks } from './hooks/useHubspotDealsWithoutTasks';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useReminders } from './hooks/useReminders';
+import { useNotionTasks } from './hooks/useNotionTasks';
 import { useAppBadge } from './hooks/useAppBadge';
 import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeGoals } from './utils/derived';
 import { formatTodayLong, formatClock } from './utils/format';
@@ -25,10 +26,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const dealsWithoutTasks = useHubspotDealsWithoutTasks();
   const calendar = useCalendarEvents();
   const reminders = useReminders();
+  const notion = useNotionTasks();
 
   const agenda = computeAgenda(state, calendar);
   const remindersTotal = reminders.vencidas.length + reminders.hojeSemHorario.length + reminders.hojeComHorario.length;
-  const counts = computeCounts(state, hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total, remindersTotal);
+  const counts = computeCounts(state, hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total, remindersTotal, notion.tasks.length);
   useAppBadge(counts.geralTotal);
   const habits = computeHabits(state);
   const { sleepWeek, sleepAvg } = computeSleepWeek(state);
@@ -59,6 +61,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           dealsWithoutTasks.refresh();
           calendar.refresh();
           reminders.refresh();
+          notion.refresh();
         }}
         onSignOut={onSignOut}
       />
@@ -75,7 +78,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           lembretesVencidas: reminders.vencidas,
           lembretesHoje: [...reminders.hojeSemHorario, ...reminders.hojeComHorario],
           ticktickHoje: state.ticktickHoje,
-          notionHoje: state.notionHoje,
+          notionHoje: notion.tasks,
         }}
       />
 
@@ -90,6 +93,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           dealsWithoutTasks={dealsWithoutTasks}
           calendar={calendar}
           reminders={reminders}
+          notion={notion}
         />
       )}
       {state.page === 'saude' && (
