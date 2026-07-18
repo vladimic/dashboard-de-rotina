@@ -82,9 +82,19 @@ export default async function handler(req, res) {
         if (!match) {
           debug.matchedProject = null;
         } else {
-          const dataRes = await fetch(`${API_BASE}/project/${match.id}/data`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
+          // Try a couple of common pagination query params too — the
+          // documented endpoint takes none, but worth a quick check in case
+          // an undocumented one works, before concluding this is a hard cap.
+          const [dataRes, limitedRes] = await Promise.all([
+            fetch(`${API_BASE}/project/${match.id}/data`, { headers: { Authorization: `Bearer ${accessToken}` } }),
+            fetch(`${API_BASE}/project/${match.id}/data?limit=500&pageSize=500`, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }),
+          ]);
+          if (limitedRes.ok) {
+            const limitedData = await limitedRes.json();
+            debug.withLimitParamTaskCount = (limitedData.tasks || []).length;
+          }
           debug.matchedProject = { id: match.id, name: match.name };
           if (!dataRes.ok) {
             debug.projectDataFetch = { status: dataRes.status, ok: false, body: (await dataRes.text()).slice(0, 1000) };
