@@ -29,6 +29,20 @@ function statusName(page) {
   return prop?.status?.name || prop?.select?.name || null;
 }
 
+// Every Notion database has exactly one property of type "title" — that's
+// the actual page title, regardless of what it's labeled. Prefer the
+// property named TITLE_PROPERTY, but fall back to whichever one is really
+// type "title" in case the configured name doesn't match (e.g. renamed).
+function taskTitle(page) {
+  const properties = page.properties || {};
+  let prop = properties[TITLE_PROPERTY];
+  if (!prop?.title?.length && !prop?.rich_text?.length) {
+    prop = Object.values(properties).find((p) => p?.type === 'title') || prop;
+  }
+  const arr = prop?.title || prop?.rich_text || [];
+  return arr.map((t) => t.plain_text).join('') || '(sem título)';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
@@ -64,12 +78,11 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const openPages = (data.results || []).filter((page) => !EXCLUDED_STATUSES.includes(normalize(statusName(page))));
-    const tasks = openPages.map((page) => {
-      const prop = page.properties?.[TITLE_PROPERTY];
-      const arr = prop?.title || prop?.rich_text || [];
-      const title = arr.map((t) => t.plain_text).join('') || '(sem título)';
-      return { id: page.id, label: title, link: `https://www.notion.so/${page.id.replace(/-/g, '')}` };
-    });
+    const tasks = openPages.map((page) => ({
+      id: page.id,
+      label: taskTitle(page),
+      link: `https://www.notion.so/${page.id.replace(/-/g, '')}`,
+    }));
 
     res.status(200).json({ updatedAt: new Date().toISOString(), tasks });
   } catch (err) {
