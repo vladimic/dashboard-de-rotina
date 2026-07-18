@@ -9,7 +9,7 @@ import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useAppBadge } from './hooks/useAppBadge';
 import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeGoals } from './utils/derived';
-import { formatTodayLong, formatClock, syncRemindersShortcutUrl } from './utils/format';
+import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
 import HojeView from './views/HojeView';
@@ -73,6 +73,20 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
       dispatch({ type: 'APPLY_DAILY_RESET', reset });
     })();
   }, [status, state.lastResetDate, confirm, dispatch]);
+
+  // First load after the Friday-14:00 boundary passes — ask before wiping
+  // "Ending Week". Saying no leaves it as-is until next week's prompt.
+  const weekAskedRef = useRef(false);
+  useEffect(() => {
+    if (status !== 'ready' || weekAskedRef.current) return;
+    const weekKey = currentWeekResetKey();
+    if (state.lastWeekResetDate === weekKey) return;
+    weekAskedRef.current = true;
+    (async () => {
+      const reset = await confirm('Reiniciar a checklist "Ending Week" desta semana?', 'Reiniciar', 'Deixar como está');
+      dispatch({ type: 'APPLY_WEEK_RESET', reset, key: weekKey });
+    })();
+  }, [status, state.lastWeekResetDate, confirm, dispatch]);
 
   const agenda = computeAgenda(state, calendar);
   const counts = computeCounts(

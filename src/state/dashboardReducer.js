@@ -158,6 +158,18 @@ export function dashboardReducer(state, action) {
       return { ...state, dayProgressDate: action.date, dayProgressBaseline: action.baseline };
     }
 
+    // Asked once per week, right after the Friday-14:00 boundary passes (see
+    // DashboardApp's week-reset effect) — mirrors APPLY_DAILY_RESET but for
+    // the "Ending Week" checklist only.
+    case 'APPLY_WEEK_RESET': {
+      if (!action.reset) return { ...state, lastWeekResetDate: action.key };
+      return {
+        ...state,
+        lastWeekResetDate: action.key,
+        semana: state.semana.map((s) => ({ ...s, done: false })),
+      };
+    }
+
     default:
       return state;
   }

@@ -3,12 +3,15 @@
 // TickTick, Notion, Downloads/Backlog/Fotos counts) is static sample data —
 // swap for real API calls when wiring up those integrations.
 
+import { currentWeekResetKey } from '../utils/format';
+
 export function createSeedState() {
   const now = Date.now();
   return {
     page: 'hoje',
     newNoteText: '',
     lastResetDate: new Date().toDateString(),
+    lastWeekResetDate: currentWeekResetKey(),
     dayProgressDate: null,
     dayProgressBaseline: 0,
 

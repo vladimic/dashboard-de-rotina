@@ -54,3 +54,34 @@ export function hourFloatInAgendaTZ(date) {
   const min = Number(parts.find((p) => p.type === 'minute').value);
   return h + min / 60;
 }
+
+const WEEK_RESET_WEEKDAY = 5; // Friday (Sun=0 .. Sat=6)
+const WEEK_RESET_HOUR = 14;
+
+// A stable "YYYY-MM-DD" key for the most recent Friday-14:00 boundary that
+// has already passed, in AGENDA_TIMEZONE — changes only once a week, right
+// at the reset instant, so it can be compared against a stored value to
+// know whether this week's "Ending Week" reset is still due.
+export function currentWeekResetKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: AGENDA_TIMEZONE,
+    weekday: 'short',
+    hourCycle: 'h23',
+    hour: '2-digit',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  const weekdayIndex = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(map.weekday);
+  const hour = Number(map.hour);
+
+  let daysSinceReset = (weekdayIndex - WEEK_RESET_WEEKDAY + 7) % 7;
+  if (daysSinceReset === 0 && hour < WEEK_RESET_HOUR) daysSinceReset = 7;
+
+  // Anchored at UTC noon on "today" (per AGENDA_TIMEZONE) so stepping back
+  // whole days never crosses a DST boundary within the calculation itself.
+  const anchor = new Date(`${map.year}-${map.month}-${map.day}T12:00:00Z`);
+  anchor.setUTCDate(anchor.getUTCDate() - daysSinceReset);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(anchor);
+}
