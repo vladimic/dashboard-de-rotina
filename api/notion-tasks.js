@@ -9,6 +9,25 @@ const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NOTION_VERSION = '2022-06-28';
 const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
+const STATUS_PROPERTY = 'Status';
+const EXCLUDED_STATUSES = ['concluido', 'cancelado'];
+
+const DIACRITICS_RE = new RegExp('[̀-ͯ]', 'g');
+
+function normalize(text) {
+  return (text || '')
+    .normalize('NFD')
+    .replace(DIACRITICS_RE, '')
+    .toLowerCase()
+    .trim();
+}
+
+// Works for either a Notion "status" or "select" property type — whichever
+// one the database actually uses for STATUS_PROPERTY.
+function statusName(page) {
+  const prop = page.properties?.[STATUS_PROPERTY];
+  return prop?.status?.name || prop?.select?.name || null;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -44,7 +63,8 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    const tasks = (data.results || []).map((page) => {
+    const openPages = (data.results || []).filter((page) => !EXCLUDED_STATUSES.includes(normalize(statusName(page))));
+    const tasks = openPages.map((page) => {
       const prop = page.properties?.[TITLE_PROPERTY];
       const arr = prop?.title || prop?.rich_text || [];
       const title = arr.map((t) => t.plain_text).join('') || '(sem título)';
