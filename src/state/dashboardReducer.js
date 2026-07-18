@@ -139,9 +139,12 @@ export function dashboardReducer(state, action) {
       };
     }
 
-    case 'MAYBE_DAILY_RESET': {
+    // Asked once per day (see DashboardApp's daily-reset effect) — if the
+    // user says yes, Starting Day/Ending Day come back unchecked; if no,
+    // they're left exactly as they were until the next day's prompt.
+    case 'APPLY_DAILY_RESET': {
       const todayKey = new Date().toDateString();
-      if (state.lastResetDate === todayKey) return state;
+      if (!action.reset) return { ...state, lastResetDate: todayKey };
       return {
         ...state,
         lastResetDate: todayKey,

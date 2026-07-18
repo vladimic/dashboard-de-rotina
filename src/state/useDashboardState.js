@@ -59,7 +59,6 @@ export function useDashboardState(userId) {
           .upsert({ user_id: userId, data: seed }, { onConflict: 'user_id' });
         if (upsertError) console.error('Failed to create dashboard state row:', upsertError);
       }
-      dispatch({ type: 'MAYBE_DAILY_RESET' });
       if (!cancelled) setStatus('ready');
     })();
 

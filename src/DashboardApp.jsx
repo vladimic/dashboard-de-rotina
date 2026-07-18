@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { useDashboardState } from './state/useDashboardState';
+import { useConfirm } from './components/ConfirmContext';
 import { useHubspotTasks } from './hooks/useHubspotTasks';
 import { useHubspotDealsWithoutTasks } from './hooks/useHubspotDealsWithoutTasks';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
@@ -27,6 +29,21 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const calendar = useCalendarEvents();
   const reminders = useReminders();
   const notion = useNotionTasks();
+  const confirm = useConfirm();
+
+  // First load of the day only — ask before wiping Starting Day/Ending Day.
+  // Saying no leaves them exactly as-is until tomorrow's prompt.
+  const askedRef = useRef(false);
+  useEffect(() => {
+    if (status !== 'ready' || askedRef.current) return;
+    const todayKey = new Date().toDateString();
+    if (state.lastResetDate === todayKey) return;
+    askedRef.current = true;
+    (async () => {
+      const reset = await confirm('Reiniciar as checklists "Starting Day" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
+      dispatch({ type: 'APPLY_DAILY_RESET', reset });
+    })();
+  }, [status, state.lastResetDate, confirm, dispatch]);
 
   const agenda = computeAgenda(state, calendar);
   const remindersTotal = reminders.vencidas.length + reminders.hojeSemHorario.length + reminders.hojeComHorario.length;

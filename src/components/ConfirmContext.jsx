@@ -4,18 +4,18 @@ import styles from './ConfirmContext.module.css';
 const ConfirmContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
-  const [message, setMessage] = useState(null);
+  const [dialog, setDialog] = useState(null);
   const resolveRef = useRef(null);
 
-  const confirm = useCallback((msg) => {
-    setMessage(msg);
+  const confirm = useCallback((message, confirmLabel = 'Remover', cancelLabel = 'Cancelar') => {
+    setDialog({ message, confirmLabel, cancelLabel });
     return new Promise((resolve) => {
       resolveRef.current = resolve;
     });
   }, []);
 
   function handle(result) {
-    setMessage(null);
+    setDialog(null);
     resolveRef.current?.(result);
     resolveRef.current = null;
   }
@@ -23,16 +23,16 @@ export function ConfirmProvider({ children }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      {message != null && (
+      {dialog != null && (
         <div className={styles.overlay} onClick={() => handle(false)}>
           <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.message}>{message}</div>
+            <div className={styles.message}>{dialog.message}</div>
             <div className={styles.actions}>
               <button type="button" className={styles.cancel} onClick={() => handle(false)}>
-                Cancelar
+                {dialog.cancelLabel}
               </button>
               <button type="button" className={styles.confirmBtn} onClick={() => handle(true)}>
-                Remover
+                {dialog.confirmLabel}
               </button>
             </div>
           </div>
