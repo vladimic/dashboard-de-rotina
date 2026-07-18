@@ -89,7 +89,7 @@ export function computeAgenda(state, calendarData) {
 
 const ENDING_DAY_UNLOCK_HOUR = 17.5; // 17:30 — before this, Ending Day counts as zero in the header/Geral, but not in its own checklist card.
 
-export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notionTotal = 0) {
+export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notionTotal = 0, ticktickTotal = 0) {
   const manhaPend = state.manha.filter((m) => !m.done).length;
   const noitePend = state.noite.filter((m) => !m.done).length;
   const noiteTotal = state.noite.length;
@@ -103,7 +103,7 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     noitePendSummary +
     hubspotTotal +
     remindersTotal +
-    state.ticktickHoje.length +
+    ticktickTotal +
     notionTotal;
   return {
     meuDiaCount,

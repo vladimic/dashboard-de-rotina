@@ -12,7 +12,17 @@ function TaskRow({ task }) {
   );
 }
 
-export default function NotionCard({ groups, total, loading, error, onRefresh, updatedLabel, extraLink }) {
+export default function GroupedTaskCard({
+  appName,
+  appNameColor,
+  groups,
+  total,
+  loading,
+  error,
+  onRefresh,
+  updatedLabel,
+  extraLink,
+}) {
   const [collapsed, setCollapsed] = useState({});
   const allCollapsed = groups.length > 0 && groups.every((g) => collapsed[g.projectLabel]);
 
@@ -37,8 +47,8 @@ export default function NotionCard({ groups, total, loading, error, onRefresh, u
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div className={styles.title} style={{ color: '#8a7a2f' }}>
-          Notion <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
+        <div className={styles.title} style={{ color: appNameColor }}>
+          {appName} <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
         </div>
         <div className={styles.headerRight}>
           {extraLink && (
@@ -55,7 +65,7 @@ export default function NotionCard({ groups, total, loading, error, onRefresh, u
               {allCollapsed ? '⊞' : '⊟'}
             </div>
           )}
-          <div className={styles.count} style={{ color: '#8a7a2f' }}>
+          <div className={styles.count} style={{ color: appNameColor }}>
             {total}
           </div>
           <div className={styles.refresh} onClick={onRefresh} title={`atualizado às ${updatedLabel}`}>

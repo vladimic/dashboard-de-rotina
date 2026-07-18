@@ -48,12 +48,6 @@ export function createSeedState() {
 
     agendaDay: 'hoje',
 
-    ticktickHoje: [
-      { id: 1, label: 'Finalizar apresentação' },
-      { id: 2, label: 'Revisar PR do time' },
-      { id: 3, label: 'Responder e-mails pendentes' },
-    ],
-
     downloadsCount: 61,
     backlogCount: 128,
     manhaOpen: false,
@@ -65,7 +59,6 @@ export function createSeedState() {
     downloadsUpdated: now,
     backlogUpdated: now,
     fotosUpdated: now,
-    ticktickUpdated: now,
 
     manhaEdit: false,
     noiteEdit: false,

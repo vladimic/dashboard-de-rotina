@@ -6,6 +6,7 @@ import { useHubspotDealsWithoutTasks } from './hooks/useHubspotDealsWithoutTasks
 import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useReminders } from './hooks/useReminders';
 import { useNotionTasks } from './hooks/useNotionTasks';
+import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useAppBadge } from './hooks/useAppBadge';
 import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeGoals } from './utils/derived';
 import { formatTodayLong, formatClock } from './utils/format';
@@ -29,6 +30,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const calendar = useCalendarEvents();
   const reminders = useReminders();
   const notion = useNotionTasks();
+  const ticktick = useTickTickTasks();
   const confirm = useConfirm();
 
   // First load of the day only — ask before wiping Starting Day/Ending Day.
@@ -47,7 +49,13 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
 
   const agenda = computeAgenda(state, calendar);
   const remindersTotal = reminders.vencidas.length + reminders.hojeSemHorario.length + reminders.hojeComHorario.length;
-  const counts = computeCounts(state, hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total, remindersTotal, notion.total);
+  const counts = computeCounts(
+    state,
+    hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total,
+    remindersTotal,
+    notion.total,
+    ticktick.total
+  );
   useAppBadge(counts.geralTotal);
   const habits = computeHabits(state);
   const { sleepWeek, sleepAvg } = computeSleepWeek(state);
@@ -79,6 +87,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           calendar.refresh();
           reminders.refresh();
           notion.refresh();
+          ticktick.refresh();
         }}
         onSignOut={onSignOut}
       />
@@ -94,7 +103,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         lists={{
           lembretesVencidas: reminders.vencidas,
           lembretesHoje: [...reminders.hojeSemHorario, ...reminders.hojeComHorario],
-          ticktickHoje: state.ticktickHoje,
+          ticktickHoje: ticktick.groups.flatMap((g) => g.tasks),
           notionHoje: notion.groups.flatMap((g) => g.tasks),
         }}
       />
@@ -111,6 +120,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           calendar={calendar}
           reminders={reminders}
           notion={notion}
+          ticktick={ticktick}
         />
       )}
       {state.page === 'saude' && (

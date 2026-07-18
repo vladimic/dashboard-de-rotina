@@ -33,6 +33,9 @@ export const SYNC_REMINDERS_SHORTCUT_URL = 'shortcuts://run-shortcut?name=Sincro
 export const NOTION_WEEKLY_APP_URL =
   'notion://www.notion.so/Todas-as-Atividades-30a05418964481c7a8ecd45e4dad4ebc?source=copy_link';
 
+// TickTick for Mac/iOS registers this URL scheme to launch the app.
+export const TICKTICK_APP_URL = 'ticktick://';
+
 export function hourFloatInAgendaTZ(date) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: AGENDA_TIMEZONE,

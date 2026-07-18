@@ -6,9 +6,15 @@ import ChecklistCard from '../components/ChecklistCard';
 import HubSpotCard from '../components/HubSpotCard';
 import HubSpotDealsWithoutTasksCard from '../components/HubSpotDealsWithoutTasksCard';
 import TaskListCard from '../components/TaskListCard';
-import NotionCard from '../components/NotionCard';
+import GroupedTaskCard from '../components/GroupedTaskCard';
 import RemindersHojeCard from '../components/RemindersHojeCard';
-import { formatClock, FANTASTICAL_APP_URL, SYNC_REMINDERS_SHORTCUT_URL, NOTION_WEEKLY_APP_URL } from '../utils/format';
+import {
+  formatClock,
+  FANTASTICAL_APP_URL,
+  SYNC_REMINDERS_SHORTCUT_URL,
+  NOTION_WEEKLY_APP_URL,
+  TICKTICK_APP_URL,
+} from '../utils/format';
 import styles from './HojeView.module.css';
 
 function useChecklistHandlers(dispatch, listKey, editKey, openKey, newTextKey, newLinkKey, confirm) {
@@ -36,12 +42,22 @@ function useChecklistHandlers(dispatch, listKey, editKey, openKey, newTextKey, n
   };
 }
 
-export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeuDia, hubspot, dealsWithoutTasks, calendar, reminders, notion }) {
+export default function HojeView({
+  state,
+  dispatch,
+  agenda,
+  counts,
+  onRefreshMeuDia,
+  hubspot,
+  dealsWithoutTasks,
+  calendar,
+  reminders,
+  notion,
+  ticktick,
+}) {
   const confirm = useConfirm();
   const manhaHandlers = useChecklistHandlers(dispatch, 'manha', 'manhaEdit', 'manhaOpen', 'newManhaText', 'newManhaLink', confirm);
   const noiteHandlers = useChecklistHandlers(dispatch, 'noite', 'noiteEdit', 'noiteOpen', 'newNoiteText', 'newNoiteLink', confirm);
-
-  const refresh = useCallback((key) => dispatch({ type: 'REFRESH', key }), [dispatch]);
 
   return (
     <div className={styles.columns}>
@@ -144,15 +160,24 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           onRefresh={reminders.refresh}
           updatedLabel={reminders.updatedAt ? formatClock(reminders.updatedAt) : '—'}
         />
-        <TaskListCard
-          title="Hoje · TickTick"
-          titleColor="#3f6b57"
-          itemColor="#5b4a63"
-          tasks={state.ticktickHoje}
-          onRefresh={() => refresh('ticktickUpdated')}
-          updatedLabel={formatClock(state.ticktickUpdated)}
+        <GroupedTaskCard
+          appName="TickTick"
+          appNameColor="#3f6b57"
+          groups={ticktick.groups}
+          total={ticktick.total}
+          loading={ticktick.loading}
+          error={ticktick.error}
+          onRefresh={ticktick.refresh}
+          updatedLabel={ticktick.updatedAt ? formatClock(ticktick.updatedAt) : '—'}
+          extraLink={{
+            label: 'TickTick',
+            href: TICKTICK_APP_URL,
+            title: 'Abrir o app do TickTick',
+          }}
         />
-        <NotionCard
+        <GroupedTaskCard
+          appName="Notion"
+          appNameColor="#8a7a2f"
           groups={notion.groups}
           total={notion.total}
           loading={notion.loading}

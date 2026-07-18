@@ -60,7 +60,6 @@ export function dashboardReducer(state, action) {
         fotosUpdated: Date.now(),
         lembretesVencidasUpdated: Date.now(),
         lembretesHojeUpdated: Date.now(),
-        ticktickUpdated: Date.now(),
       };
 
     case 'UPDATE_ITEM_TEXT':
