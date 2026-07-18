@@ -54,7 +54,7 @@ export default function GroupedTaskCard({
     <div className={styles.card}>
       <div className={styles.header}>
         <div className={styles.title} style={{ color: appNameColor }}>
-          {appName} <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
+          {appName}
         </div>
         <div className={styles.headerRight}>
           {extraLink && (

@@ -24,7 +24,7 @@ const CARD_BG = {
 };
 
 export default function DashboardApp({ userId, userEmail, onSignOut }) {
-  const [state, dispatch, status, refreshFromServer] = useDashboardState(userId);
+  const [state, dispatch, status] = useDashboardState(userId);
   const hubspot = useHubspotTasks();
   const dealsWithoutTasks = useHubspotDealsWithoutTasks();
   const calendar = useCalendarEvents();
@@ -32,6 +32,17 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const notion = useNotionTasks();
   const ticktick = useTickTickTasks();
   const confirm = useConfirm();
+
+  // Catches the moment the "Sincronizar" round-trip to the Atalhos app
+  // returns here (via x-callback-url) and pulls in whatever it just synced.
+  const refreshReminders = reminders.refresh;
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible') refreshReminders();
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [refreshReminders]);
 
   // First load of the day only — ask before wiping Starting Day/Ending Day.
   // Saying no leaves them exactly as-is until tomorrow's prompt.
@@ -113,7 +124,6 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           dispatch={dispatch}
           agenda={agenda}
           counts={counts}
-          onRefreshMeuDia={refreshFromServer}
           hubspot={hubspot}
           dealsWithoutTasks={dealsWithoutTasks}
           calendar={calendar}

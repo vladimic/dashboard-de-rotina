@@ -9,7 +9,8 @@ import GroupedTaskCard from '../components/GroupedTaskCard';
 import {
   formatClock,
   FANTASTICAL_APP_URL,
-  SYNC_REMINDERS_SHORTCUT_URL,
+  syncRemindersShortcutUrl,
+  REMINDERS_APP_URL,
   NOTION_WEEKLY_APP_URL,
   TICKTICK_APP_URL,
 } from '../utils/format';
@@ -45,7 +46,6 @@ export default function HojeView({
   dispatch,
   agenda,
   counts,
-  onRefreshMeuDia,
   hubspot,
   dealsWithoutTasks,
   calendar,
@@ -88,7 +88,6 @@ export default function HojeView({
           }}
           onUpdateNoteText={(id, value) => dispatch({ type: 'UPDATE_NOTE_TEXT', id, value })}
           onUpdateNoteColor={(id, bg, tc) => dispatch({ type: 'UPDATE_NOTE_COLOR', id, bg, tc })}
-          onRefresh={onRefreshMeuDia}
           onDragStart={(id) => dispatch({ type: 'DRAG_START', listKey: 'notes', id })}
           onDrop={(targetId) => dispatch({ type: 'DROP_ON', listKey: 'notes', targetId })}
         />
@@ -154,12 +153,15 @@ export default function HojeView({
           total={reminders.total}
           loading={reminders.loading}
           error={reminders.error}
-          onRefresh={reminders.refresh}
+          onRefresh={() => {
+            reminders.refresh();
+            window.location.href = syncRemindersShortcutUrl();
+          }}
           updatedLabel={reminders.updatedAt ? formatClock(reminders.updatedAt) : '—'}
           extraLink={{
-            label: 'Sincronizar',
-            href: SYNC_REMINDERS_SHORTCUT_URL,
-            title: 'Rodar o Atalho que envia os Lembretes atualizados',
+            label: 'Lembretes',
+            href: REMINDERS_APP_URL,
+            title: 'Abrir o app Lembretes',
           }}
         />
         <GroupedTaskCard

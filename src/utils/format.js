@@ -23,9 +23,16 @@ const AGENDA_TIMEZONE = 'America/Sao_Paulo';
 // Fantastical for Mac registers this URL scheme to launch the app.
 export const FANTASTICAL_APP_URL = 'x-fantastical3://';
 
-// Runs the named Shortcut on-demand (Mac or iPhone) — the Shortcut must be
-// named exactly "Sincronizar Lembretes" for this link to find it.
-export const SYNC_REMINDERS_SHORTCUT_URL = 'shortcuts://run-shortcut?name=Sincronizar%20Lembretes';
+// Runs the named Shortcut on-demand (Mac or iPhone) and, via x-callback-url,
+// automatically switches back to this page once it finishes — the Shortcut
+// must be named exactly "Sincronizar Lembretes" for this link to find it.
+export function syncRemindersShortcutUrl() {
+  const returnUrl = encodeURIComponent(window.location.href);
+  return `shortcuts://x-callback-url/run-shortcut?name=Sincronizar%20Lembretes&x-success=${returnUrl}`;
+}
+
+// Reminders for Mac/iOS registers this URL scheme to launch the app.
+export const REMINDERS_APP_URL = 'x-apple-reminderkit://';
 
 // Notion desktop/mobile app registers this URL scheme; substituting it in
 // for https://app.notion.com opens the same page directly in the app instead
