@@ -239,10 +239,23 @@ export default async function handler(req, res) {
       const schemaRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
         headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
       });
-      const schemaData = schemaRes.ok ? await schemaRes.json() : null;
-      const schemaProp = schemaData
-        ? Object.entries(schemaData.properties || {}).find(([, v]) => v.id === prop?.id)
-        : null;
+      const schemaBodyText = await schemaRes.text();
+      let schemaProp = null;
+      let allSchemaProps = null;
+      if (schemaRes.ok) {
+        const schemaData = JSON.parse(schemaBodyText);
+        const schemaProperties = schemaData.properties || {};
+        allSchemaProps = Object.fromEntries(Object.entries(schemaProperties).map(([k, v]) => [k, v.type]));
+        // Match by name (same proven fuzzy logic used everywhere else) —
+        // not by id, since the database-schema endpoint and the
+        // page-properties endpoint can format/encode the same property's id
+        // differently, which would silently fail a strict id === match.
+        const schemaProjectValue = findProperty(schemaProperties, PROJECT_PROPERTY, 'projeto');
+        const entry = schemaProjectValue
+          ? Object.entries(schemaProperties).find(([, v]) => v === schemaProjectValue)
+          : null;
+        if (entry) schemaProp = { name: entry[0], definition: entry[1] };
+      }
 
       res.status(200).json({
         debug: {
@@ -251,7 +264,9 @@ export default async function handler(req, res) {
           allPropertyNames: Object.keys(targetPage.properties || {}),
           projectPropertyRaw: prop,
           propertyItemFetch: rawFetch,
-          projectPropertySchema: schemaProp ? { name: schemaProp[0], definition: schemaProp[1] } : null,
+          schemaFetch: { status: schemaRes.status, ok: schemaRes.ok, bodyIfError: schemaRes.ok ? undefined : schemaBodyText.slice(0, 500) },
+          projectPropertySchema: schemaProp,
+          allSchemaPropertyTypes: allSchemaProps,
         },
       });
       return;
