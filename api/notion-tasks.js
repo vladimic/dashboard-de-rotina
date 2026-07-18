@@ -206,67 +206,56 @@ export default async function handler(req, res) {
 
     const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
-    // ?debug=1[&title=<substring>] — makes the actual "retrieve page property
-    // item" call for a chosen task (first task by default, or the first task
-    // whose title contains &title=) and reports back its raw HTTP status/body
-    // verbatim, instead of guessing.
+    // ?debug=1&projectDbId=<id> — the "[A] Projetos" property that shows up
+    // on task pages isn't in the tasks database's own schema at all (proven
+    // in a previous round), meaning it's only readable from the Projetos
+    // database's side. This checks that database directly: its schema (to
+    // find whichever property is the reverse relation back to tasks) and a
+    // live sample of its pages.
     if (req.query?.debug) {
-      const titleFilter = (req.query.title || '').toLowerCase();
-      const targetPage = titleFilter
-        ? openPages.find((p) => taskTitle(p).toLowerCase().includes(titleFilter))
-        : openPages[0];
-      if (!targetPage) {
-        res.status(200).json({ debug: `no matching open page found (title filter: "${titleFilter}")` });
+      const projectDbId = req.query.projectDbId;
+      if (!projectDbId) {
+        res.status(200).json({ debug: 'pass &projectDbId=<uuid> to inspect the Projetos database directly' });
         return;
       }
-      const prop = findProjectProperty(targetPage.properties || {});
-      let rawFetch = null;
-      if (prop?.type === 'relation') {
-        const url = `https://api.notion.com/v1/pages/${targetPage.id}/properties/${prop.id}`;
-        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION } });
-        const bodyText = await r.text();
-        rawFetch = { url, status: r.status, ok: r.ok, body: bodyText.slice(0, 2000) };
-      }
 
-      // Both the query endpoint AND the dedicated "retrieve page property
-      // item" endpoint agreeing on "empty" (previous debug round) is only
-      // possible if the property itself is configured in a way that makes it
-      // genuinely empty from the API's perspective — e.g. a dual-property
-      // (synced) relation where the API only reliably serves it from the
-      // *other* database. The database schema spells out exactly how "[A]
-      // Projetos" is configured, which explains it definitively instead of
-      // guessing again.
-      const schemaRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
+      const schemaRes = await fetch(`https://api.notion.com/v1/databases/${projectDbId}`, {
         headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
       });
       const schemaBodyText = await schemaRes.text();
-      let schemaProp = null;
-      let allSchemaProps = null;
+      let schemaInfo = null;
       if (schemaRes.ok) {
         const schemaData = JSON.parse(schemaBodyText);
-        const schemaProperties = schemaData.properties || {};
-        allSchemaProps = Object.fromEntries(Object.entries(schemaProperties).map(([k, v]) => [k, v.type]));
-        // Match by name (same proven fuzzy logic used everywhere else) —
-        // not by id, since the database-schema endpoint and the
-        // page-properties endpoint can format/encode the same property's id
-        // differently, which would silently fail a strict id === match.
-        const schemaProjectValue = findProperty(schemaProperties, PROJECT_PROPERTY, 'projeto');
-        const entry = schemaProjectValue
-          ? Object.entries(schemaProperties).find(([, v]) => v === schemaProjectValue)
-          : null;
-        if (entry) schemaProp = { name: entry[0], definition: entry[1] };
+        schemaInfo = {
+          title: (schemaData.title || []).map((t) => t.plain_text).join(''),
+          propertyTypes: Object.fromEntries(Object.entries(schemaData.properties || {}).map(([k, v]) => [k, v.type])),
+        };
+      }
+
+      const queryRes = await fetch(`https://api.notion.com/v1/databases/${projectDbId}/query`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Notion-Version': NOTION_VERSION,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ page_size: 2 }),
+      });
+      const queryBodyText = await queryRes.text();
+      let sampleFirstPageProperties = null;
+      if (queryRes.ok) {
+        const queryData = JSON.parse(queryBodyText);
+        const first = queryData.results?.[0];
+        sampleFirstPageProperties = first ? { title: pageTitle(first), properties: first.properties } : null;
       }
 
       res.status(200).json({
         debug: {
-          title: taskTitle(targetPage),
-          pageId: targetPage.id,
-          allPropertyNames: Object.keys(targetPage.properties || {}),
-          projectPropertyRaw: prop,
-          propertyItemFetch: rawFetch,
+          projectDbId,
           schemaFetch: { status: schemaRes.status, ok: schemaRes.ok, bodyIfError: schemaRes.ok ? undefined : schemaBodyText.slice(0, 500) },
-          projectPropertySchema: schemaProp,
-          allSchemaPropertyTypes: allSchemaProps,
+          schemaInfo,
+          queryFetch: { status: queryRes.status, ok: queryRes.ok, bodyIfError: queryRes.ok ? undefined : queryBodyText.slice(0, 500) },
+          sampleFirstPageProperties,
         },
       });
       return;
