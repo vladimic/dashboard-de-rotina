@@ -169,6 +169,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         }}
       />
 
+      <DayProgressBar percent={dayProgressPercent} done={dayProgressDone} total={dayProgressBaseline} />
+
       {state.page === 'hoje' && (
         <HojeView
           state={state}
@@ -188,8 +190,6 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         <SaudeView state={state} dispatch={dispatch} habits={habits} sleepWeek={sleepWeek} sleepAvg={sleepAvg} goals={goals} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
-
-      <DayProgressBar percent={dayProgressPercent} done={dayProgressDone} total={dayProgressBaseline} />
     </div>
   );
 }
