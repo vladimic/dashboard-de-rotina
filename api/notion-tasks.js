@@ -11,7 +11,9 @@ const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
 const STATUS_PROPERTY = 'Status';
 const PROJECT_PROPERTY = '[A] Projetos';
-const EXCLUDED_STATUSES = ['concluido', 'cancelado'];
+// Prefixes, not full words — matches "concluído"/"concluída"/"concluídos"
+// and "cancelado"/"cancelada"/etc. regardless of grammatical gender/plural.
+const EXCLUDED_STATUS_PREFIXES = ['conclu', 'cancel'];
 
 const DIACRITICS_RE = new RegExp('[̀-ͯ]', 'g');
 
@@ -23,10 +25,32 @@ function normalize(text) {
     .trim();
 }
 
+function isExcludedStatus(status) {
+  const n = normalize(status);
+  return EXCLUDED_STATUS_PREFIXES.some((prefix) => n.startsWith(prefix));
+}
+
+// Looks up a property by exact name first, then falls back to a
+// bracket/whitespace/accent-insensitive match, then to any property whose
+// name simply contains `hint` — in case the configured property name
+// doesn't match the database's actual property name character-for-character.
+function findProperty(properties, exactName, hint) {
+  if (properties[exactName]) return properties[exactName];
+  const target = normalize(exactName).replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+  for (const [key, value] of Object.entries(properties)) {
+    const normalizedKey = normalize(key).replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+    if (normalizedKey === target) return value;
+  }
+  for (const [key, value] of Object.entries(properties)) {
+    if (normalize(key).includes(hint)) return value;
+  }
+  return null;
+}
+
 // Works for either a Notion "status" or "select" property type — whichever
 // one the database actually uses for STATUS_PROPERTY.
 function statusName(page) {
-  const prop = page.properties?.[STATUS_PROPERTY];
+  const prop = findProperty(page.properties || {}, STATUS_PROPERTY, 'status');
   return prop?.status?.name || prop?.select?.name || null;
 }
 
@@ -82,21 +106,8 @@ function propertyText(prop, relationTitles) {
   }
 }
 
-// Looks up a property by exact name first, then falls back to a
-// bracket/whitespace/accent-insensitive match, then to any property whose
-// name simply contains "projeto" — in case PROJECT_PROPERTY doesn't match
-// the database's actual property name character-for-character.
 function findProjectProperty(properties) {
-  if (properties[PROJECT_PROPERTY]) return properties[PROJECT_PROPERTY];
-  const target = normalize(PROJECT_PROPERTY).replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
-  for (const [key, value] of Object.entries(properties)) {
-    const normalizedKey = normalize(key).replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
-    if (normalizedKey === target) return value;
-  }
-  for (const [key, value] of Object.entries(properties)) {
-    if (normalize(key).includes('projeto')) return value;
-  }
-  return null;
+  return findProperty(properties, PROJECT_PROPERTY, 'projeto');
 }
 
 // Walks a property (including nested inside a rollup array) collecting every
@@ -161,7 +172,26 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    const openPages = (data.results || []).filter((page) => !EXCLUDED_STATUSES.includes(normalize(statusName(page))));
+
+    // ?debug=1 — bypasses status filtering and returns each page's raw
+    // property names/types instead of the normal { tasks } shape, so real
+    // property names/values can be inspected without guessing blindly.
+    if (req.query?.debug) {
+      const debug = (data.results || []).map((page) => {
+        const properties = page.properties || {};
+        const projectProp = findProjectProperty(properties);
+        return {
+          title: taskTitle(page),
+          propertyNames: Object.keys(properties),
+          statusDetected: { name: STATUS_PROPERTY, value: statusName(page) },
+          projectDetected: projectProp ? { type: projectProp.type, raw: projectProp } : null,
+        };
+      });
+      res.status(200).json({ debug });
+      return;
+    }
+
+    const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
     const relationIds = new Set();
     for (const page of openPages) collectRelationIds(findProjectProperty(page.properties || {}), relationIds);

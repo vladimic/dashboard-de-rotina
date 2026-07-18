@@ -21,7 +21,7 @@ export default function AgendaCard({
         <div className={styles.headerRight}>
           {calendarAppUrl && (
             <a href={calendarAppUrl} className={styles.toggleLabel} title="Abrir no Fantastical">
-              Abrir no Calendário
+              Calendário
             </a>
           )}
           <div className={styles.toggleLabel} onClick={onToggleDay}>
