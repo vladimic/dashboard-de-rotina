@@ -88,16 +88,30 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // Freezes today's starting workload the first time every source has
   // finished its first load — capturing it any earlier would undercount
   // whatever hasn't come back from HubSpot/Reminders/Notion/TickTick yet.
+  // Falls back to capturing with whatever's loaded after 15s so one stuck
+  // source can't block the baseline forever.
   const allSourcesLoaded =
     status === 'ready' && !hubspot.loading && !dealsWithoutTasks.loading && !reminders.loading && !notion.loading && !ticktick.loading;
   const baselineCapturedRef = useRef(false);
-  useEffect(() => {
-    if (baselineCapturedRef.current || !allSourcesLoaded) return;
+  const progressTotalRef = useRef(counts.progressTotal);
+  progressTotalRef.current = counts.progressTotal;
+
+  const captureBaseline = useCallback(() => {
+    if (baselineCapturedRef.current) return;
     baselineCapturedRef.current = true;
     const todayKey = new Date().toDateString();
     if (state.dayProgressDate === todayKey) return;
-    dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: todayKey, baseline: counts.progressTotal });
-  }, [allSourcesLoaded, state.dayProgressDate, counts.progressTotal, dispatch]);
+    dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: todayKey, baseline: progressTotalRef.current });
+  }, [state.dayProgressDate, dispatch]);
+
+  useEffect(() => {
+    if (allSourcesLoaded) {
+      captureBaseline();
+      return;
+    }
+    const timer = setTimeout(captureBaseline, 15000);
+    return () => clearTimeout(timer);
+  }, [allSourcesLoaded, captureBaseline]);
 
   const dayProgressBaseline = state.dayProgressDate === new Date().toDateString() ? state.dayProgressBaseline : 0;
   const dayProgressDone = Math.max(0, dayProgressBaseline - counts.progressTotal);
