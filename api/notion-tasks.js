@@ -206,29 +206,32 @@ export default async function handler(req, res) {
 
     const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
-    // ?debug=1 — instead of guessing again, makes the actual "retrieve page
-    // property item" call for the first task and reports back its raw HTTP
-    // status/body verbatim (the hydration code silently swallowed this on
-    // any non-ok response, which is exactly the kind of thing that produces
-    // "still empty, no idea why").
+    // ?debug=1[&title=<substring>] — makes the actual "retrieve page property
+    // item" call for a chosen task (first task by default, or the first task
+    // whose title contains &title=) and reports back its raw HTTP status/body
+    // verbatim, instead of guessing.
     if (req.query?.debug) {
-      const firstPage = openPages[0];
-      if (!firstPage) {
-        res.status(200).json({ debug: 'no open pages to test' });
+      const titleFilter = (req.query.title || '').toLowerCase();
+      const targetPage = titleFilter
+        ? openPages.find((p) => taskTitle(p).toLowerCase().includes(titleFilter))
+        : openPages[0];
+      if (!targetPage) {
+        res.status(200).json({ debug: `no matching open page found (title filter: "${titleFilter}")` });
         return;
       }
-      const prop = findProjectProperty(firstPage.properties || {});
+      const prop = findProjectProperty(targetPage.properties || {});
       let rawFetch = null;
       if (prop?.type === 'relation') {
-        const url = `https://api.notion.com/v1/pages/${firstPage.id}/properties/${prop.id}`;
+        const url = `https://api.notion.com/v1/pages/${targetPage.id}/properties/${prop.id}`;
         const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION } });
         const bodyText = await r.text();
         rawFetch = { url, status: r.status, ok: r.ok, body: bodyText.slice(0, 2000) };
       }
       res.status(200).json({
         debug: {
-          title: taskTitle(firstPage),
-          pageId: firstPage.id,
+          title: taskTitle(targetPage),
+          pageId: targetPage.id,
+          allPropertyNames: Object.keys(targetPage.properties || {}),
           projectPropertyRaw: prop,
           propertyItemFetch: rawFetch,
         },
