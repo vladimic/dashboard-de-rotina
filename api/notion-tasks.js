@@ -1,11 +1,9 @@
 // Vercel serverless function. Runs server-side only — the Notion integration
 // token never reaches the browser. Pulls tasks due today or overdue from a
-// single Notion tasks database, sorted by due date, with a deep link back to
-// each task's page in Notion.
-
-import { getDayBoundsMs } from './_lib/dateRange.js';
+// single Notion tasks database, grouped by project.
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
+const NO_PROJECT_LABEL = 'Sem Projeto';
 const NOTION_VERSION = '2022-06-28';
 const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
@@ -160,8 +158,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { endOfDay } = getDayBoundsMs(0, TIMEZONE);
-    const endOfDayIso = new Date(endOfDay).toISOString();
+    // A plain "YYYY-MM-DD" string (not a full ISO instant) makes Notion
+    // compare calendar dates directly. "Prazo" is a date-only property (no
+    // time-of-day), and Notion anchors date-only values at UTC midnight —
+    // comparing that against an instant like "23:59 America/Sao_Paulo"
+    // (= 02:59 UTC the *next* day) let tomorrow's date-only tasks slip in as
+    // "on or before today", which is exactly the stale-looking bug reported.
+    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
 
     const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
@@ -171,7 +174,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        filter: { property: DUE_PROPERTY, date: { on_or_before: endOfDayIso } },
+        filter: { property: DUE_PROPERTY, date: { on_or_before: todayStr } },
         sorts: [{ property: DUE_PROPERTY, direction: 'ascending' }],
         page_size: 100,
       }),
@@ -242,17 +245,25 @@ export default async function handler(req, res) {
 
     // notion:// opens the page directly in the Notion app instead of a
     // browser tab.
-    const tasks = openPages.map((page) => {
-      const title = taskTitle(page);
-      const project = propertyText(projectPropertyFor(page), relationTitles);
-      return {
+    const groupsByLabel = new Map();
+    for (const page of openPages) {
+      const project = propertyText(projectPropertyFor(page), relationTitles) || NO_PROJECT_LABEL;
+      if (!groupsByLabel.has(project)) groupsByLabel.set(project, []);
+      groupsByLabel.get(project).push({
         id: page.id,
-        label: project ? `${title} :: [${project}]` : title,
+        label: taskTitle(page),
         link: `notion://www.notion.so/${page.id.replace(/-/g, '')}`,
-      };
-    });
+      });
+    }
 
-    res.status(200).json({ updatedAt: new Date().toISOString(), tasks });
+    const groups = [...groupsByLabel.entries()]
+      .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
+      .map(([projectLabel, tasks]) => ({
+        projectLabel,
+        tasks: [...tasks].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')),
+      }));
+
+    res.status(200).json({ updatedAt: new Date().toISOString(), total: openPages.length, groups });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || 'Unknown error fetching Notion tasks.' });

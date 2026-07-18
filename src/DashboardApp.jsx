@@ -30,7 +30,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
 
   const agenda = computeAgenda(state, calendar);
   const remindersTotal = reminders.vencidas.length + reminders.hojeSemHorario.length + reminders.hojeComHorario.length;
-  const counts = computeCounts(state, hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total, remindersTotal, notion.tasks.length);
+  const counts = computeCounts(state, hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total, remindersTotal, notion.total);
   useAppBadge(counts.geralTotal);
   const habits = computeHabits(state);
   const { sleepWeek, sleepAvg } = computeSleepWeek(state);
@@ -78,7 +78,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           lembretesVencidas: reminders.vencidas,
           lembretesHoje: [...reminders.hojeSemHorario, ...reminders.hojeComHorario],
           ticktickHoje: state.ticktickHoje,
-          notionHoje: notion.tasks,
+          notionHoje: notion.groups.flatMap((g) => g.tasks),
         }}
       />
 

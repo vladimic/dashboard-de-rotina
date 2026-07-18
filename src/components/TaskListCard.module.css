@@ -40,13 +40,6 @@
   line-height: 1;
 }
 
-.groupToggleIcon {
-  font: 600 15px Inter, sans-serif;
-  color: #8a72a0;
-  cursor: pointer;
-  line-height: 1;
-}
-
 .row {
   display: flex;
   align-items: center;

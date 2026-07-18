@@ -6,6 +6,7 @@ import ChecklistCard from '../components/ChecklistCard';
 import HubSpotCard from '../components/HubSpotCard';
 import HubSpotDealsWithoutTasksCard from '../components/HubSpotDealsWithoutTasksCard';
 import TaskListCard from '../components/TaskListCard';
+import NotionCard from '../components/NotionCard';
 import RemindersHojeCard from '../components/RemindersHojeCard';
 import { formatClock, FANTASTICAL_APP_URL, SYNC_REMINDERS_SHORTCUT_URL, NOTION_WEEKLY_APP_URL } from '../utils/format';
 import styles from './HojeView.module.css';
@@ -151,18 +152,13 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           onRefresh={() => refresh('ticktickUpdated')}
           updatedLabel={formatClock(state.ticktickUpdated)}
         />
-        <TaskListCard
-          title={
-            <>
-              Notion <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
-            </>
-          }
-          titleColor="#8a7a2f"
-          itemColor="#8a7a2f"
-          tasks={notion.tasks}
+        <NotionCard
+          groups={notion.groups}
+          total={notion.total}
+          loading={notion.loading}
+          error={notion.error}
           onRefresh={notion.refresh}
           updatedLabel={notion.updatedAt ? formatClock(notion.updatedAt) : '—'}
-          collapsible
           extraLink={{
             label: 'Notion',
             href: NOTION_WEEKLY_APP_URL,

@@ -44,6 +44,14 @@
   line-height: 1;
 }
 
+.extraLink {
+  font: 600 10px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
 .group {
   margin-top: 12px;
 }

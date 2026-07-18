@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const EMPTY = { tasks: [], updatedAt: null };
+const EMPTY = { groups: [], total: 0, updatedAt: null };
 
-// Fetches Notion tasks due today or overdue from the /api/notion-tasks
-// serverless function, which authenticates to the Notion API. The
-// integration token stays server-side.
+// Fetches Notion tasks due today or overdue, grouped by project, from the
+// /api/notion-tasks serverless function, which authenticates to the Notion
+// API. The integration token stays server-side.
 export function useNotionTasks() {
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
