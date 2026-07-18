@@ -9,10 +9,6 @@ const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
 const STATUS_PROPERTY = 'Status';
 const PROJECT_PROPERTY = '[A] Projetos';
-// Sub-items often don't carry the project relation directly — it's set on
-// the parent task instead. "item principal" is Notion's own Portuguese
-// label for its built-in "Parent item" sub-task property.
-const PARENT_ITEM_PROPERTY = 'item principal';
 // Prefixes, not full words — matches "concluído"/"concluída"/"concluídos"
 // and "cancelado"/"cancelada"/etc. regardless of grammatical gender/plural.
 const EXCLUDED_STATUS_PREFIXES = ['conclu', 'cancel'];
@@ -70,11 +66,9 @@ function taskTitle(page) {
   return arr.map((t) => t.plain_text).join('') || '(sem título)';
 }
 
-// Reads the plain-text value of a Notion property regardless of its type —
-// PROJECT_PROPERTY could be a rollup, relation, select, etc. depending on how
-// the user's database is set up. "relation" properties only carry related
-// page ids, not their titles — those are resolved separately via
-// relationTitles (see collectRelationIds / fetchPageTitle below).
+// Reads the plain-text value of a Notion property regardless of its type.
+// "relation" properties only carry related page ids, not their titles —
+// those are resolved separately via relationTitles.
 function propertyText(prop, relationTitles) {
   if (!prop) return '';
   switch (prop.type) {
@@ -112,16 +106,6 @@ function findProjectProperty(properties) {
   return findProperty(properties, PROJECT_PROPERTY, 'projeto');
 }
 
-function findParentItemProperty(properties) {
-  return findProperty(properties, PARENT_ITEM_PROPERTY, 'principal');
-}
-
-function hasProjectValue(prop) {
-  if (!prop) return false;
-  if (prop.type === 'relation') return (prop.relation || []).length > 0;
-  return true;
-}
-
 // Walks a property (including nested inside a rollup array) collecting every
 // related page id so their titles can be fetched in one batch up front.
 function collectRelationIds(prop, ids) {
@@ -145,6 +129,39 @@ function pageTitle(page) {
   const titleProp = Object.values(page.properties || {}).find((p) => p?.type === 'title');
   const arr = titleProp?.title || [];
   return arr.map((t) => t.plain_text).join('') || null;
+}
+
+// The "query a database" endpoint doesn't reliably return relation property
+// values inline (a documented Notion API quirk — confirmed here: a task
+// visibly had its project set in the Notion UI but the query response still
+// came back with an empty relation array). The "retrieve a page property
+// item" endpoint is the reliable source of truth for relation values, so
+// every task's project relation is re-fetched through it directly.
+async function fetchRelationIds(pageId, propertyId, token) {
+  const ids = [];
+  let cursor;
+  do {
+    const url = new URL(`https://api.notion.com/v1/pages/${pageId}/properties/${propertyId}`);
+    if (cursor) url.searchParams.set('start_cursor', cursor);
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
+    });
+    if (!res.ok) return ids;
+    const data = await res.json();
+    for (const item of data.results || []) {
+      if (item.relation?.id) ids.push(item.relation.id);
+    }
+    cursor = data.has_more ? data.next_cursor : null;
+  } while (cursor);
+  return ids;
+}
+
+async function hydratedProjectProperty(page, token) {
+  const prop = findProjectProperty(page.properties || {});
+  if (!prop) return null;
+  if (prop.type !== 'relation') return prop;
+  const ids = await fetchRelationIds(page.id, prop.id, token);
+  return { type: 'relation', relation: ids.map((id) => ({ id })) };
 }
 
 export default async function handler(req, res) {
@@ -189,39 +206,21 @@ export default async function handler(req, res) {
 
     const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
-    // ?debug=1 — bypasses grouping and returns each page's raw property
-    // names/values plus the full parent-item fallback trail, so real
-    // property names/values can be inspected without guessing blindly.
+    // ?debug=1 — bypasses grouping and returns each page's raw + hydrated
+    // project property, so real property names/values can be inspected
+    // without guessing blindly.
     if (req.query?.debug) {
       const debug = await Promise.all(
         openPages.map(async (page) => {
           const properties = page.properties || {};
           const ownProject = findProjectProperty(properties);
-          const parentItemProp = findParentItemProperty(properties);
-          const parentId = parentItemProp?.relation?.[0]?.id || null;
-          let parentTrail = null;
-          if (parentId) {
-            const parentPage = await fetchPage(parentId, token);
-            parentTrail = parentPage
-              ? {
-                  fetched: true,
-                  parentTitle: pageTitle(parentPage),
-                  parentPropertyNames: Object.keys(parentPage.properties || {}),
-                  parentProjectDetected: (() => {
-                    const p = findProjectProperty(parentPage.properties || {});
-                    return p ? { type: p.type, raw: p } : null;
-                  })(),
-                }
-              : { fetched: false, reason: 'fetchPage returned null (404/403/etc.)' };
-          }
+          const hydrated = await hydratedProjectProperty(page, token);
           return {
             title: taskTitle(page),
             propertyNames: Object.keys(properties),
             statusDetected: { name: STATUS_PROPERTY, value: statusName(page) },
             ownProjectDetected: ownProject ? { type: ownProject.type, raw: ownProject } : null,
-            parentItemPropDetected: parentItemProp ? { type: parentItemProp.type, raw: parentItemProp } : null,
-            parentId,
-            parentTrail,
+            hydratedProjectProperty: hydrated,
           };
         })
       );
@@ -229,34 +228,15 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Sub-items usually don't carry the project relation on their own row —
-    // it's set on the parent task ("item principal") instead. For any task
-    // whose own project relation is empty, fetch its parent page so its
-    // project relation can be used instead.
-    const parentIdByTaskId = new Map();
-    for (const page of openPages) {
-      if (!hasProjectValue(findProjectProperty(page.properties || {}))) {
-        const parentId = findParentItemProperty(page.properties || {})?.relation?.[0]?.id;
-        if (parentId) parentIdByTaskId.set(page.id, parentId);
-      }
-    }
-    const parentPages = new Map();
+    const hydratedProjects = new Map();
     await Promise.all(
-      [...new Set(parentIdByTaskId.values())].map(async (id) => {
-        const page = await fetchPage(id, token);
-        if (page) parentPages.set(id, page);
+      openPages.map(async (page) => {
+        hydratedProjects.set(page.id, await hydratedProjectProperty(page, token));
       })
     );
 
-    function projectPropertyFor(page) {
-      const own = findProjectProperty(page.properties || {});
-      if (hasProjectValue(own)) return own;
-      const parent = parentPages.get(parentIdByTaskId.get(page.id));
-      return parent ? findProjectProperty(parent.properties || {}) : null;
-    }
-
     const relationIds = new Set();
-    for (const page of openPages) collectRelationIds(projectPropertyFor(page), relationIds);
+    for (const page of openPages) collectRelationIds(hydratedProjects.get(page.id), relationIds);
     const relationTitles = new Map();
     await Promise.all(
       [...relationIds].map(async (id) => {
@@ -269,7 +249,7 @@ export default async function handler(req, res) {
     // browser tab.
     const groupsByLabel = new Map();
     for (const page of openPages) {
-      const project = propertyText(projectPropertyFor(page), relationTitles) || NO_PROJECT_LABEL;
+      const project = propertyText(hydratedProjects.get(page.id), relationTitles) || NO_PROJECT_LABEL;
       if (!groupsByLabel.has(project)) groupsByLabel.set(project, []);
       groupsByLabel.get(project).push({
         id: page.id,
