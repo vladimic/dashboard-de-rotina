@@ -66,6 +66,30 @@ export default async function handler(req, res) {
     }
     const projects = await projectsRes.json();
 
+    // ?debug=1[&project=<name substring>] — dumps the raw project list, and
+    // (when &project= is given) that project's raw task data verbatim, so
+    // real field names/values (dueDate, isAllDay, status, recurrence, etc.)
+    // can be inspected without guessing.
+    if (req.query?.debug) {
+      const projectFilter = (req.query.project || '').toLowerCase();
+      const debug = { todayStr, endOfDayMs, projects: (projects || []).map((p) => ({ id: p.id, name: p.name })) };
+      if (projectFilter) {
+        const match = (projects || []).find((p) => (p.name || '').toLowerCase().includes(projectFilter));
+        if (match) {
+          const dataRes = await fetch(`${API_BASE}/project/${match.id}/data`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const bodyText = await dataRes.text();
+          debug.matchedProject = { id: match.id, name: match.name };
+          debug.projectDataFetch = { status: dataRes.status, ok: dataRes.ok, body: bodyText.slice(0, 4000) };
+        } else {
+          debug.matchedProject = null;
+        }
+      }
+      res.status(200).json({ debug });
+      return;
+    }
+
     const groupsByLabel = new Map();
     let total = 0;
 
