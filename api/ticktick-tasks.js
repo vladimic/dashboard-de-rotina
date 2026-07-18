@@ -1,15 +1,20 @@
 // Vercel serverless function. Reads the TickTick OAuth token stored by
 // api/ticktick-auth-callback.js from Supabase, then pulls tasks due today or
-// overdue from every TickTick project (list), grouped by project.
+// overdue from every TickTick project (list) plus the Inbox, grouped by list.
 //
 // TickTick's Open API has no single "all tasks across projects, filtered by
 // due date" endpoint — each project's data has to be fetched individually
-// and filtered/grouped here.
+// and filtered/grouped here. Two quirks confirmed by direct testing:
+// - GET /open/v1/project doesn't include the Inbox ("Caixa de Entrada") —
+//   its tasks are only reachable via the special literal id "inbox".
+// - GET /open/v1/project/{id}/data caps out around ~99 tasks with no
+//   pagination parameter that changes that, so very large lists (300+
+//   tasks) won't fully come through — a real Open API limitation.
 
 import { createClient } from '@supabase/supabase-js';
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
-const NO_PROJECT_LABEL = 'Sem Lista';
+const INBOX_LABEL = 'Caixa de Entrada';
 const API_BASE = 'https://api.ticktick.com/open/v1';
 
 async function getAccessToken(supabase) {
@@ -65,47 +70,26 @@ export default async function handler(req, res) {
       throw new Error(`TickTick projects fetch failed (${projectsRes.status}): ${text}`);
     }
     const projects = await projectsRes.json();
+    const projectList = [{ id: 'inbox', name: INBOX_LABEL }, ...(projects || [])];
 
-    // ?debug=1[&project=<name substring>][&task=<title substring>] — dumps
-    // the raw project list, and (when &project= is given) runs the exact
-    // same filter used in production against that project's full task list,
-    // reporting how many pass the status filter vs the due-date filter vs
-    // both — plus the raw JSON of any task matching &task= regardless of
-    // whether it passed the filters, so real field values can be inspected
-    // directly instead of guessing why something was excluded.
+    // ?debug=1[&project=<name substring>][&task=<title substring>] — runs
+    // the exact same filter used in production against one project's full
+    // task list, reporting how many pass the status filter vs the due-date
+    // filter vs both — plus the raw JSON of any task matching &task=
+    // regardless of whether it passed, so real field values can be
+    // inspected directly instead of guessing why something was excluded.
     if (req.query?.debug) {
       const projectFilter = (req.query.project || '').toLowerCase();
       const taskFilter = (req.query.task || '').toLowerCase();
-      const debug = { todayStr, endOfDayMs, projects: (projects || []).map((p) => ({ id: p.id, name: p.name })) };
-
-      // "Caixa de Entrada" (Inbox) is a special system list that GET
-      // /open/v1/project doesn't include — it's not in the list above at
-      // all. TickTick's own apps reference it via the literal id "inbox";
-      // testing whether that also works through the public Open API.
-      const inboxRes = await fetch(`${API_BASE}/project/inbox/data`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const inboxBodyText = await inboxRes.text();
-      debug.inboxProbe = { status: inboxRes.status, ok: inboxRes.ok, body: inboxBodyText.slice(0, 2000) };
-
+      const debug = { todayStr, endOfDayMs, projects: projectList.map((p) => ({ id: p.id, name: p.name })) };
       if (projectFilter) {
-        const match = (projects || []).find((p) => (p.name || '').toLowerCase().includes(projectFilter));
+        const match = projectList.find((p) => (p.name || '').toLowerCase().includes(projectFilter));
         if (!match) {
           debug.matchedProject = null;
         } else {
-          // Try a couple of common pagination query params too — the
-          // documented endpoint takes none, but worth a quick check in case
-          // an undocumented one works, before concluding this is a hard cap.
-          const [dataRes, limitedRes] = await Promise.all([
-            fetch(`${API_BASE}/project/${match.id}/data`, { headers: { Authorization: `Bearer ${accessToken}` } }),
-            fetch(`${API_BASE}/project/${match.id}/data?limit=500&pageSize=500`, {
-              headers: { Authorization: `Bearer ${accessToken}` },
-            }),
-          ]);
-          if (limitedRes.ok) {
-            const limitedData = await limitedRes.json();
-            debug.withLimitParamTaskCount = (limitedData.tasks || []).length;
-          }
+          const dataRes = await fetch(`${API_BASE}/project/${match.id}/data`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
           debug.matchedProject = { id: match.id, name: match.name };
           if (!dataRes.ok) {
             debug.projectDataFetch = { status: dataRes.status, ok: false, body: (await dataRes.text()).slice(0, 1000) };
@@ -132,7 +116,7 @@ export default async function handler(req, res) {
     let total = 0;
 
     await Promise.all(
-      (projects || []).map(async (project) => {
+      projectList.map(async (project) => {
         const dataRes = await fetch(`${API_BASE}/project/${project.id}/data`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -142,11 +126,13 @@ export default async function handler(req, res) {
           (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr, endOfDayMs)
         );
         if (dueTasks.length === 0) return;
-        const label = project.name || NO_PROJECT_LABEL;
+        const label = project.name || INBOX_LABEL;
         const tasks = dueTasks.map((t) => ({
           id: t.id,
           label: t.title || '(sem título)',
-          link: `https://ticktick.com/webapp/#p/${project.id}/tasks/${t.id}`,
+          // t.projectId (not the loop's project.id) — matches for both
+          // regular projects and the special "inbox" pseudo-id.
+          link: `https://ticktick.com/webapp/#p/${t.projectId}/tasks/${t.id}`,
         }));
         groupsByLabel.set(label, tasks);
         total += tasks.length;
