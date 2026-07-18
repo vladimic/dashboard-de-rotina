@@ -1,6 +1,13 @@
 // Vercel serverless function. Runs server-side only — the Notion integration
 // token never reaches the browser. Pulls tasks due today or overdue from a
 // single Notion tasks database, grouped by project.
+//
+// Grouping reads the *Projetos* database's "[A] Atividades" relation
+// (project -> its tasks) rather than the task's own "[A] Projetos" relation
+// (task -> its project). Confirmed empirically: the task-side property is
+// unreliable via the API (empty even when visibly set in the Notion UI —
+// likely a sync-lag quirk of this specific two-way relation), while the
+// project-side property reliably lists its related tasks.
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NO_PROJECT_LABEL = 'Sem Projeto';
@@ -8,7 +15,7 @@ const NOTION_VERSION = '2022-06-28';
 const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
 const STATUS_PROPERTY = 'Status';
-const PROJECT_PROPERTY = '[A] Projetos';
+const REVERSE_TASKS_PROPERTY = '[A] Atividades';
 // Prefixes, not full words — matches "concluído"/"concluída"/"concluídos"
 // and "cancelado"/"cancelada"/etc. regardless of grammatical gender/plural.
 const EXCLUDED_STATUS_PREFIXES = ['conclu', 'cancel'];
@@ -66,77 +73,16 @@ function taskTitle(page) {
   return arr.map((t) => t.plain_text).join('') || '(sem título)';
 }
 
-// Reads the plain-text value of a Notion property regardless of its type.
-// "relation" properties only carry related page ids, not their titles —
-// those are resolved separately via relationTitles.
-function propertyText(prop, relationTitles) {
-  if (!prop) return '';
-  switch (prop.type) {
-    case 'title':
-      return (prop.title || []).map((t) => t.plain_text).join('');
-    case 'rich_text':
-      return (prop.rich_text || []).map((t) => t.plain_text).join('');
-    case 'select':
-      return prop.select?.name || '';
-    case 'multi_select':
-      return (prop.multi_select || []).map((s) => s.name).join(', ');
-    case 'relation':
-      return (prop.relation || [])
-        .map((r) => relationTitles.get(r.id))
-        .filter(Boolean)
-        .join(', ');
-    case 'formula':
-      return propertyText(
-        { type: prop.formula?.type, [prop.formula?.type]: prop.formula?.[prop.formula?.type] },
-        relationTitles
-      );
-    case 'rollup':
-      if (prop.rollup?.type === 'array') {
-        return prop.rollup.array.map((item) => propertyText(item, relationTitles)).filter(Boolean).join(', ');
-      }
-      if (prop.rollup?.type === 'number') return prop.rollup.number != null ? String(prop.rollup.number) : '';
-      if (prop.rollup?.type === 'date') return prop.rollup.date?.start || '';
-      return '';
-    default:
-      return '';
-  }
-}
-
-function findProjectProperty(properties) {
-  return findProperty(properties, PROJECT_PROPERTY, 'projeto');
-}
-
-// Walks a property (including nested inside a rollup array) collecting every
-// related page id so their titles can be fetched in one batch up front.
-function collectRelationIds(prop, ids) {
-  if (!prop) return;
-  if (prop.type === 'relation') {
-    for (const r of prop.relation || []) ids.add(r.id);
-  } else if (prop.type === 'rollup' && prop.rollup?.type === 'array') {
-    for (const item of prop.rollup.array) collectRelationIds(item, ids);
-  }
-}
-
-async function fetchPage(pageId, token) {
-  const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-    headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
-
 function pageTitle(page) {
   const titleProp = Object.values(page.properties || {}).find((p) => p?.type === 'title');
   const arr = titleProp?.title || [];
   return arr.map((t) => t.plain_text).join('') || null;
 }
 
-// The "query a database" endpoint doesn't reliably return relation property
-// values inline (a documented Notion API quirk — confirmed here: a task
-// visibly had its project set in the Notion UI but the query response still
-// came back with an empty relation array). The "retrieve a page property
-// item" endpoint is the reliable source of truth for relation values, so
-// every task's project relation is re-fetched through it directly.
+// The "query a database" endpoint doesn't reliably return every item of a
+// relation property (Notion caps/truncates inline relation values). The
+// "retrieve a page property item" endpoint is the reliable, paginated
+// source of truth, so every project's task list is re-fetched through it.
 async function fetchRelationIds(pageId, propertyId, token) {
   const ids = [];
   let cursor;
@@ -156,12 +102,36 @@ async function fetchRelationIds(pageId, propertyId, token) {
   return ids;
 }
 
-async function hydratedProjectProperty(page, token) {
-  const prop = findProjectProperty(page.properties || {});
-  if (!prop) return null;
-  if (prop.type !== 'relation') return prop;
-  const ids = await fetchRelationIds(page.id, prop.id, token);
-  return { type: 'relation', relation: ids.map((id) => ({ id })) };
+// Queries the Projetos database and builds taskPageId -> projectName by
+// reading each project's "[A] Atividades" relation.
+async function buildProjectByTaskId(token, projectsDbId) {
+  const map = new Map();
+  let cursor;
+  do {
+    const res = await fetch(`https://api.notion.com/v1/databases/${projectsDbId}/query`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Notion-Version': NOTION_VERSION,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ page_size: 100, start_cursor: cursor }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Projetos database query failed (${res.status}): ${text}`);
+    }
+    const data = await res.json();
+    for (const projectPage of data.results || []) {
+      const projectName = pageTitle(projectPage) || NO_PROJECT_LABEL;
+      const reverseProp = findProperty(projectPage.properties || {}, REVERSE_TASKS_PROPERTY, 'atividades');
+      if (reverseProp?.type !== 'relation') continue;
+      const taskIds = await fetchRelationIds(projectPage.id, reverseProp.id, token);
+      for (const taskId of taskIds) map.set(taskId, projectName);
+    }
+    cursor = data.has_more ? data.next_cursor : null;
+  } while (cursor);
+  return map;
 }
 
 export default async function handler(req, res) {
@@ -169,6 +139,7 @@ export default async function handler(req, res) {
 
   const token = process.env.NOTION_TOKEN;
   const databaseId = process.env.NOTION_TASKS_DATABASE_ID;
+  const projectsDbId = process.env.NOTION_PROJECTS_DATABASE_ID;
   if (!token || !databaseId) {
     res.status(500).json({ error: 'NOTION_TOKEN / NOTION_TASKS_DATABASE_ID not configured on the server.' });
     return;
@@ -206,83 +177,37 @@ export default async function handler(req, res) {
 
     const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
-    // ?debug=1&projectDbId=<id> — the "[A] Projetos" property that shows up
-    // on task pages isn't in the tasks database's own schema at all (proven
-    // in a previous round), meaning it's only readable from the Projetos
-    // database's side. This checks that database directly: its schema (to
-    // find whichever property is the reverse relation back to tasks) and a
-    // live sample of its pages.
+    // ?debug=1 — dumps the project -> task-count map built from the
+    // Projetos database's reverse relation, for troubleshooting.
     if (req.query?.debug) {
-      const projectDbId = req.query.projectDbId;
-      if (!projectDbId) {
-        res.status(200).json({ debug: 'pass &projectDbId=<uuid> to inspect the Projetos database directly' });
+      if (!projectsDbId) {
+        res.status(200).json({ debug: 'NOTION_PROJECTS_DATABASE_ID not configured' });
         return;
       }
-
-      const schemaRes = await fetch(`https://api.notion.com/v1/databases/${projectDbId}`, {
-        headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
-      });
-      const schemaBodyText = await schemaRes.text();
-      let schemaInfo = null;
-      if (schemaRes.ok) {
-        const schemaData = JSON.parse(schemaBodyText);
-        schemaInfo = {
-          title: (schemaData.title || []).map((t) => t.plain_text).join(''),
-          propertyTypes: Object.fromEntries(Object.entries(schemaData.properties || {}).map(([k, v]) => [k, v.type])),
-        };
-      }
-
-      const queryRes = await fetch(`https://api.notion.com/v1/databases/${projectDbId}/query`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Notion-Version': NOTION_VERSION,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ page_size: 2 }),
-      });
-      const queryBodyText = await queryRes.text();
-      let sampleFirstPageProperties = null;
-      if (queryRes.ok) {
-        const queryData = JSON.parse(queryBodyText);
-        const first = queryData.results?.[0];
-        sampleFirstPageProperties = first ? { title: pageTitle(first), properties: first.properties } : null;
-      }
-
+      const projectByTaskId = await buildProjectByTaskId(token, projectsDbId);
+      const counts = {};
+      for (const name of projectByTaskId.values()) counts[name] = (counts[name] || 0) + 1;
+      const openTaskIds = new Set(openPages.map((p) => p.id));
+      const matchedOpenTasks = [...projectByTaskId.keys()].filter((id) => openTaskIds.has(id)).length;
       res.status(200).json({
         debug: {
-          projectDbId,
-          schemaFetch: { status: schemaRes.status, ok: schemaRes.ok, bodyIfError: schemaRes.ok ? undefined : schemaBodyText.slice(0, 500) },
-          schemaInfo,
-          queryFetch: { status: queryRes.status, ok: queryRes.ok, bodyIfError: queryRes.ok ? undefined : queryBodyText.slice(0, 500) },
-          sampleFirstPageProperties,
+          totalProjectPages: [...new Set(projectByTaskId.values())].length,
+          totalTaskLinksFound: projectByTaskId.size,
+          projectTaskCounts: counts,
+          openTasksMatchedToAProject: matchedOpenTasks,
+          openTasksTotal: openPages.length,
         },
       });
       return;
     }
 
-    const hydratedProjects = new Map();
-    await Promise.all(
-      openPages.map(async (page) => {
-        hydratedProjects.set(page.id, await hydratedProjectProperty(page, token));
-      })
-    );
-
-    const relationIds = new Set();
-    for (const page of openPages) collectRelationIds(hydratedProjects.get(page.id), relationIds);
-    const relationTitles = new Map();
-    await Promise.all(
-      [...relationIds].map(async (id) => {
-        const page = await fetchPage(id, token);
-        if (page) relationTitles.set(id, pageTitle(page));
-      })
-    );
+    const projectByTaskId = projectsDbId ? await buildProjectByTaskId(token, projectsDbId) : new Map();
 
     // notion:// opens the page directly in the Notion app instead of a
     // browser tab.
     const groupsByLabel = new Map();
     for (const page of openPages) {
-      const project = propertyText(hydratedProjects.get(page.id), relationTitles) || NO_PROJECT_LABEL;
+      const project = projectByTaskId.get(page.id) || NO_PROJECT_LABEL;
       if (!groupsByLabel.has(project)) groupsByLabel.set(project, []);
       groupsByLabel.get(project).push({
         id: page.id,
