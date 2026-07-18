@@ -55,7 +55,9 @@ export default function HubSpotCard({ groups, vencidas, hoje, loading, error, on
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div className={styles.title}>HubSpot - Tarefas Vencidas ou de Hoje</div>
+        <div className={styles.title}>
+          HubSpot <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
+        </div>
         <div className={styles.headerRight}>
           {groups.length > 0 && (
             <div

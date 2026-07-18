@@ -1,10 +1,15 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { NOTE_PALETTE } from '../data/seedData';
 import styles from './MeuDiaCard.module.css';
 
 // Fallback for notes saved before per-note colors existed.
 const NOTE_BG = '#fdf3d0';
 const NOTE_TC = '#8a7a2f';
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+}
 
 export default function MeuDiaCard({
   notes,
@@ -19,13 +24,45 @@ export default function MeuDiaCard({
   onDrop,
 }) {
   const inputRef = useRef(null);
+  const textareaRef = useRef(null);
   const [editingId, setEditingId] = useState(null);
+  // Height of the note's text (as a plain, non-editable div) measured right
+  // before switching to edit mode — a <textarea> wraps the very same text
+  // slightly differently than a <div> even with identical font/width, so
+  // reusing the textarea's own scrollHeight for the *initial* size can jump
+  // by a line. Applying the pre-measured height instead guarantees no jump.
+  const [editingHeight, setEditingHeight] = useState(null);
   const [colorPickerId, setColorPickerId] = useState(null);
 
   function addAndRefocus() {
     onAddNote();
     inputRef.current?.focus();
   }
+
+  function toggleEditing(id, textEl) {
+    if (editingId === id) {
+      setEditingId(null);
+    } else {
+      setEditingHeight(textEl ? textEl.getBoundingClientRect().height : null);
+      setEditingId(id);
+    }
+  }
+
+  // Only runs when edit mode is entered/exited for a note — not on every
+  // keystroke — so the cursor stays where the user is actually typing
+  // instead of jumping to the end on each character.
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (editingId != null && el) {
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
+      if (editingHeight != null) {
+        el.style.height = `${editingHeight}px`;
+      } else {
+        autoResize(el);
+      }
+    }
+  }, [editingId, editingHeight]);
 
   return (
     <div className={styles.card}>
@@ -88,7 +125,10 @@ export default function MeuDiaCard({
                   <span
                     className={styles.edit}
                     style={{ color: `${tc}aa` }}
-                    onClick={() => setEditingId(editingId === n.id ? null : n.id)}
+                    onClick={(e) => {
+                      const textEl = e.currentTarget.closest(`.${styles.note}`)?.querySelector(`.${styles.text}`);
+                      toggleEditing(n.id, textEl);
+                    }}
                     title="Editar nota"
                   >
                     ✎
@@ -116,16 +156,14 @@ export default function MeuDiaCard({
               {editingId === n.id ? (
                 <textarea
                   autoFocus
-                  ref={(el) => {
-                    if (el) {
-                      const end = el.value.length;
-                      el.setSelectionRange(end, end);
-                    }
-                  }}
+                  ref={textareaRef}
                   className={styles.textEdit}
                   style={{ color: tc }}
                   value={n.text}
-                  onChange={(e) => onUpdateNoteText(n.id, e.target.value)}
+                  onChange={(e) => {
+                    onUpdateNoteText(n.id, e.target.value);
+                    autoResize(e.target);
+                  }}
                   onBlur={() => setEditingId(null)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {

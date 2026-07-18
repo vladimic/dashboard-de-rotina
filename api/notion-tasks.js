@@ -82,6 +82,23 @@ function propertyText(prop, relationTitles) {
   }
 }
 
+// Looks up a property by exact name first, then falls back to a
+// bracket/whitespace/accent-insensitive match, then to any property whose
+// name simply contains "projeto" — in case PROJECT_PROPERTY doesn't match
+// the database's actual property name character-for-character.
+function findProjectProperty(properties) {
+  if (properties[PROJECT_PROPERTY]) return properties[PROJECT_PROPERTY];
+  const target = normalize(PROJECT_PROPERTY).replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+  for (const [key, value] of Object.entries(properties)) {
+    const normalizedKey = normalize(key).replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+    if (normalizedKey === target) return value;
+  }
+  for (const [key, value] of Object.entries(properties)) {
+    if (normalize(key).includes('projeto')) return value;
+  }
+  return null;
+}
+
 // Walks a property (including nested inside a rollup array) collecting every
 // related page id so their titles can be fetched in one batch up front.
 function collectRelationIds(prop, ids) {
@@ -106,7 +123,7 @@ async function fetchPageTitle(pageId, token) {
 
 function taskLabel(page, relationTitles) {
   const title = taskTitle(page);
-  const project = propertyText(page.properties?.[PROJECT_PROPERTY], relationTitles);
+  const project = propertyText(findProjectProperty(page.properties || {}), relationTitles);
   return project ? `${title} :: [${project}]` : title;
 }
 
@@ -147,7 +164,7 @@ export default async function handler(req, res) {
     const openPages = (data.results || []).filter((page) => !EXCLUDED_STATUSES.includes(normalize(statusName(page))));
 
     const relationIds = new Set();
-    for (const page of openPages) collectRelationIds(page.properties?.[PROJECT_PROPERTY], relationIds);
+    for (const page of openPages) collectRelationIds(findProjectProperty(page.properties || {}), relationIds);
     const relationTitles = new Map();
     await Promise.all(
       [...relationIds].map(async (id) => {
@@ -156,10 +173,12 @@ export default async function handler(req, res) {
       })
     );
 
+    // notion:// opens the page directly in the Notion app instead of a
+    // browser tab.
     const tasks = openPages.map((page) => ({
       id: page.id,
       label: taskLabel(page, relationTitles),
-      link: `https://www.notion.so/${page.id.replace(/-/g, '')}`,
+      link: `notion://www.notion.so/${page.id.replace(/-/g, '')}`,
     }));
 
     res.status(200).json({ updatedAt: new Date().toISOString(), tasks });

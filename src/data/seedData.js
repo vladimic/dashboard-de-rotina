@@ -142,4 +142,5 @@ export const NOTE_PALETTE = [
   { bg: '#e0f3e0', tc: '#3f7a4f' }, // verde
   { bg: '#ece0fb', tc: '#6a4f9c' }, // roxo
   { bg: '#fbe7d0', tc: '#9c6a2f' }, // laranja
+  { bg: '#e6e6ea', tc: '#5a5a63' }, // cinza
 ];

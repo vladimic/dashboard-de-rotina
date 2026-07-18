@@ -20,7 +20,9 @@ export default function HubSpotDealsWithoutTasksCard({ groups, total, loading, e
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div className={styles.title}>HubSpot - Deals sem Tarefa</div>
+        <div className={styles.title}>
+          HubSpot <span style={{ fontSize: '10px', fontWeight: 500 }}>- Deals sem Tarefa</span>
+        </div>
         <div className={styles.headerRight}>
           {groups.length > 0 && (
             <div
