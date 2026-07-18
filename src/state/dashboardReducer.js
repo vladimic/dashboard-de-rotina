@@ -152,6 +152,12 @@ export function dashboardReducer(state, action) {
       };
     }
 
+    // Freezes the day's starting workload the first time it's computed each
+    // day, so "% do dia" always compares against the same baseline.
+    case 'SET_DAY_PROGRESS_BASELINE': {
+      return { ...state, dayProgressDate: action.date, dayProgressBaseline: action.baseline };
+    }
+
     default:
       return state;
   }

@@ -12,6 +12,7 @@ import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeG
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
+import DayProgressBar from './components/DayProgressBar';
 import HojeView from './views/HojeView';
 import SaudeView from './views/SaudeView';
 import BacklogView from './views/BacklogView';
@@ -83,6 +84,25 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     ticktick.total
   );
   useAppBadge(counts.geralTotal);
+
+  // Freezes today's starting workload the first time every source has
+  // finished its first load — capturing it any earlier would undercount
+  // whatever hasn't come back from HubSpot/Reminders/Notion/TickTick yet.
+  const allSourcesLoaded =
+    status === 'ready' && !hubspot.loading && !dealsWithoutTasks.loading && !reminders.loading && !notion.loading && !ticktick.loading;
+  const baselineCapturedRef = useRef(false);
+  useEffect(() => {
+    if (baselineCapturedRef.current || !allSourcesLoaded) return;
+    baselineCapturedRef.current = true;
+    const todayKey = new Date().toDateString();
+    if (state.dayProgressDate === todayKey) return;
+    dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: todayKey, baseline: counts.progressTotal });
+  }, [allSourcesLoaded, state.dayProgressDate, counts.progressTotal, dispatch]);
+
+  const dayProgressBaseline = state.dayProgressDate === new Date().toDateString() ? state.dayProgressBaseline : 0;
+  const dayProgressDone = Math.max(0, dayProgressBaseline - counts.progressTotal);
+  const dayProgressPercent =
+    dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const habits = computeHabits(state);
   const { sleepWeek, sleepAvg } = computeSleepWeek(state);
   const goals = computeGoals(state);
@@ -154,6 +174,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         <SaudeView state={state} dispatch={dispatch} habits={habits} sleepWeek={sleepWeek} sleepAvg={sleepAvg} goals={goals} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
+
+      <DayProgressBar percent={dayProgressPercent} done={dayProgressDone} total={dayProgressBaseline} />
     </div>
   );
 }

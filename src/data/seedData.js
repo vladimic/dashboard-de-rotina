@@ -9,6 +9,8 @@ export function createSeedState() {
     page: 'hoje',
     newNoteText: '',
     lastResetDate: new Date().toDateString(),
+    dayProgressDate: null,
+    dayProgressBaseline: 0,
 
     notes: [
       { id: 1, text: 'Ligar pro dentista', bg: '#fdf3d0', tc: '#8a7a2f' },

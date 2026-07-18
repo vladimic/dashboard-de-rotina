@@ -105,6 +105,17 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     remindersTotal +
     ticktickTotal +
     notionTotal;
+  // Same shape as geralTotal, but Ending Day always counts (never gated by
+  // the 17:30 unlock) — this is the number "% do dia" tracks against, so it
+  // stays consistent across the whole day instead of jumping at 17:30.
+  const progressTotal =
+    meuDiaCount +
+    manhaPend +
+    noitePend +
+    hubspotTotal +
+    remindersTotal +
+    ticktickTotal +
+    notionTotal;
   return {
     meuDiaCount,
     manhaTotal: state.manha.length,
@@ -115,6 +126,7 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     noitePendSummary,
     hubspotTotal,
     geralTotal,
+    progressTotal,
   };
 }
 
