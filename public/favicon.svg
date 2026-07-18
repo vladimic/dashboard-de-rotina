@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#863bff"/>
+      <stop offset="100%" stop-color="#5b2f8f"/>
+    </linearGradient>
+    <clipPath id="face">
+      <circle cx="256" cy="256" r="196"/>
+    </clipPath>
+  </defs>
+
+  <!-- outer bezel -->
+  <circle cx="256" cy="256" r="212" fill="#2f2438"/>
+  <circle cx="256" cy="256" r="204" fill="#ffffff"/>
+
+  <!-- instrument face -->
+  <g clip-path="url(#face)">
+    <rect x="60" y="60" width="392" height="196" fill="#ede6ff"/>
+    <rect x="60" y="256" width="392" height="196" fill="url(#ground)"/>
+    <!-- bank tick fan lines, faint -->
+    <g stroke="#ffffff" stroke-width="3" opacity="0.55">
+      <line x1="256" y1="60" x2="256" y2="100"/>
+      <line x1="163" y1="83" x2="185" y2="115"/>
+      <line x1="349" y1="83" x2="327" y2="115"/>
+      <line x1="97" y1="150" x2="130" y2="172"/>
+      <line x1="415" y1="150" x2="382" y2="172"/>
+    </g>
+  </g>
+
+  <!-- horizon line -->
+  <rect x="60" y="252" width="392" height="8" fill="#ffffff"/>
+
+  <!-- fixed aircraft symbol -->
+  <g>
+    <rect x="150" y="244" width="120" height="24" rx="6" fill="#ffffff" stroke="#2f2438" stroke-width="6"/>
+    <rect x="242" y="244" width="120" height="24" rx="6" fill="#ffffff" stroke="#2f2438" stroke-width="6"/>
+    <circle cx="256" cy="256" r="16" fill="#47bfff" stroke="#2f2438" stroke-width="6"/>
+  </g>
+
+  <!-- top pointer -->
+  <path d="M256 44 L272 76 L240 76 Z" fill="#ffffff" stroke="#2f2438" stroke-width="5"/>
+
+  <!-- outer ring highlight -->
+  <circle cx="256" cy="256" r="196" fill="none" stroke="#2f2438" stroke-width="8"/>
+</svg>

@@ -1,0 +1,52 @@
+.card {
+  background: #dcefe6;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #3f6b57;
+  margin-bottom: 12px;
+}
+
+.weight {
+  font: 700 30px Inter, sans-serif;
+  color: #3f6b57;
+}
+
+.unit {
+  font: 500 14px Inter, sans-serif;
+  color: #7fa693;
+}
+
+.target {
+  font: 500 11px Inter, sans-serif;
+  color: #7fa693;
+  margin-bottom: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  border: 1px solid #bfe0cf;
+  border-radius: 9px;
+  padding: 8px 10px;
+  font: 500 12px Inter, sans-serif;
+  color: #3f6b57;
+  background: #fff;
+  outline: none;
+}
+
+.okBtn {
+  background: #3f6b57;
+  color: #fff;
+  border-radius: 9px;
+  padding: 8px 12px;
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+}

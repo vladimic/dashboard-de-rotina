@@ -1,0 +1,44 @@
+.card {
+  background: #dbeaf7;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #3f5c78;
+  margin-bottom: 12px;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+}
+
+.barCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 4px;
+}
+
+.barLabel {
+  font: 500 10px Inter, sans-serif;
+  color: #7f9ab5;
+}
+
+.caption {
+  font: 500 11px Inter, sans-serif;
+  color: #7f9ab5;
+  margin-top: 10px;
+}

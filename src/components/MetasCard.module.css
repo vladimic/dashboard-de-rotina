@@ -1,0 +1,61 @@
+.card {
+  background: #f3e6ea;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #6b3f4a;
+}
+
+.count {
+  font: 600 11px Inter, sans-serif;
+  color: #b58893;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(107, 63, 74, 0.08);
+}
+
+.label {
+  font: 500 12px Inter, sans-serif;
+  color: #6b3f4a;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barTrack {
+  width: 64px;
+  height: 5px;
+  background: #fff;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: #e8a0b3;
+}
+
+.fraction {
+  font: 600 11px Inter, sans-serif;
+  color: #6b3f4a;
+  width: 26px;
+  text-align: right;
+}

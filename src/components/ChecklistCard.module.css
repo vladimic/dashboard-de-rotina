@@ -1,0 +1,152 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #5b4a63;
+}
+
+.toggleIcon {
+  font: 600 15px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pend {
+  font: 600 13px Inter, sans-serif;
+  color: #5b4a63;
+}
+
+.editLink {
+  font: 600 10px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.editRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px 0;
+  border-bottom: 1px solid #f3ecf5;
+  cursor: grab;
+}
+
+.editRowTop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dragHandle {
+  font: 600 12px Inter, sans-serif;
+  color: #c3b3c9;
+}
+
+.editInput {
+  flex: 1;
+  border: 1px solid #e3d6e8;
+  border-radius: 6px;
+  padding: 5px 7px;
+  font: 500 12px Inter, sans-serif;
+  color: #5b4a63;
+  background: #fff;
+  outline: none;
+}
+
+.removeBtn {
+  font: 600 13px Inter, sans-serif;
+  color: #c48fce;
+  cursor: pointer;
+}
+
+.linkInput {
+  margin-left: 18px;
+  border: 1px solid #e3d6e8;
+  border-radius: 6px;
+  padding: 4px 7px;
+  font: 500 11px Inter, sans-serif;
+  color: #8a72a0;
+  background: #fff;
+  outline: none;
+}
+
+.addRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.addInput {
+  flex: 1;
+  border: 1px solid #e3d6e8;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: 500 12px Inter, sans-serif;
+  color: #5b4a63;
+  background: #fff;
+  outline: none;
+}
+
+.addBtn {
+  background: #5b4a63;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.addLinkInput {
+  width: 100%;
+  margin-top: 4px;
+  border: 1px solid #e3d6e8;
+  border-radius: 6px;
+  padding: 4px 7px;
+  font: 500 11px Inter, sans-serif;
+  color: #8a72a0;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.viewRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3px 0;
+}
+
+.checkbox {
+  accent-color: #5b4a63;
+  cursor: pointer;
+}
+
+.itemLink {
+  font: 500 12px Inter, sans-serif;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.itemLabel {
+  font: 500 12px Inter, sans-serif;
+  cursor: pointer;
+}

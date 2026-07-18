@@ -1,0 +1,53 @@
+.card {
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.title {
+  font: var(--fs-card-title);
+}
+
+.chevron {
+  font: 600 11px Inter, sans-serif;
+}
+
+.refresh {
+  font: 600 19.5px Inter, sans-serif;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.count {
+  font: 700 34px Inter, sans-serif;
+}
+
+.caption {
+  font: 500 12px Inter, sans-serif;
+  margin-top: 2px;
+}
+
+.subList {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid;
+}
+
+.subRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font: 500 12px Inter, sans-serif;
+}

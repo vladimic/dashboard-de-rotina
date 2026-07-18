@@ -1,0 +1,179 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #5b4a63;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggleLabel {
+  font: 600 10px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.refresh {
+  font: 600 19.5px Inter, sans-serif;
+  color: #a897ad;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.error {
+  font: 500 12px Inter, sans-serif;
+  color: #8a3f56;
+  background: #f8d9e3;
+  border-radius: 9px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.timeline {
+  position: relative;
+}
+
+.hourLabel {
+  position: absolute;
+  left: 0;
+  font: 500 10px Inter, sans-serif;
+  color: #c3b3c9;
+}
+
+.hourLine {
+  position: absolute;
+  left: 38px;
+  right: 0;
+  border-top: 1px solid #f3ecf5;
+}
+
+.eventsLayer {
+  position: absolute;
+  top: 0;
+  left: 38px;
+  right: 0;
+  bottom: 0;
+}
+
+.event {
+  position: absolute;
+  border-left: 3px solid;
+  border-radius: 6px;
+  padding: 4px 8px;
+  box-shadow: 0 1px 3px rgba(91, 74, 99, 0.18);
+}
+
+.eventContent {
+  overflow: hidden;
+}
+
+.eventLabel {
+  font: 600 11px Inter, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventTime {
+  font: 500 10px Inter, sans-serif;
+}
+
+.eventTooltip {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  min-width: 220px;
+  max-width: 280px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgba(91, 74, 99, 0.25);
+  z-index: 30;
+}
+
+.event:hover .eventTooltip {
+  display: block;
+}
+
+.tooltipTitle {
+  font: 600 12px Inter, sans-serif;
+  color: #5b4a63;
+  margin-bottom: 4px;
+}
+
+.tooltipTime {
+  font: 500 11px Inter, sans-serif;
+  color: #a897ad;
+  margin-bottom: 4px;
+}
+
+.tooltipLocation {
+  font: 500 11px Inter, sans-serif;
+  color: #5b4a63;
+  margin-bottom: 4px;
+}
+
+.tooltipLink {
+  font: 600 11px Inter, sans-serif;
+  color: #8a72a0;
+  text-decoration: underline;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.tooltipDescription {
+  font: 400 11px Inter, sans-serif;
+  color: #8a7a90;
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow: auto;
+}
+
+.nowLine {
+  position: absolute;
+  left: 38px;
+  right: 0;
+  border-top: 2px solid #d9455f;
+  pointer-events: none;
+}
+
+.nowDot {
+  position: absolute;
+  left: 38px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d9455f;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.nowLabel {
+  position: absolute;
+  left: 0;
+  width: 34px;
+  text-align: right;
+  font: 700 10px Inter, sans-serif;
+  color: #d9455f;
+  transform: translateY(-50%);
+  pointer-events: none;
+}

@@ -1,0 +1,21 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #5b4a63;
+  margin-bottom: 10px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f3ecf5;
+  font: 500 12px Inter, sans-serif;
+  color: #5b4a63;
+}
+

@@ -1,0 +1,123 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #5b4a63;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count {
+  font: 600 13px Inter, sans-serif;
+  color: #5b4a63;
+}
+
+.refresh {
+  font: 600 19.5px Inter, sans-serif;
+  color: #a897ad;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.input {
+  flex: 1;
+  border: 1px solid #e3d6e8;
+  border-radius: 9px;
+  padding: 8px 10px;
+  font: 500 12px Inter, sans-serif;
+  color: #5b4a63;
+  background: #fff;
+  outline: none;
+}
+
+.addBtn {
+  background: #5b4a63;
+  color: #fff;
+  border-radius: 9px;
+  padding: 8px 12px;
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.note {
+  border-radius: 12px;
+  padding: 8px 10px 10px;
+}
+
+.noteHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.dragHandle {
+  font: 600 12px Inter, sans-serif;
+  cursor: grab;
+  line-height: 1;
+}
+
+.noteActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.edit {
+  font: 600 11px Inter, sans-serif;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.remove {
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.text {
+  font: 500 12px Inter, sans-serif;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+.textEdit {
+  width: 100%;
+  min-height: 44px;
+  font: 500 12px Inter, sans-serif;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  word-break: break-word;
+  padding: 0;
+}

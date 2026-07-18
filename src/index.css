@@ -1,0 +1,38 @@
+:root {
+  /* Shared typography tokens — the two roles unified across cards.
+     Change the size here once instead of in every .module.css. */
+  --fs-card-title: 600 13px Inter, sans-serif;
+  --fs-kpi-value: 700 20px Inter, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f0eee9;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  overflow-x: auto;
+  padding: 32px 20px;
+}
+
+input {
+  font-family: inherit;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+}

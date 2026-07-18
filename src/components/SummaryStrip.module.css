@@ -1,0 +1,116 @@
+.strip {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 15px;
+}
+
+.hojeGroup {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: auto;
+  gap: 7px;
+  flex: 1;
+  border: 1px solid rgba(91, 74, 99, 0.18);
+  border-radius: 16px;
+  padding: 8px;
+}
+
+.hojeGroup[data-dim='true'] {
+  background: rgba(91, 74, 99, 0.05);
+  filter: brightness(0.93) saturate(0.85);
+}
+
+.saudeGroup {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  border: 1px solid rgba(63, 107, 87, 0.18);
+  border-radius: 16px;
+  padding: 8px;
+}
+
+.saudeGroup[data-dim='true'] {
+  background: rgba(63, 107, 87, 0.05);
+  filter: brightness(0.93) saturate(0.85);
+}
+
+.card {
+  min-width: 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.hojeCard {
+  box-shadow: 0 1px 3px rgba(91, 74, 99, 0.1);
+}
+
+.saudeCard {
+  flex: 1;
+  box-shadow: 0 1px 3px rgba(63, 107, 87, 0.1);
+}
+
+.cardTitle {
+  font: 600 10px Inter, sans-serif;
+  line-height: 1.4;
+  color: #5b4a63;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saudeCard .cardTitle {
+  color: #3f6b57;
+}
+
+.cardValue {
+  font: var(--fs-kpi-value);
+  line-height: 1;
+  color: #2a2230;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.cardSuffix {
+  font: 500 11px Inter, sans-serif;
+  color: #a897ad;
+}
+
+.saudeCard .cardSuffix {
+  color: #7fa693;
+}
+
+.geralCard {
+  grid-row: span 2;
+  min-width: 0;
+  background: #5b4a63;
+  border-radius: 12px;
+  padding: 7px 9px;
+  box-shadow: 0 1px 3px rgba(91, 74, 99, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.geralTitle {
+  font: 600 14px Inter, sans-serif;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.geralValue {
+  /* Deliberately its own size, bigger than the shared --fs-kpi-value used by
+     every other summary card — this is the one number meant to dominate. */
+  font: 700 44px Inter, sans-serif;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}

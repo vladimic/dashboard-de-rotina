@@ -1,0 +1,84 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.tab {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+  background: #fff;
+  color: #5b4a63;
+}
+
+.tab[data-active='true'] {
+  background: #5b4a63;
+  color: #fff;
+}
+
+.date {
+  font: 700 26px Inter, sans-serif;
+  color: #5b4a63;
+  flex: none;
+  text-align: center;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 1;
+}
+
+.rightTop {
+  font: 500 12px Inter, sans-serif;
+  color: #b59cb0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.refreshAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #5b4a63;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font: 600 11px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 10px Inter, sans-serif;
+  color: #c3b3c9;
+}
+
+.signOut {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #a897ad;
+}
+
+.version {
+  font: 600 9px 'SF Mono', Menlo, monospace;
+  color: #c3b3c9;
+  background: #f3ecf5;
+  border-radius: 8px;
+  padding: 2px 6px;
+}

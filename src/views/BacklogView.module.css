@@ -1,0 +1,17 @@
+.columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.col {
+  width: 270px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: none;
+}
+
+.spacer {
+  flex: 1;
+}

@@ -1,0 +1,76 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #3f6b57;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count {
+  font: 600 13px Inter, sans-serif;
+  color: #3f6b57;
+}
+
+.refresh {
+  font: 600 19.5px Inter, sans-serif;
+  color: #a897ad;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(91, 74, 99, 0.08);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9cee0;
+  flex: none;
+}
+
+.label {
+  flex: 1;
+  font: 500 12px Inter, sans-serif;
+  color: #5b4a63;
+}
+
+.time {
+  font: 500 10px Inter, sans-serif;
+  color: #a897ad;
+}
+
+.error {
+  font: 500 12px Inter, sans-serif;
+  color: #8a3f56;
+  background: #f8d9e3;
+  border-radius: 9px;
+  padding: 8px 10px;
+}
+
+.empty {
+  font: 500 12px Inter, sans-serif;
+  color: #a897ad;
+  padding: 6px 0;
+}

@@ -1,0 +1,14 @@
+.card {
+  width: 100%;
+  min-width: 1180px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 18px 28px 26px;
+}
+
+.loading {
+  font: 500 13px Inter, sans-serif;
+  color: #a897ad;
+  padding: 40px;
+  text-align: center;
+}

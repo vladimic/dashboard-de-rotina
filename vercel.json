@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/hubspot-deals-without-tasks.js": {
+      "maxDuration": 30
+    }
+  }
+}

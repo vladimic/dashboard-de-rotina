@@ -1,0 +1,49 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #5b4a63;
+}
+
+.count {
+  font: 600 11px Inter, sans-serif;
+  color: #a897ad;
+}
+
+.row {
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.rowTop {
+  display: flex;
+  justify-content: space-between;
+  font: 500 12px Inter, sans-serif;
+  margin-bottom: 4px;
+}
+
+.streak {
+  color: #c3b3c9;
+}
+
+.barTrack {
+  height: 5px;
+  background: #f3ecf5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+}
