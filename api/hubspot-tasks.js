@@ -86,8 +86,10 @@ export default async function handler(req, res) {
     // slipped through), so the status is re-checked client-side as a guarantee.
     const tasks = (searchData.results || []).filter((t) => t.properties?.hs_task_status !== 'COMPLETED');
 
+    const tasksUrl = `https://app.hubspot.com/tasks/${portalId}/view/all`;
+
     if (tasks.length === 0) {
-      res.status(200).json({ updatedAt: new Date().toISOString(), vencidas: 0, hoje: 0, groups: [] });
+      res.status(200).json({ updatedAt: new Date().toISOString(), vencidas: 0, hoje: 0, groups: [], tasksUrl });
       return;
     }
 
@@ -163,7 +165,7 @@ export default async function handler(req, res) {
       ([stageLabel, groupTasks]) => ({ stageLabel, tasks: groupTasks })
     );
 
-    res.status(200).json({ updatedAt: new Date().toISOString(), vencidas, hoje, groups });
+    res.status(200).json({ updatedAt: new Date().toISOString(), vencidas, hoje, groups, tasksUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || 'Unknown error fetching HubSpot tasks.' });

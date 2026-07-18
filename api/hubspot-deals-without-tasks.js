@@ -3,7 +3,7 @@
 // involved (all open tasks, all deals), each capped at 3000 records — a
 // very large account could still see this miss records beyond that cap.
 
-import { hubspotFetch, searchAll, chunk, fetchStageLabelMap, sortByStage, dealLink, normalizeStageName } from './_lib/hubspotShared.js';
+import { hubspotFetch, searchAll, chunk, fetchStageLabelMap, sortByStage, dealLink, normalizeStageName, DEALS_OBJECT_TYPE } from './_lib/hubspotShared.js';
 
 const OTHER_STAGE_LABEL = 'Outro estágio';
 
@@ -29,6 +29,8 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'HUBSPOT_TOKEN / HUBSPOT_PORTAL_ID not configured on the server.' });
     return;
   }
+
+  const dealsUrl = `https://app.hubspot.com/contacts/${portalId}/objects/${DEALS_OBJECT_TYPE}/views/all/list`;
 
   try {
     // 1. All open tasks (any due date). The server-side NEQ filter isn't
@@ -153,7 +155,7 @@ export default async function handler(req, res) {
       }));
 
     if (dealsWithoutTask.length === 0) {
-      res.status(200).json({ updatedAt: new Date().toISOString(), total: 0, groups: [], excludedDebug });
+      res.status(200).json({ updatedAt: new Date().toISOString(), total: 0, groups: [], excludedDebug, dealsUrl });
       return;
     }
 
@@ -176,7 +178,7 @@ export default async function handler(req, res) {
       ([stageLabel, deals]) => ({ stageLabel, deals })
     );
 
-    res.status(200).json({ updatedAt: new Date().toISOString(), total: dealsWithoutTask.length, groups, excludedDebug });
+    res.status(200).json({ updatedAt: new Date().toISOString(), total: dealsWithoutTask.length, groups, excludedDebug, dealsUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || 'Unknown error fetching deals without tasks.' });

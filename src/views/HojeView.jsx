@@ -127,6 +127,11 @@ export default function HojeView({
           error={hubspot.error}
           onRefresh={hubspot.refresh}
           updatedLabel={hubspot.updatedAt ? formatClock(hubspot.updatedAt) : '—'}
+          extraLink={{
+            label: 'Hubspot',
+            href: hubspot.tasksUrl,
+            title: 'Abrir a lista de tarefas pendentes no HubSpot',
+          }}
         />
         <HubSpotDealsWithoutTasksCard
           groups={dealsWithoutTasks.groups}
@@ -135,6 +140,11 @@ export default function HojeView({
           error={dealsWithoutTasks.error}
           onRefresh={dealsWithoutTasks.refresh}
           updatedLabel={dealsWithoutTasks.updatedAt ? formatClock(dealsWithoutTasks.updatedAt) : '—'}
+          extraLink={{
+            label: 'Hubspot',
+            href: dealsWithoutTasks.dealsUrl,
+            title: 'Abrir a página de deals no HubSpot',
+          }}
         />
       </div>
 

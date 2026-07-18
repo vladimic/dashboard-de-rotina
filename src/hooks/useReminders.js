@@ -13,6 +13,7 @@ export function useReminders() {
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setData(EMPTY);
     try {
       const res = await fetch(`/api/reminders?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();

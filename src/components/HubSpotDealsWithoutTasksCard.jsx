@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from './HubSpotCard.module.css';
 
-export default function HubSpotDealsWithoutTasksCard({ groups, total, loading, error, onRefresh, updatedLabel }) {
+export default function HubSpotDealsWithoutTasksCard({ groups, total, loading, error, onRefresh, updatedLabel, extraLink }) {
   const [expanded, setExpanded] = useState({});
   const allExpanded = groups.length > 0 && groups.every((g) => expanded[g.stageLabel]);
 
@@ -24,6 +24,11 @@ export default function HubSpotDealsWithoutTasksCard({ groups, total, loading, e
           HubSpot <span style={{ fontSize: '10px', fontWeight: 500 }}>- Deals sem Tarefa</span>
         </div>
         <div className={styles.headerRight}>
+          {extraLink && (
+            <a href={extraLink.href} className={styles.extraLink} title={extraLink.title}>
+              {extraLink.label}
+            </a>
+          )}
           {groups.length > 0 && (
             <div
               className={styles.groupToggleIcon}

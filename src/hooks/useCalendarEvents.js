@@ -12,6 +12,7 @@ export function useCalendarEvents() {
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setData(EMPTY);
     try {
       const res = await fetch(`/api/calendar-events?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();

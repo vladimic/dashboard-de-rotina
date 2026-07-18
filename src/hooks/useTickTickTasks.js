@@ -13,6 +13,7 @@ export function useTickTickTasks() {
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setData(EMPTY);
     try {
       const res = await fetch(`/api/ticktick-tasks?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();

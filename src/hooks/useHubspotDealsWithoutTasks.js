@@ -12,6 +12,7 @@ export function useHubspotDealsWithoutTasks() {
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setData(EMPTY);
     try {
       const res = await fetch(`/api/hubspot-deals-without-tasks?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();

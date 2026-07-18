@@ -29,7 +29,7 @@ function TaskRow({ task }) {
   );
 }
 
-export default function HubSpotCard({ groups, vencidas, hoje, loading, error, onRefresh, updatedLabel }) {
+export default function HubSpotCard({ groups, vencidas, hoje, loading, error, onRefresh, updatedLabel, extraLink }) {
   const [collapsed, setCollapsed] = useState({});
   const total = vencidas + hoje;
   const allCollapsed = groups.length > 0 && groups.every((g) => collapsed[g.stageLabel]);
@@ -59,6 +59,11 @@ export default function HubSpotCard({ groups, vencidas, hoje, loading, error, on
           HubSpot <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
         </div>
         <div className={styles.headerRight}>
+          {extraLink && (
+            <a href={extraLink.href} className={styles.extraLink} title={extraLink.title}>
+              {extraLink.label}
+            </a>
+          )}
           {groups.length > 0 && (
             <div
               className={styles.groupToggleIcon}
