@@ -11,6 +11,10 @@ const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
 const STATUS_PROPERTY = 'Status';
 const PROJECT_PROPERTY = '[A] Projetos';
+// Sub-items often don't carry the project relation directly — it's set on
+// the parent task instead. "item principal" is Notion's own Portuguese
+// label for its built-in "Parent item" sub-task property.
+const PARENT_ITEM_PROPERTY = 'item principal';
 // Prefixes, not full words — matches "concluído"/"concluída"/"concluídos"
 // and "cancelado"/"cancelada"/etc. regardless of grammatical gender/plural.
 const EXCLUDED_STATUS_PREFIXES = ['conclu', 'cancel'];
@@ -110,6 +114,16 @@ function findProjectProperty(properties) {
   return findProperty(properties, PROJECT_PROPERTY, 'projeto');
 }
 
+function findParentItemProperty(properties) {
+  return findProperty(properties, PARENT_ITEM_PROPERTY, 'principal');
+}
+
+function hasProjectValue(prop) {
+  if (!prop) return false;
+  if (prop.type === 'relation') return (prop.relation || []).length > 0;
+  return true;
+}
+
 // Walks a property (including nested inside a rollup array) collecting every
 // related page id so their titles can be fetched in one batch up front.
 function collectRelationIds(prop, ids) {
@@ -121,21 +135,18 @@ function collectRelationIds(prop, ids) {
   }
 }
 
-async function fetchPageTitle(pageId, token) {
+async function fetchPage(pageId, token) {
   const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
     headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
   });
   if (!res.ok) return null;
-  const page = await res.json();
+  return res.json();
+}
+
+function pageTitle(page) {
   const titleProp = Object.values(page.properties || {}).find((p) => p?.type === 'title');
   const arr = titleProp?.title || [];
   return arr.map((t) => t.plain_text).join('') || null;
-}
-
-function taskLabel(page, relationTitles) {
-  const title = taskTitle(page);
-  const project = propertyText(findProjectProperty(page.properties || {}), relationTitles);
-  return project ? `${title} :: [${project}]` : title;
 }
 
 export default async function handler(req, res) {
@@ -193,23 +204,53 @@ export default async function handler(req, res) {
 
     const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
+    // Sub-items usually don't carry the project relation on their own row —
+    // it's set on the parent task ("item principal") instead. For any task
+    // whose own project relation is empty, fetch its parent page so its
+    // project relation can be used instead.
+    const parentIdByTaskId = new Map();
+    for (const page of openPages) {
+      if (!hasProjectValue(findProjectProperty(page.properties || {}))) {
+        const parentId = findParentItemProperty(page.properties || {})?.relation?.[0]?.id;
+        if (parentId) parentIdByTaskId.set(page.id, parentId);
+      }
+    }
+    const parentPages = new Map();
+    await Promise.all(
+      [...new Set(parentIdByTaskId.values())].map(async (id) => {
+        const page = await fetchPage(id, token);
+        if (page) parentPages.set(id, page);
+      })
+    );
+
+    function projectPropertyFor(page) {
+      const own = findProjectProperty(page.properties || {});
+      if (hasProjectValue(own)) return own;
+      const parent = parentPages.get(parentIdByTaskId.get(page.id));
+      return parent ? findProjectProperty(parent.properties || {}) : null;
+    }
+
     const relationIds = new Set();
-    for (const page of openPages) collectRelationIds(findProjectProperty(page.properties || {}), relationIds);
+    for (const page of openPages) collectRelationIds(projectPropertyFor(page), relationIds);
     const relationTitles = new Map();
     await Promise.all(
       [...relationIds].map(async (id) => {
-        const title = await fetchPageTitle(id, token);
-        if (title) relationTitles.set(id, title);
+        const page = await fetchPage(id, token);
+        if (page) relationTitles.set(id, pageTitle(page));
       })
     );
 
     // notion:// opens the page directly in the Notion app instead of a
     // browser tab.
-    const tasks = openPages.map((page) => ({
-      id: page.id,
-      label: taskLabel(page, relationTitles),
-      link: `notion://www.notion.so/${page.id.replace(/-/g, '')}`,
-    }));
+    const tasks = openPages.map((page) => {
+      const title = taskTitle(page);
+      const project = propertyText(projectPropertyFor(page), relationTitles);
+      return {
+        id: page.id,
+        label: project ? `${title} :: [${project}]` : title,
+        link: `notion://www.notion.so/${page.id.replace(/-/g, '')}`,
+      };
+    });
 
     res.status(200).json({ updatedAt: new Date().toISOString(), tasks });
   } catch (err) {
