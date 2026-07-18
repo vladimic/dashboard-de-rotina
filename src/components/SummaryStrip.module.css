@@ -15,6 +15,10 @@
   padding: 8px;
 }
 
+.progressRow {
+  grid-column: 1 / -1;
+}
+
 .hojeGroup[data-dim='true'] {
   background: rgba(91, 74, 99, 0.05);
   filter: brightness(0.93) saturate(0.85);

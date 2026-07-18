@@ -12,7 +12,6 @@ import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeG
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
-import DayProgressBar from './components/DayProgressBar';
 import HojeView from './views/HojeView';
 import SaudeView from './views/SaudeView';
 import BacklogView from './views/BacklogView';
@@ -167,9 +166,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           ticktickTotal: ticktick.total,
           notionTotal: notion.total,
         }}
+        dayProgress={{ percent: dayProgressPercent, done: dayProgressDone, total: dayProgressBaseline }}
       />
-
-      <DayProgressBar percent={dayProgressPercent} done={dayProgressDone} total={dayProgressBaseline} />
 
       {state.page === 'hoje' && (
         <HojeView

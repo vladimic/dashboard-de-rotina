@@ -3,9 +3,8 @@
   align-items: center;
   gap: 14px;
   background: #5b4a63;
-  border-radius: 16px;
-  padding: 10px 16px;
-  margin-bottom: 15px;
+  border-radius: 12px;
+  padding: 7px 9px;
 }
 
 .label {

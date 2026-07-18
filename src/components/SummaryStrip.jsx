@@ -1,3 +1,4 @@
+import DayProgressBar from './DayProgressBar';
 import styles from './SummaryStrip.module.css';
 
 function StatCard({ title, value, suffix, className }) {
@@ -12,7 +13,7 @@ function StatCard({ title, value, suffix, className }) {
   );
 }
 
-export default function SummaryStrip({ page, counts, habits, water, waterTarget, sleepHours, weight, lists }) {
+export default function SummaryStrip({ page, counts, habits, water, waterTarget, sleepHours, weight, lists, dayProgress }) {
   const isHoje = page === 'hoje';
   const isSaude = page === 'saude';
 
@@ -33,6 +34,9 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
         <StatCard title="HubSpot Deals" value={lists.hubspotDealsTotal} className={styles.hojeCard} />
         <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} />
         <StatCard title="Notion" value={lists.notionTotal} className={styles.hojeCard} />
+        <div className={styles.progressRow}>
+          <DayProgressBar percent={dayProgress.percent} done={dayProgress.done} total={dayProgress.total} />
+        </div>
       </div>
 
       <div className={styles.saudeGroup} data-dim={isHoje}>
