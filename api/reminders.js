@@ -73,11 +73,16 @@ export default async function handler(req, res) {
     hojeSemHorario.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
     hojeComHorario.sort((a, b) => a.dueMs - b.dueMs);
 
+    const now = Date.now();
     const groups = [
-      { projectLabel: 'Vencidos', tasks: vencidas.map((r) => ({ id: r.id, label: r.title })) },
+      { projectLabel: 'Vencidos', tasks: vencidas.map((r) => ({ id: r.id, label: r.title, overdue: true })) },
       {
         projectLabel: 'Hoje Programado',
-        tasks: hojeComHorario.map((r) => ({ id: r.id, label: `${r.timeLabel} · ${r.title}` })),
+        tasks: hojeComHorario.map((r) => ({
+          id: r.id,
+          label: `${r.timeLabel} · ${r.title}`,
+          overdue: r.dueMs < now,
+        })),
       },
       { projectLabel: 'Hoje Sem Horário', tasks: hojeSemHorario.map((r) => ({ id: r.id, label: r.title })) },
     ].filter((g) => g.tasks.length > 0);

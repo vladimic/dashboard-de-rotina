@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import styles from './HubSpotCard.module.css';
 
+const OVERDUE_COLOR = '#b5546b';
+
 function TaskRow({ task }) {
+  const textStyle = task.overdue ? { color: OVERDUE_COLOR } : undefined;
   return (
     <div className={styles.row}>
       <div className={styles.dot} />
       {task.link ? (
         <a href={task.link} className={styles.label}>
-          <div className={styles.dealName}>{task.label}</div>
+          <div className={styles.dealName} style={textStyle}>{task.label}</div>
         </a>
       ) : (
         <div className={styles.label}>
-          <div className={styles.dealName}>{task.label}</div>
+          <div className={styles.dealName} style={textStyle}>{task.label}</div>
         </div>
       )}
     </div>

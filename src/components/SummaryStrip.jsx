@@ -24,15 +24,15 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
         <StatCard title="Meu Dia" value={counts.meuDiaCount} className={styles.hojeCard} />
         <StatCard title="Starting Day" value={counts.manhaPend} suffix={`/${counts.manhaTotal}`} className={styles.hojeCard} />
         <StatCard title="Ending Day" value={counts.noitePendSummary} suffix={`/${counts.noiteTotalSummary}`} className={styles.hojeCard} />
-        <StatCard title="HubSpot" value={counts.hubspotTotal} className={styles.hojeCard} />
+        <StatCard title="Lembretes" value={lists.lembretesTotal} className={styles.hojeCard} />
         <div className={styles.geralCard}>
           <div className={styles.geralTitle}>Geral</div>
           <div className={styles.geralValue}>{counts.geralTotal}</div>
         </div>
-        <StatCard title="Vencidas · Lembretes" value={lists.lembretesVencidas.length} className={styles.hojeCard} />
-        <StatCard title="Hoje · Lembretes" value={lists.lembretesHoje.length} className={styles.hojeCard} />
-        <StatCard title="TickTick · Hoje" value={lists.ticktickHoje.length} className={styles.hojeCard} />
-        <StatCard title="Notion · Hoje" value={lists.notionHoje.length} className={styles.hojeCard} />
+        <StatCard title="HubSpot Tasks" value={lists.hubspotTasksTotal} className={styles.hojeCard} />
+        <StatCard title="HubSpot Deals" value={lists.hubspotDealsTotal} className={styles.hojeCard} />
+        <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} />
+        <StatCard title="Notion" value={lists.notionTotal} className={styles.hojeCard} />
       </div>
 
       <div className={styles.saudeGroup} data-dim={isHoje}>

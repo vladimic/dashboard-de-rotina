@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useDashboardState } from './state/useDashboardState';
 import { useConfirm } from './components/ConfirmContext';
 import { useHubspotTasks } from './hooks/useHubspotTasks';
@@ -9,7 +9,7 @@ import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useAppBadge } from './hooks/useAppBadge';
 import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeGoals } from './utils/derived';
-import { formatTodayLong, formatClock } from './utils/format';
+import { formatTodayLong, formatClock, syncRemindersShortcutUrl } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
 import HojeView from './views/HojeView';
@@ -33,9 +33,17 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const ticktick = useTickTickTasks();
   const confirm = useConfirm();
 
-  // Catches the moment the "Sincronizar" round-trip to the Atalhos app
-  // returns here (via x-callback-url) and pulls in whatever it just synced.
+  // Fires the Atalho, re-fetches the cache it just filled, and polls a few
+  // more times afterward since coming back to this tab doesn't reliably
+  // trigger a visibilitychange event on every OS/browser combo.
   const refreshReminders = reminders.refresh;
+  const syncReminders = useCallback(() => {
+    refreshReminders();
+    window.location.href = syncRemindersShortcutUrl();
+    [3000, 6000, 10000, 15000].forEach((delay) => setTimeout(refreshReminders, delay));
+  }, [refreshReminders]);
+
+  // Also catches the moment the round-trip to the Atalhos app returns here.
   useEffect(() => {
     function onVisible() {
       if (document.visibilityState === 'visible') refreshReminders();
@@ -43,6 +51,14 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [refreshReminders]);
+
+  // Force a sync as soon as the dashboard opens, not just on manual clicks.
+  const syncedOnLoadRef = useRef(false);
+  useEffect(() => {
+    if (syncedOnLoadRef.current) return;
+    syncedOnLoadRef.current = true;
+    syncReminders();
+  }, [syncReminders]);
 
   // First load of the day only — ask before wiping Starting Day/Ending Day.
   // Saying no leaves them exactly as-is until tomorrow's prompt.
@@ -111,10 +127,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         sleepHours={state.sleepHours}
         weight={state.weight}
         lists={{
-          lembretesVencidas: reminders.groups.find((g) => g.projectLabel === 'Vencidos')?.tasks || [],
-          lembretesHoje: reminders.groups.filter((g) => g.projectLabel !== 'Vencidos').flatMap((g) => g.tasks),
-          ticktickHoje: ticktick.groups.flatMap((g) => g.tasks),
-          notionHoje: notion.groups.flatMap((g) => g.tasks),
+          lembretesTotal: reminders.total,
+          hubspotTasksTotal: hubspot.vencidas + hubspot.hoje,
+          hubspotDealsTotal: dealsWithoutTasks.total,
+          ticktickTotal: ticktick.total,
+          notionTotal: notion.total,
         }}
       />
 
@@ -128,6 +145,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           dealsWithoutTasks={dealsWithoutTasks}
           calendar={calendar}
           reminders={reminders}
+          onSyncReminders={syncReminders}
           notion={notion}
           ticktick={ticktick}
         />
