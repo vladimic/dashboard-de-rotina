@@ -109,6 +109,33 @@
   text-overflow: ellipsis;
 }
 
+.geralBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.geralRing {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.geralRingInner {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: #5b4a63;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 8px Inter, sans-serif;
+  color: #fff;
+}
+
 .geralValue {
   /* Deliberately its own size, bigger than the shared --fs-kpi-value used by
      every other summary card — this is the one number meant to dominate. */

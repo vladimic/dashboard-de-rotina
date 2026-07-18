@@ -28,7 +28,17 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
         <StatCard title="Lembretes" value={lists.lembretesTotal} className={styles.hojeCard} />
         <div className={styles.geralCard}>
           <div className={styles.geralTitle}>Geral</div>
-          <div className={styles.geralValue}>{counts.geralTotal}</div>
+          <div className={styles.geralBottom}>
+            <div
+              className={styles.geralRing}
+              style={{
+                background: `conic-gradient(#8fd9b6 ${dayProgress.percent * 3.6}deg, rgba(255,255,255,0.18) 0deg)`,
+              }}
+            >
+              <div className={styles.geralRingInner}>{dayProgress.percent}%</div>
+            </div>
+            <div className={styles.geralValue}>{counts.geralTotal}</div>
+          </div>
         </div>
         <StatCard title="HubSpot Tasks" value={lists.hubspotTasksTotal} className={styles.hojeCard} />
         <StatCard title="HubSpot Deals" value={lists.hubspotDealsTotal} className={styles.hojeCard} />
