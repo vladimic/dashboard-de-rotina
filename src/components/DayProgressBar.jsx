@@ -5,13 +5,11 @@ export default function DayProgressBar({ percent, done, total }) {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.inner}>
-        <span className={styles.label}>Progresso do dia</span>
-        <div className={styles.track}>
-          {hasBaseline && <div className={styles.fill} style={{ width: `${percent}%` }} />}
-        </div>
-        <span className={styles.pct}>{hasBaseline ? `${percent}% · ${done}/${total}` : 'calculando...'}</span>
+      <span className={styles.label}>Progresso do dia</span>
+      <div className={styles.track}>
+        {hasBaseline && <div className={styles.fill} style={{ width: `${percent}%` }} />}
       </div>
+      <span className={styles.pct}>{hasBaseline ? `${percent}% · ${done}/${total}` : 'calculando...'}</span>
     </div>
   );
 }
