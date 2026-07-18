@@ -151,7 +151,7 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           updatedLabel={formatClock(state.ticktickUpdated)}
         />
         <TaskListCard
-          title="Hoje · Notion"
+          title="Notion - Tarefas Vencidas ou de Hoje"
           titleColor="#8a7a2f"
           itemColor="#8a7a2f"
           tasks={notion.tasks}

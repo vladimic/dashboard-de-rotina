@@ -25,7 +25,19 @@ export default function TaskListCard({ title, titleColor, itemColor, tasks, onRe
         <div key={task.id} className={styles.row}>
           <div className={styles.dot} />
           {task.link ? (
-            <a href={task.link} target="_blank" rel="noreferrer" className={styles.label} style={{ color: itemColor }}>
+            <a
+              href={task.link}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.label}
+              style={{ color: itemColor }}
+              onClick={(e) => {
+                // Opens in a new tab without stealing focus from the dashboard.
+                e.preventDefault();
+                window.open(task.link, '_blank', 'noopener,noreferrer');
+                window.focus();
+              }}
+            >
               {task.label}
             </a>
           ) : (
