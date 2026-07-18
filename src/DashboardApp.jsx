@@ -48,11 +48,10 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   }, [status, state.lastResetDate, confirm, dispatch]);
 
   const agenda = computeAgenda(state, calendar);
-  const remindersTotal = reminders.vencidas.length + reminders.hojeSemHorario.length + reminders.hojeComHorario.length;
   const counts = computeCounts(
     state,
     hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total,
-    remindersTotal,
+    reminders.total,
     notion.total,
     ticktick.total
   );
@@ -101,8 +100,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         sleepHours={state.sleepHours}
         weight={state.weight}
         lists={{
-          lembretesVencidas: reminders.vencidas,
-          lembretesHoje: [...reminders.hojeSemHorario, ...reminders.hojeComHorario],
+          lembretesVencidas: reminders.groups.find((g) => g.projectLabel === 'Vencidos')?.tasks || [],
+          lembretesHoje: reminders.groups.filter((g) => g.projectLabel !== 'Vencidos').flatMap((g) => g.tasks),
           ticktickHoje: ticktick.groups.flatMap((g) => g.tasks),
           notionHoje: notion.groups.flatMap((g) => g.tasks),
         }}

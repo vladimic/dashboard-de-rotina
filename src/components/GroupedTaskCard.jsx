@@ -5,9 +5,15 @@ function TaskRow({ task }) {
   return (
     <div className={styles.row}>
       <div className={styles.dot} />
-      <a href={task.link} className={styles.label}>
-        <div className={styles.dealName}>{task.label}</div>
-      </a>
+      {task.link ? (
+        <a href={task.link} className={styles.label}>
+          <div className={styles.dealName}>{task.label}</div>
+        </a>
+      ) : (
+        <div className={styles.label}>
+          <div className={styles.dealName}>{task.label}</div>
+        </div>
+      )}
     </div>
   );
 }

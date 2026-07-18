@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const EMPTY = { vencidas: [], hojeSemHorario: [], hojeComHorario: [], updatedAt: null };
+const EMPTY = { groups: [], total: 0, updatedAt: null };
 
 // Fetches Apple Reminders (overdue / due-today) from the /api/reminders
 // serverless function, which authenticates to iCloud's CalDAV server. The

@@ -5,9 +5,7 @@ import MeuDiaCard from '../components/MeuDiaCard';
 import ChecklistCard from '../components/ChecklistCard';
 import HubSpotCard from '../components/HubSpotCard';
 import HubSpotDealsWithoutTasksCard from '../components/HubSpotDealsWithoutTasksCard';
-import TaskListCard from '../components/TaskListCard';
 import GroupedTaskCard from '../components/GroupedTaskCard';
-import RemindersHojeCard from '../components/RemindersHojeCard';
 import {
   formatClock,
   FANTASTICAL_APP_URL,
@@ -149,11 +147,13 @@ export default function HojeView({
       </div>
 
       <div className={styles.col}>
-        <TaskListCard
-          title="Vencidas · Lembretes"
-          titleColor="#6b3f4a"
-          itemColor="#5b4a63"
-          tasks={reminders.vencidas.map((r) => ({ id: r.id, label: r.title }))}
+        <GroupedTaskCard
+          appName="Lembretes"
+          appNameColor="#6b3f4a"
+          groups={reminders.groups}
+          total={reminders.total}
+          loading={reminders.loading}
+          error={reminders.error}
           onRefresh={reminders.refresh}
           updatedLabel={reminders.updatedAt ? formatClock(reminders.updatedAt) : '—'}
           extraLink={{
@@ -161,14 +161,6 @@ export default function HojeView({
             href: SYNC_REMINDERS_SHORTCUT_URL,
             title: 'Rodar o Atalho que envia os Lembretes atualizados',
           }}
-        />
-        <RemindersHojeCard
-          semHorario={reminders.hojeSemHorario}
-          comHorario={reminders.hojeComHorario}
-          loading={reminders.loading}
-          error={reminders.error}
-          onRefresh={reminders.refresh}
-          updatedLabel={reminders.updatedAt ? formatClock(reminders.updatedAt) : '—'}
         />
         <GroupedTaskCard
           appName="TickTick"

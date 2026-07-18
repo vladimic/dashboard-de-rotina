@@ -73,13 +73,19 @@ export default async function handler(req, res) {
     hojeSemHorario.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
     hojeComHorario.sort((a, b) => a.dueMs - b.dueMs);
 
-    const strip = ({ id, title }) => ({ id, title });
+    const groups = [
+      { projectLabel: 'Vencidos', tasks: vencidas.map((r) => ({ id: r.id, label: r.title })) },
+      {
+        projectLabel: 'Hoje Programado',
+        tasks: hojeComHorario.map((r) => ({ id: r.id, label: `${r.timeLabel} · ${r.title}` })),
+      },
+      { projectLabel: 'Hoje Sem Horário', tasks: hojeSemHorario.map((r) => ({ id: r.id, label: r.title })) },
+    ].filter((g) => g.tasks.length > 0);
 
     res.status(200).json({
       updatedAt: row?.updated_at || null,
-      vencidas: vencidas.map(strip),
-      hojeSemHorario: hojeSemHorario.map(strip),
-      hojeComHorario: hojeComHorario.map(({ id, title, timeLabel }) => ({ id, title, timeLabel })),
+      total: vencidas.length + hojeComHorario.length + hojeSemHorario.length,
+      groups,
     });
   } catch (err) {
     console.error(err);
