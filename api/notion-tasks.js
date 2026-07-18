@@ -187,25 +187,47 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // ?debug=1 — bypasses status filtering and returns each page's raw
-    // property names/types instead of the normal { tasks } shape, so real
+    const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
+
+    // ?debug=1 — bypasses grouping and returns each page's raw property
+    // names/values plus the full parent-item fallback trail, so real
     // property names/values can be inspected without guessing blindly.
     if (req.query?.debug) {
-      const debug = (data.results || []).map((page) => {
-        const properties = page.properties || {};
-        const projectProp = findProjectProperty(properties);
-        return {
-          title: taskTitle(page),
-          propertyNames: Object.keys(properties),
-          statusDetected: { name: STATUS_PROPERTY, value: statusName(page) },
-          projectDetected: projectProp ? { type: projectProp.type, raw: projectProp } : null,
-        };
-      });
+      const debug = await Promise.all(
+        openPages.map(async (page) => {
+          const properties = page.properties || {};
+          const ownProject = findProjectProperty(properties);
+          const parentItemProp = findParentItemProperty(properties);
+          const parentId = parentItemProp?.relation?.[0]?.id || null;
+          let parentTrail = null;
+          if (parentId) {
+            const parentPage = await fetchPage(parentId, token);
+            parentTrail = parentPage
+              ? {
+                  fetched: true,
+                  parentTitle: pageTitle(parentPage),
+                  parentPropertyNames: Object.keys(parentPage.properties || {}),
+                  parentProjectDetected: (() => {
+                    const p = findProjectProperty(parentPage.properties || {});
+                    return p ? { type: p.type, raw: p } : null;
+                  })(),
+                }
+              : { fetched: false, reason: 'fetchPage returned null (404/403/etc.)' };
+          }
+          return {
+            title: taskTitle(page),
+            propertyNames: Object.keys(properties),
+            statusDetected: { name: STATUS_PROPERTY, value: statusName(page) },
+            ownProjectDetected: ownProject ? { type: ownProject.type, raw: ownProject } : null,
+            parentItemPropDetected: parentItemProp ? { type: parentItemProp.type, raw: parentItemProp } : null,
+            parentId,
+            parentTrail,
+          };
+        })
+      );
       res.status(200).json({ debug });
       return;
     }
-
-    const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
     // Sub-items usually don't carry the project relation on their own row —
     // it's set on the parent task ("item principal") instead. For any task
