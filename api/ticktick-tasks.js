@@ -132,7 +132,10 @@ export default async function handler(req, res) {
           label: t.title || '(sem título)',
           // t.projectId (not the loop's project.id) — matches for both
           // regular projects and the special "inbox" pseudo-id.
-          link: `https://ticktick.com/webapp/#p/${t.projectId}/tasks/${t.id}`,
+          // Best-effort app deep link (no official docs for this) — mirrors
+          // the web URL's #p/{projectId}/tasks/{taskId} shape under the
+          // ticktick:// scheme. Falls back to the web URL if it doesn't work.
+          link: `ticktick://p/${t.projectId}/tasks/${t.id}`,
         }));
         groupsByLabel.set(label, tasks);
         total += tasks.length;
