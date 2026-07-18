@@ -86,7 +86,8 @@ export default async function handler(req, res) {
     // slipped through), so the status is re-checked client-side as a guarantee.
     const tasks = (searchData.results || []).filter((t) => t.properties?.hs_task_status !== 'COMPLETED');
 
-    const tasksUrl = `https://app.hubspot.com/tasks/${portalId}/view/all`;
+    // Points at the "Meu Dia" saved view (object type 0-27 = tasks).
+    const tasksUrl = `https://app.hubspot.com/contacts/${portalId}/objects/0-27/views/61258822/list`;
 
     if (tasks.length === 0) {
       res.status(200).json({ updatedAt: new Date().toISOString(), vencidas: 0, hoje: 0, groups: [], tasksUrl });

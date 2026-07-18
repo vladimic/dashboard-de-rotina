@@ -30,7 +30,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  const dealsUrl = `https://app.hubspot.com/contacts/${portalId}/objects/${DEALS_OBJECT_TYPE}/views/all/list`;
+  // Points at the "Sem tarefa" saved view, board layout.
+  const dealsUrl = `https://app.hubspot.com/contacts/${portalId}/objects/${DEALS_OBJECT_TYPE}/views/9882583/board`;
 
   try {
     // 1. All open tasks (any due date). The server-side NEQ filter isn't
