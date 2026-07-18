@@ -10,6 +10,7 @@ const NOTION_VERSION = '2022-06-28';
 const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
 const STATUS_PROPERTY = 'Status';
+const PROJECT_PROPERTY = '[A] Projetos';
 const EXCLUDED_STATUSES = ['concluido', 'cancelado'];
 
 const DIACRITICS_RE = new RegExp('[̀-ͯ]', 'g');
@@ -41,6 +42,40 @@ function taskTitle(page) {
   }
   const arr = prop?.title || prop?.rich_text || [];
   return arr.map((t) => t.plain_text).join('') || '(sem título)';
+}
+
+// Reads the plain-text value of a Notion property regardless of its type —
+// PROJECT_PROPERTY could be a rollup, relation-backed formula, select, etc.
+// depending on how the user's database is set up.
+function propertyText(prop) {
+  if (!prop) return '';
+  switch (prop.type) {
+    case 'title':
+      return (prop.title || []).map((t) => t.plain_text).join('');
+    case 'rich_text':
+      return (prop.rich_text || []).map((t) => t.plain_text).join('');
+    case 'select':
+      return prop.select?.name || '';
+    case 'multi_select':
+      return (prop.multi_select || []).map((s) => s.name).join(', ');
+    case 'formula':
+      return propertyText({ type: prop.formula?.type, [prop.formula?.type]: prop.formula?.[prop.formula?.type] });
+    case 'rollup':
+      if (prop.rollup?.type === 'array') {
+        return prop.rollup.array.map((item) => propertyText(item)).filter(Boolean).join(', ');
+      }
+      if (prop.rollup?.type === 'number') return prop.rollup.number != null ? String(prop.rollup.number) : '';
+      if (prop.rollup?.type === 'date') return prop.rollup.date?.start || '';
+      return '';
+    default:
+      return '';
+  }
+}
+
+function taskLabel(page) {
+  const title = taskTitle(page);
+  const project = propertyText(page.properties?.[PROJECT_PROPERTY]);
+  return project ? `${title} [${project}]` : title;
 }
 
 export default async function handler(req, res) {
@@ -80,7 +115,7 @@ export default async function handler(req, res) {
     const openPages = (data.results || []).filter((page) => !EXCLUDED_STATUSES.includes(normalize(statusName(page))));
     const tasks = openPages.map((page) => ({
       id: page.id,
-      label: taskTitle(page),
+      label: taskLabel(page),
       link: `https://www.notion.so/${page.id.replace(/-/g, '')}`,
     }));
 

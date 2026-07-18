@@ -133,3 +133,13 @@ export function createSeedState() {
 
 // Note color pair (bg / text) — pastel yellow, used for every note.
 export const NOTE_COLORS = [{ bg: '#fdf3d0', tc: '#8a7a2f' }];
+
+// Palette offered in the note color picker.
+export const NOTE_PALETTE = [
+  { bg: '#fdf3d0', tc: '#8a7a2f' }, // amarelo
+  { bg: '#fde3ec', tc: '#9c4f6e' }, // rosa
+  { bg: '#dde9fb', tc: '#3f5f8a' }, // azul
+  { bg: '#e0f3e0', tc: '#3f7a4f' }, // verde
+  { bg: '#ece0fb', tc: '#6a4f9c' }, // roxo
+  { bg: '#fbe7d0', tc: '#9c6a2f' }, // laranja
+];

@@ -91,10 +91,37 @@
   gap: 7px;
 }
 
+.colorBtn {
+  font: 600 11px Inter, sans-serif;
+  cursor: pointer;
+  line-height: 1;
+}
+
 .edit {
   font: 600 11px Inter, sans-serif;
   cursor: pointer;
   line-height: 1;
+}
+
+.colorPicker {
+  position: absolute;
+  top: 26px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 7px;
+  box-shadow: 0 4px 14px rgba(91, 74, 99, 0.22);
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid;
+  cursor: pointer;
 }
 
 .remove {

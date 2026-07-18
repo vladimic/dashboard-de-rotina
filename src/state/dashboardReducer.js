@@ -29,6 +29,12 @@ export function dashboardReducer(state, action) {
         notes: state.notes.map((n) => (n.id === action.id ? { ...n, text: action.value } : n)),
       };
 
+    case 'UPDATE_NOTE_COLOR':
+      return {
+        ...state,
+        notes: state.notes.map((n) => (n.id === action.id ? { ...n, bg: action.bg, tc: action.tc } : n)),
+      };
+
     case 'TOGGLE_LIST_ITEM':
       return {
         ...state,

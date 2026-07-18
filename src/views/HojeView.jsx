@@ -7,7 +7,7 @@ import HubSpotCard from '../components/HubSpotCard';
 import HubSpotDealsWithoutTasksCard from '../components/HubSpotDealsWithoutTasksCard';
 import TaskListCard from '../components/TaskListCard';
 import RemindersHojeCard from '../components/RemindersHojeCard';
-import { formatClock, FANTASTICAL_APP_URL, SYNC_REMINDERS_SHORTCUT_URL } from '../utils/format';
+import { formatClock, FANTASTICAL_APP_URL, SYNC_REMINDERS_SHORTCUT_URL, NOTION_WEEKLY_APP_URL } from '../utils/format';
 import styles from './HojeView.module.css';
 
 function useChecklistHandlers(dispatch, listKey, editKey, openKey, newTextKey, newLinkKey, confirm) {
@@ -72,6 +72,7 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
             dispatch({ type: 'REMOVE_NOTE', id });
           }}
           onUpdateNoteText={(id, value) => dispatch({ type: 'UPDATE_NOTE_TEXT', id, value })}
+          onUpdateNoteColor={(id, bg, tc) => dispatch({ type: 'UPDATE_NOTE_COLOR', id, bg, tc })}
           onRefresh={onRefreshMeuDia}
           onDragStart={(id) => dispatch({ type: 'DRAG_START', listKey: 'notes', id })}
           onDrop={(targetId) => dispatch({ type: 'DROP_ON', listKey: 'notes', targetId })}
@@ -157,6 +158,12 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           tasks={notion.tasks}
           onRefresh={notion.refresh}
           updatedLabel={notion.updatedAt ? formatClock(notion.updatedAt) : '—'}
+          collapsible
+          extraLink={{
+            label: 'Abrir no Notion',
+            href: NOTION_WEEKLY_APP_URL,
+            title: 'Abrir a visão semanal "Todas as Atividades" no app do Notion',
+          }}
         />
       </div>
     </div>
