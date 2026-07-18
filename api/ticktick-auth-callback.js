@@ -25,8 +25,14 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!clientId || !clientSecret || !supabaseUrl || !serviceRoleKey) {
-    res.status(500).send('Servidor incompleto: falta TICKTICK_CLIENT_ID/SECRET ou as variáveis do Supabase.');
+  const missing = [
+    !clientId && 'TICKTICK_CLIENT_ID',
+    !clientSecret && 'TICKTICK_CLIENT_SECRET',
+    !supabaseUrl && 'VITE_SUPABASE_URL',
+    !serviceRoleKey && 'SUPABASE_SERVICE_ROLE_KEY',
+  ].filter(Boolean);
+  if (missing.length > 0) {
+    res.status(500).send(`Servidor incompleto: faltam estas variáveis de ambiente: ${missing.join(', ')}.`);
     return;
   }
 
