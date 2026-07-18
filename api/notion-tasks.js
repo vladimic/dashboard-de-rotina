@@ -206,25 +206,33 @@ export default async function handler(req, res) {
 
     const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
 
-    // ?debug=1 — bypasses grouping and returns each page's raw + hydrated
-    // project property, so real property names/values can be inspected
-    // without guessing blindly.
+    // ?debug=1 — instead of guessing again, makes the actual "retrieve page
+    // property item" call for the first task and reports back its raw HTTP
+    // status/body verbatim (the hydration code silently swallowed this on
+    // any non-ok response, which is exactly the kind of thing that produces
+    // "still empty, no idea why").
     if (req.query?.debug) {
-      const debug = await Promise.all(
-        openPages.map(async (page) => {
-          const properties = page.properties || {};
-          const ownProject = findProjectProperty(properties);
-          const hydrated = await hydratedProjectProperty(page, token);
-          return {
-            title: taskTitle(page),
-            propertyNames: Object.keys(properties),
-            statusDetected: { name: STATUS_PROPERTY, value: statusName(page) },
-            ownProjectDetected: ownProject ? { type: ownProject.type, raw: ownProject } : null,
-            hydratedProjectProperty: hydrated,
-          };
-        })
-      );
-      res.status(200).json({ debug });
+      const firstPage = openPages[0];
+      if (!firstPage) {
+        res.status(200).json({ debug: 'no open pages to test' });
+        return;
+      }
+      const prop = findProjectProperty(firstPage.properties || {});
+      let rawFetch = null;
+      if (prop?.type === 'relation') {
+        const url = `https://api.notion.com/v1/pages/${firstPage.id}/properties/${prop.id}`;
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION } });
+        const bodyText = await r.text();
+        rawFetch = { url, status: r.status, ok: r.ok, body: bodyText.slice(0, 2000) };
+      }
+      res.status(200).json({
+        debug: {
+          title: taskTitle(firstPage),
+          pageId: firstPage.id,
+          projectPropertyRaw: prop,
+          propertyItemFetch: rawFetch,
+        },
+      });
       return;
     }
 
