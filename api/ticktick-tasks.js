@@ -66,24 +66,41 @@ export default async function handler(req, res) {
     }
     const projects = await projectsRes.json();
 
-    // ?debug=1[&project=<name substring>] — dumps the raw project list, and
-    // (when &project= is given) that project's raw task data verbatim, so
-    // real field names/values (dueDate, isAllDay, status, recurrence, etc.)
-    // can be inspected without guessing.
+    // ?debug=1[&project=<name substring>][&task=<title substring>] — dumps
+    // the raw project list, and (when &project= is given) runs the exact
+    // same filter used in production against that project's full task list,
+    // reporting how many pass the status filter vs the due-date filter vs
+    // both — plus the raw JSON of any task matching &task= regardless of
+    // whether it passed the filters, so real field values can be inspected
+    // directly instead of guessing why something was excluded.
     if (req.query?.debug) {
       const projectFilter = (req.query.project || '').toLowerCase();
+      const taskFilter = (req.query.task || '').toLowerCase();
       const debug = { todayStr, endOfDayMs, projects: (projects || []).map((p) => ({ id: p.id, name: p.name })) };
       if (projectFilter) {
         const match = (projects || []).find((p) => (p.name || '').toLowerCase().includes(projectFilter));
-        if (match) {
+        if (!match) {
+          debug.matchedProject = null;
+        } else {
           const dataRes = await fetch(`${API_BASE}/project/${match.id}/data`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
-          const bodyText = await dataRes.text();
           debug.matchedProject = { id: match.id, name: match.name };
-          debug.projectDataFetch = { status: dataRes.status, ok: dataRes.ok, body: bodyText.slice(0, 4000) };
-        } else {
-          debug.matchedProject = null;
+          if (!dataRes.ok) {
+            debug.projectDataFetch = { status: dataRes.status, ok: false, body: (await dataRes.text()).slice(0, 1000) };
+          } else {
+            const projectData = await dataRes.json();
+            const allTasks = projectData.tasks || [];
+            debug.totalTasksInProject = allTasks.length;
+            debug.tasksPassingStatusFilter = allTasks.filter((t) => t.status === 0).length;
+            debug.tasksPassingDueFilter = allTasks.filter((t) => isDueTodayOrEarlier(t, todayStr, endOfDayMs)).length;
+            debug.tasksPassingBoth = allTasks.filter(
+              (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr, endOfDayMs)
+            ).length;
+            if (taskFilter) {
+              debug.matchingTasksRaw = allTasks.filter((t) => (t.title || '').toLowerCase().includes(taskFilter));
+            }
+          }
         }
       }
       res.status(200).json({ debug });
