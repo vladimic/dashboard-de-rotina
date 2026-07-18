@@ -118,21 +118,21 @@
 
 .geralRing {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   flex: none;
 }
 
 .geralRingInner {
   position: absolute;
-  inset: 3px;
+  inset: 4px;
   border-radius: 50%;
   background: #5b4a63;
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 700 8px Inter, sans-serif;
+  font: 700 11px Inter, sans-serif;
   color: #fff;
 }
 
