@@ -156,6 +156,10 @@ export default function HojeView({
           onRefresh={() => {
             reminders.refresh();
             window.location.href = syncRemindersShortcutUrl();
+            // Coming back to this tab doesn't reliably fire a visibilitychange
+            // event on every OS/browser combo, so also poll a few times to
+            // catch the Atalho's update without needing a manual reload.
+            [3000, 6000, 10000, 15000].forEach((delay) => setTimeout(() => reminders.refresh(), delay));
           }}
           updatedLabel={reminders.updatedAt ? formatClock(reminders.updatedAt) : '—'}
           extraLink={{
