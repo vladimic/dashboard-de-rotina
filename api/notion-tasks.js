@@ -45,9 +45,11 @@ function taskTitle(page) {
 }
 
 // Reads the plain-text value of a Notion property regardless of its type —
-// PROJECT_PROPERTY could be a rollup, relation-backed formula, select, etc.
-// depending on how the user's database is set up.
-function propertyText(prop) {
+// PROJECT_PROPERTY could be a rollup, relation, select, etc. depending on how
+// the user's database is set up. "relation" properties only carry related
+// page ids, not their titles — those are resolved separately via
+// relationTitles (see collectRelationIds / fetchPageTitle below).
+function propertyText(prop, relationTitles) {
   if (!prop) return '';
   switch (prop.type) {
     case 'title':
@@ -58,11 +60,19 @@ function propertyText(prop) {
       return prop.select?.name || '';
     case 'multi_select':
       return (prop.multi_select || []).map((s) => s.name).join(', ');
+    case 'relation':
+      return (prop.relation || [])
+        .map((r) => relationTitles.get(r.id))
+        .filter(Boolean)
+        .join(', ');
     case 'formula':
-      return propertyText({ type: prop.formula?.type, [prop.formula?.type]: prop.formula?.[prop.formula?.type] });
+      return propertyText(
+        { type: prop.formula?.type, [prop.formula?.type]: prop.formula?.[prop.formula?.type] },
+        relationTitles
+      );
     case 'rollup':
       if (prop.rollup?.type === 'array') {
-        return prop.rollup.array.map((item) => propertyText(item)).filter(Boolean).join(', ');
+        return prop.rollup.array.map((item) => propertyText(item, relationTitles)).filter(Boolean).join(', ');
       }
       if (prop.rollup?.type === 'number') return prop.rollup.number != null ? String(prop.rollup.number) : '';
       if (prop.rollup?.type === 'date') return prop.rollup.date?.start || '';
@@ -72,10 +82,32 @@ function propertyText(prop) {
   }
 }
 
-function taskLabel(page) {
+// Walks a property (including nested inside a rollup array) collecting every
+// related page id so their titles can be fetched in one batch up front.
+function collectRelationIds(prop, ids) {
+  if (!prop) return;
+  if (prop.type === 'relation') {
+    for (const r of prop.relation || []) ids.add(r.id);
+  } else if (prop.type === 'rollup' && prop.rollup?.type === 'array') {
+    for (const item of prop.rollup.array) collectRelationIds(item, ids);
+  }
+}
+
+async function fetchPageTitle(pageId, token) {
+  const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+    headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
+  });
+  if (!res.ok) return null;
+  const page = await res.json();
+  const titleProp = Object.values(page.properties || {}).find((p) => p?.type === 'title');
+  const arr = titleProp?.title || [];
+  return arr.map((t) => t.plain_text).join('') || null;
+}
+
+function taskLabel(page, relationTitles) {
   const title = taskTitle(page);
-  const project = propertyText(page.properties?.[PROJECT_PROPERTY]);
-  return project ? `${title} [${project}]` : title;
+  const project = propertyText(page.properties?.[PROJECT_PROPERTY], relationTitles);
+  return project ? `${title} :: [${project}]` : title;
 }
 
 export default async function handler(req, res) {
@@ -113,9 +145,20 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const openPages = (data.results || []).filter((page) => !EXCLUDED_STATUSES.includes(normalize(statusName(page))));
+
+    const relationIds = new Set();
+    for (const page of openPages) collectRelationIds(page.properties?.[PROJECT_PROPERTY], relationIds);
+    const relationTitles = new Map();
+    await Promise.all(
+      [...relationIds].map(async (id) => {
+        const title = await fetchPageTitle(id, token);
+        if (title) relationTitles.set(id, title);
+      })
+    );
+
     const tasks = openPages.map((page) => ({
       id: page.id,
-      label: taskLabel(page),
+      label: taskLabel(page, relationTitles),
       link: `https://www.notion.so/${page.id.replace(/-/g, '')}`,
     }));
 

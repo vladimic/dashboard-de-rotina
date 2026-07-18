@@ -28,9 +28,10 @@ export const FANTASTICAL_APP_URL = 'x-fantastical3://';
 export const SYNC_REMINDERS_SHORTCUT_URL = 'shortcuts://run-shortcut?name=Sincronizar%20Lembretes';
 
 // Notion desktop/mobile app registers this URL scheme; substituting it in
-// for https://www.notion.so opens the same page directly in the app instead
-// of the browser. "Todas as Atividades" weekly view page.
-export const NOTION_WEEKLY_APP_URL = 'notion://www.notion.so/Todas-as-Atividades-30a05418964481c7a8ecd45e4dad4ebc';
+// for https://app.notion.com opens the same page directly in the app instead
+// of the browser — positioned on the "Hoje" view of "Todas as Atividades".
+export const NOTION_WEEKLY_APP_URL =
+  'notion://www.notion.so/Todas-as-Atividades-30a05418964481c7a8ecd45e4dad4ebc?source=copy_link';
 
 export function hourFloatInAgendaTZ(date) {
   const parts = new Intl.DateTimeFormat('en-US', {

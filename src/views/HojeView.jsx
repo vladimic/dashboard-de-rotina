@@ -152,7 +152,11 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           updatedLabel={formatClock(state.ticktickUpdated)}
         />
         <TaskListCard
-          title="Notion - Tarefas Vencidas ou de Hoje"
+          title={
+            <>
+              Notion <span style={{ fontSize: '10px', fontWeight: 500 }}>- Tarefas Vencidas ou de Hoje</span>
+            </>
+          }
           titleColor="#8a7a2f"
           itemColor="#8a7a2f"
           tasks={notion.tasks}
@@ -160,7 +164,7 @@ export default function HojeView({ state, dispatch, agenda, counts, onRefreshMeu
           updatedLabel={notion.updatedAt ? formatClock(notion.updatedAt) : '—'}
           collapsible
           extraLink={{
-            label: 'Abrir no Notion',
+            label: 'Notion',
             href: NOTION_WEEKLY_APP_URL,
             title: 'Abrir a visão semanal "Todas as Atividades" no app do Notion',
           }}
