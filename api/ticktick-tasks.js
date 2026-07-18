@@ -77,6 +77,17 @@ export default async function handler(req, res) {
       const projectFilter = (req.query.project || '').toLowerCase();
       const taskFilter = (req.query.task || '').toLowerCase();
       const debug = { todayStr, endOfDayMs, projects: (projects || []).map((p) => ({ id: p.id, name: p.name })) };
+
+      // "Caixa de Entrada" (Inbox) is a special system list that GET
+      // /open/v1/project doesn't include — it's not in the list above at
+      // all. TickTick's own apps reference it via the literal id "inbox";
+      // testing whether that also works through the public Open API.
+      const inboxRes = await fetch(`${API_BASE}/project/inbox/data`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const inboxBodyText = await inboxRes.text();
+      debug.inboxProbe = { status: inboxRes.status, ok: inboxRes.ok, body: inboxBodyText.slice(0, 2000) };
+
       if (projectFilter) {
         const match = (projects || []).find((p) => (p.name || '').toLowerCase().includes(projectFilter));
         if (!match) {
