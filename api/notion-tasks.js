@@ -227,6 +227,23 @@ export default async function handler(req, res) {
         const bodyText = await r.text();
         rawFetch = { url, status: r.status, ok: r.ok, body: bodyText.slice(0, 2000) };
       }
+
+      // Both the query endpoint AND the dedicated "retrieve page property
+      // item" endpoint agreeing on "empty" (previous debug round) is only
+      // possible if the property itself is configured in a way that makes it
+      // genuinely empty from the API's perspective — e.g. a dual-property
+      // (synced) relation where the API only reliably serves it from the
+      // *other* database. The database schema spells out exactly how "[A]
+      // Projetos" is configured, which explains it definitively instead of
+      // guessing again.
+      const schemaRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}`, {
+        headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
+      });
+      const schemaData = schemaRes.ok ? await schemaRes.json() : null;
+      const schemaProp = schemaData
+        ? Object.entries(schemaData.properties || {}).find(([, v]) => v.id === prop?.id)
+        : null;
+
       res.status(200).json({
         debug: {
           title: taskTitle(targetPage),
@@ -234,6 +251,7 @@ export default async function handler(req, res) {
           allPropertyNames: Object.keys(targetPage.properties || {}),
           projectPropertyRaw: prop,
           propertyItemFetch: rawFetch,
+          projectPropertySchema: schemaProp ? { name: schemaProp[0], definition: schemaProp[1] } : null,
         },
       });
       return;
