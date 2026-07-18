@@ -60,7 +60,7 @@ export default function HubSpotCard({ groups, vencidas, hoje, loading, error, on
         </div>
         <div className={styles.headerRight}>
           {extraLink && (
-            <a href={extraLink.href} className={styles.extraLink} title={extraLink.title}>
+            <a href={extraLink.href} target="_blank" rel="noreferrer" className={styles.extraLink} title={extraLink.title}>
               {extraLink.label}
             </a>
           )}

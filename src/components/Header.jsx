@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { APP_VERSION } from '../version';
 import styles from './Header.module.css';
 
@@ -9,13 +8,6 @@ const TABS = [
 ];
 
 export default function Header({ page, todayLong, updatedAt, userEmail, onGoPage, onRefreshAll, onSignOut }) {
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoaded(true), 400);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className={styles.header}>
       <div className={styles.tabs}>
@@ -45,7 +37,6 @@ export default function Header({ page, todayLong, updatedAt, userEmail, onGoPage
             <span className={styles.version} title="Versão do dashboard">
               v{APP_VERSION}
             </span>
-            {loaded && <span title="Página carregada">✅</span>}
             <button type="button" className={styles.signOut} onClick={onSignOut}>
               Sair
             </button>
