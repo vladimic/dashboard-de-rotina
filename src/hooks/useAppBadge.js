@@ -1,23 +1,23 @@
 import { useEffect, useRef } from 'react';
 
+// iOS requires Notification.requestPermission() to run inside a direct user
+// gesture (a tap), or it silently resolves to "denied" without ever showing
+// the native prompt. Call this from an onClick handler only.
+export function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    alert('DEBUG badge: Notification API não existe neste contexto.');
+    return;
+  }
+  Notification.requestPermission().then((perm) => {
+    alert(`DEBUG badge: permissão de notificação = "${perm}".`);
+  });
+}
+
 // Sets the numeric badge on the installed app's icon (Dock/Home Screen) via
 // the Badging API. Only affects the device this runs on — each device
 // updates its own badge only while the app is open there.
 export function useAppBadge(count) {
   const debuggedRef = useRef(false);
-  const permAskedRef = useRef(false);
-
-  useEffect(() => {
-    if (permAskedRef.current) return;
-    permAskedRef.current = true;
-    if (!('Notification' in window) || Notification.permission !== 'default') {
-      alert(`DEBUG badge: permissão de notificação já é "${'Notification' in window ? Notification.permission : 'indisponível'}".`);
-      return;
-    }
-    Notification.requestPermission().then((perm) => {
-      alert(`DEBUG badge: permissão de notificação = "${perm}".`);
-    });
-  }, []);
 
   useEffect(() => {
     if (!('setAppBadge' in navigator)) {

@@ -1,4 +1,5 @@
 import { APP_VERSION } from '../version';
+import { requestNotificationPermission } from '../hooks/useAppBadge';
 import styles from './Header.module.css';
 
 const TABS = [
@@ -30,6 +31,9 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
           <div className={styles.updatedAt}>atualizado às {updatedAt}</div>
           <button type="button" className={styles.refreshAll} onClick={onRefreshAll}>
             Atualizar tudo
+          </button>
+          <button type="button" className={styles.refreshAll} onClick={requestNotificationPermission}>
+            DEBUG: Ativar notificações
           </button>
         </div>
         {onSignOut && (
