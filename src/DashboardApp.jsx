@@ -53,10 +53,18 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   }, [refreshReminders]);
 
   // Force a sync as soon as the dashboard opens, not just on manual clicks.
+  // Gated by a localStorage timestamp (not just the ref below) because the
+  // Atalho's x-success round-trip can land on a brand-new window/tab (seen
+  // on Mac) — a fresh mount there would otherwise re-trigger this effect,
+  // re-run the Atalho, and loop forever across new windows.
+  const AUTO_SYNC_COOLDOWN_MS = 60000;
   const syncedOnLoadRef = useRef(false);
   useEffect(() => {
     if (syncedOnLoadRef.current) return;
     syncedOnLoadRef.current = true;
+    const lastAutoSyncAt = Number(localStorage.getItem('reminders:lastAutoSyncAt') || 0);
+    if (Date.now() - lastAutoSyncAt < AUTO_SYNC_COOLDOWN_MS) return;
+    localStorage.setItem('reminders:lastAutoSyncAt', String(Date.now()));
     syncReminders();
   }, [syncReminders]);
 
