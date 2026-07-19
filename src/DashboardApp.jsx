@@ -110,15 +110,15 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const allSourcesLoaded =
     status === 'ready' && !hubspot.loading && !dealsWithoutTasks.loading && !reminders.loading && !notion.loading && !ticktick.loading;
   const baselineCapturedRef = useRef(false);
-  const progressTotalRef = useRef(counts.progressTotal);
-  progressTotalRef.current = counts.progressTotal;
+  const geralTotalRef = useRef(counts.geralTotal);
+  geralTotalRef.current = counts.geralTotal;
 
   const captureBaseline = useCallback(() => {
     if (baselineCapturedRef.current) return;
     baselineCapturedRef.current = true;
     const todayKey = new Date().toDateString();
     if (!forceReset && state.dayProgressDate === todayKey) return;
-    dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: todayKey, baseline: progressTotalRef.current });
+    dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: todayKey, baseline: geralTotalRef.current });
   }, [state.dayProgressDate, dispatch, forceReset]);
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   }, [allSourcesLoaded, captureBaseline]);
 
   const dayProgressBaseline = state.dayProgressDate === new Date().toDateString() ? state.dayProgressBaseline : 0;
-  const dayProgressDone = Math.max(0, dayProgressBaseline - counts.progressTotal);
+  const dayProgressDone = Math.max(0, dayProgressBaseline - counts.geralTotal);
   const dayProgressPercent =
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const habits = computeHabits(state);

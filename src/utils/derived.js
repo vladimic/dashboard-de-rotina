@@ -87,28 +87,12 @@ export function computeAgenda(state, calendarData) {
   };
 }
 
-const ENDING_DAY_UNLOCK_HOUR = 17.5; // 17:30 — before this, Ending Day counts as zero in the header/Geral, but not in its own checklist card.
-
 export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notionTotal = 0, ticktickTotal = 0) {
   const manhaPend = state.manha.filter((m) => !m.done).length;
   const noitePend = state.noite.filter((m) => !m.done).length;
   const noiteTotal = state.noite.length;
-  const endingDayUnlocked = hourFloatInAgendaTZ(Date.now()) >= ENDING_DAY_UNLOCK_HOUR;
-  const noitePendSummary = endingDayUnlocked ? noitePend : 0;
-  const noiteTotalSummary = endingDayUnlocked ? noiteTotal : 0;
   const meuDiaCount = state.notes.length;
   const geralTotal =
-    meuDiaCount +
-    manhaPend +
-    noitePendSummary +
-    hubspotTotal +
-    remindersTotal +
-    ticktickTotal +
-    notionTotal;
-  // Same shape as geralTotal, but Ending Day always counts (never gated by
-  // the 17:30 unlock) — this is the number "% do dia" tracks against, so it
-  // stays consistent across the whole day instead of jumping at 17:30.
-  const progressTotal =
     meuDiaCount +
     manhaPend +
     noitePend +
@@ -122,11 +106,8 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     manhaPend,
     noiteTotal,
     noitePend,
-    noiteTotalSummary,
-    noitePendSummary,
     hubspotTotal,
     geralTotal,
-    progressTotal,
   };
 }
 
