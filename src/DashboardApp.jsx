@@ -60,19 +60,23 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     syncReminders();
   }, [syncReminders]);
 
+  // ?forceReset=1 bypasses the "already done today/this week" gates below —
+  // a one-off manual trigger, not something meant to stay in a bookmark.
+  const forceReset = new URLSearchParams(window.location.search).get('forceReset') === '1';
+
   // First load of the day only — ask before wiping Starting Day/Ending Day.
   // Saying no leaves them exactly as-is until tomorrow's prompt.
   const askedRef = useRef(false);
   useEffect(() => {
     if (status !== 'ready' || askedRef.current) return;
     const todayKey = new Date().toDateString();
-    if (state.lastResetDate === todayKey) return;
+    if (!forceReset && state.lastResetDate === todayKey) return;
     askedRef.current = true;
     (async () => {
       const reset = await confirm('Reiniciar as checklists "Starting Day" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
       dispatch({ type: 'APPLY_DAILY_RESET', reset });
     })();
-  }, [status, state.lastResetDate, confirm, dispatch]);
+  }, [status, state.lastResetDate, confirm, dispatch, forceReset]);
 
   // First load after the Friday-14:00 boundary passes — ask before wiping
   // "Ending Week". Saying no leaves it as-is until next week's prompt.
@@ -113,9 +117,9 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     if (baselineCapturedRef.current) return;
     baselineCapturedRef.current = true;
     const todayKey = new Date().toDateString();
-    if (state.dayProgressDate === todayKey) return;
+    if (!forceReset && state.dayProgressDate === todayKey) return;
     dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: todayKey, baseline: progressTotalRef.current });
-  }, [state.dayProgressDate, dispatch]);
+  }, [state.dayProgressDate, dispatch, forceReset]);
 
   useEffect(() => {
     if (allSourcesLoaded) {
