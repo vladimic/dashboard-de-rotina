@@ -20,9 +20,7 @@ export default function HubSpotDealsWithoutTasksCard({ groups, total, loading, e
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div className={styles.title}>
-          HubSpot <span style={{ fontSize: '10px', fontWeight: 500 }}>- Deals sem Tarefa</span>
-        </div>
+        <div className={styles.title}>HubSpot Deals</div>
         <div className={styles.headerRight}>
           {extraLink && (
             <a href={extraLink.href} target="_blank" rel="noreferrer" className={styles.extraLink} title={extraLink.title}>
