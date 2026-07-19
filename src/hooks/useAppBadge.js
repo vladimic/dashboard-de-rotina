@@ -5,6 +5,19 @@ import { useEffect, useRef } from 'react';
 // updates its own badge only while the app is open there.
 export function useAppBadge(count) {
   const debuggedRef = useRef(false);
+  const permAskedRef = useRef(false);
+
+  useEffect(() => {
+    if (permAskedRef.current) return;
+    permAskedRef.current = true;
+    if (!('Notification' in window) || Notification.permission !== 'default') {
+      alert(`DEBUG badge: permissão de notificação já é "${'Notification' in window ? Notification.permission : 'indisponível'}".`);
+      return;
+    }
+    Notification.requestPermission().then((perm) => {
+      alert(`DEBUG badge: permissão de notificação = "${perm}".`);
+    });
+  }, []);
 
   useEffect(() => {
     if (!('setAppBadge' in navigator)) {
