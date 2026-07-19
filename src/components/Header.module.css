@@ -50,8 +50,8 @@
 }
 
 .loadingMsg {
-  font: 600 11px Inter, sans-serif;
-  color: #8a72a0;
+  font: 700 15px Inter, sans-serif;
+  color: #8fd9b6;
   animation: pulse 1.4s ease-in-out infinite;
 }
 
