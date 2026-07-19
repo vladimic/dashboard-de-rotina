@@ -23,12 +23,21 @@ const AGENDA_TIMEZONE = 'America/Sao_Paulo';
 // Fantastical for Mac registers this URL scheme to launch the app.
 export const FANTASTICAL_APP_URL = 'x-fantastical3://';
 
-// Runs the named Shortcut on-demand (Mac or iPhone) and, via x-callback-url,
-// automatically switches back to this page once it finishes — the Shortcut
-// must be named exactly "Sincronizar Lembretes" for this link to find it.
+// Runs the named Shortcut on-demand (Mac or iPhone) — the Shortcut must be
+// named exactly "Sincronizar Lembretes" for this link to find it.
+//
+// x-success (auto-return to this page once the Shortcut finishes) is only
+// added on iOS. There, running the Shortcut fully backgrounds the installed
+// PWA, so x-success is what brings the user back. On Mac the app window
+// never loses focus while the Shortcut runs in the background — adding
+// x-success there only spawns a redundant new Chrome tab with the dashboard
+// reloaded in it. Background polling already refreshes the open window.
 export function syncRemindersShortcutUrl() {
+  const base = 'shortcuts://x-callback-url/run-shortcut?name=Sincronizar%20Lembretes';
+  const isIOS = /iP(hone|od|ad)/.test(navigator.platform) || (navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 1);
+  if (!isIOS) return base;
   const returnUrl = encodeURIComponent(window.location.href);
-  return `shortcuts://x-callback-url/run-shortcut?name=Sincronizar%20Lembretes&x-success=${returnUrl}`;
+  return `${base}&x-success=${returnUrl}`;
 }
 
 // Reminders for Mac/iOS registers this URL scheme to launch the app.
