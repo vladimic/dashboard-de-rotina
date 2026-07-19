@@ -17,15 +17,15 @@ export function useAppBadge(count) {
     const action = count > 0 ? navigator.setAppBadge(count) : navigator.clearAppBadge();
     action
       .then(() => {
-        if (!debuggedRef.current) {
+        if (!debuggedRef.current && count > 0) {
           debuggedRef.current = true;
-          alert(`DEBUG badge: chamada OK (count=${count}).`);
+          alert(`DEBUG badge: setAppBadge(${count}) OK. Vá pra Home Screen agora e confira o ícone.`);
         }
       })
       .catch((err) => {
         if (!debuggedRef.current) {
           debuggedRef.current = true;
-          alert(`DEBUG badge: falhou — ${err?.name || ''} ${err?.message || err}`);
+          alert(`DEBUG badge: falhou (count=${count}) — ${err?.name || ''} ${err?.message || err}`);
         }
       });
   }, [count]);
