@@ -107,8 +107,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // /api/reminders resolves fast regardless of freshness, but the
   // sync-on-load Atalho round-trip (see syncReminders) only lands via its
   // own polling through 15s, so waiting on loading flags alone captures a
-  // stale Reminders count. Falls back to capturing with whatever's loaded
-  // once that 16s minimum passes, so one stuck source can't block forever.
+  // stale Reminders count. A source that's still genuinely loading (e.g.
+  // Notion's multi-database query) keeps blocking past that 16s floor —
+  // only the 30s ceiling below overrides a source stuck for real.
+  const MIN_WAIT_MS = 16000;
+  const MAX_WAIT_MS = 30000;
   const allSourcesLoaded =
     status === 'ready' && !hubspot.loading && !dealsWithoutTasks.loading && !reminders.loading && !notion.loading && !ticktick.loading;
   const baselineCapturedRef = useRef(false);
@@ -125,13 +128,18 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   }, [state.dayProgressDate, dispatch, forceReset]);
 
   useEffect(() => {
-    const remindersSettleDelay = Math.max(0, 16000 - (Date.now() - mountedAtRef.current));
-    if (allSourcesLoaded && remindersSettleDelay === 0) {
-      captureBaseline();
-      return;
-    }
-    const timer = setTimeout(captureBaseline, Math.max(remindersSettleDelay, 1000));
-    return () => clearTimeout(timer);
+    if (baselineCapturedRef.current) return undefined;
+    let interval;
+    const check = () => {
+      const elapsed = Date.now() - mountedAtRef.current;
+      if ((allSourcesLoaded && elapsed >= MIN_WAIT_MS) || elapsed >= MAX_WAIT_MS) {
+        captureBaseline();
+        clearInterval(interval);
+      }
+    };
+    check();
+    interval = setInterval(check, 1000);
+    return () => clearInterval(interval);
   }, [allSourcesLoaded, captureBaseline]);
 
   const dayProgressBaseline = state.dayProgressDate === new Date().toDateString() ? state.dayProgressBaseline : 0;
