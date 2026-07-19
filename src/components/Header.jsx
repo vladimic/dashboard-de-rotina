@@ -9,6 +9,8 @@ const TABS = [
 ];
 
 export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut }) {
+  const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
+
   return (
     <div className={styles.header}>
       <div className={styles.tabs}>
@@ -32,9 +34,11 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
           <button type="button" className={styles.refreshAll} onClick={onRefreshAll}>
             Atualizar tudo
           </button>
-          <button type="button" className={styles.refreshAll} onClick={requestNotificationPermission}>
-            DEBUG: Ativar notificações
-          </button>
+          {notificationsBlocked && (
+            <button type="button" className={styles.refreshAll} onClick={requestNotificationPermission}>
+              Ativar notificações
+            </button>
+          )}
         </div>
         {onSignOut && (
           <div className={styles.account}>

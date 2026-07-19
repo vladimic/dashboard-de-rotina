@@ -1,15 +1,18 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 // iOS requires Notification.requestPermission() to run inside a direct user
 // gesture (a tap), or it silently resolves to "denied" without ever showing
-// the native prompt. Call this from an onClick handler only.
+// the native prompt. Call this from an onClick handler only. Granting
+// notification permission is also what unlocks the home-screen app badge on
+// iOS, even though this app never sends notifications.
 export function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    alert('DEBUG badge: Notification API não existe neste contexto.');
-    return;
-  }
+  if (!('Notification' in window)) return;
   Notification.requestPermission().then((perm) => {
-    alert(`DEBUG badge: permissão de notificação = "${perm}".`);
+    if (perm === 'granted') {
+      alert('Notificações ativadas! O selo no ícone do app já deve funcionar.');
+    } else {
+      alert('Permissão negada. O selo no ícone não vai aparecer.');
+    }
   });
 }
 
@@ -17,29 +20,9 @@ export function requestNotificationPermission() {
 // the Badging API. Only affects the device this runs on — each device
 // updates its own badge only while the app is open there.
 export function useAppBadge(count) {
-  const debuggedRef = useRef(false);
-
   useEffect(() => {
-    if (!('setAppBadge' in navigator)) {
-      if (!debuggedRef.current) {
-        debuggedRef.current = true;
-        alert('DEBUG badge: navigator.setAppBadge não existe neste contexto.');
-      }
-      return;
-    }
+    if (!('setAppBadge' in navigator)) return;
     const action = count > 0 ? navigator.setAppBadge(count) : navigator.clearAppBadge();
-    action
-      .then(() => {
-        if (!debuggedRef.current && count > 0) {
-          debuggedRef.current = true;
-          alert(`DEBUG badge: setAppBadge(${count}) OK. Vá pra Home Screen agora e confira o ícone.`);
-        }
-      })
-      .catch((err) => {
-        if (!debuggedRef.current) {
-          debuggedRef.current = true;
-          alert(`DEBUG badge: falhou (count=${count}) — ${err?.name || ''} ${err?.message || err}`);
-        }
-      });
+    action.catch(() => {});
   }, [count]);
 }
