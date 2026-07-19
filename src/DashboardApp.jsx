@@ -92,6 +92,15 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     })();
   }, [status, state.lastWeekResetDate, confirm, dispatch]);
 
+  const anyLoading =
+    status !== 'ready' ||
+    hubspot.loading ||
+    dealsWithoutTasks.loading ||
+    calendar.loading ||
+    reminders.loading ||
+    notion.loading ||
+    ticktick.loading;
+
   const agenda = computeAgenda(state, calendar);
   const counts = computeCounts(
     state,
@@ -167,6 +176,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         page={state.page}
         todayLong={todayLong}
         updatedAt={updatedAt}
+        loading={anyLoading}
         userEmail={userEmail}
         onGoPage={(page) => dispatch({ type: 'GO_PAGE', page })}
         onRefreshAll={() => {

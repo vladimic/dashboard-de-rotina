@@ -7,7 +7,7 @@ const TABS = [
   { key: 'backlog', label: 'Backlog' },
 ];
 
-export default function Header({ page, todayLong, updatedAt, userEmail, onGoPage, onRefreshAll, onSignOut }) {
+export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut }) {
   return (
     <div className={styles.header}>
       <div className={styles.tabs}>
@@ -26,6 +26,7 @@ export default function Header({ page, todayLong, updatedAt, userEmail, onGoPage
       <div className={styles.date}>{todayLong}</div>
       <div className={styles.right}>
         <div className={styles.rightTop}>
+          {loading && <div className={styles.loadingMsg}>Carregando informações...</div>}
           <div className={styles.updatedAt}>atualizado às {updatedAt}</div>
           <button type="button" className={styles.refreshAll} onClick={onRefreshAll}>
             Atualizar tudo

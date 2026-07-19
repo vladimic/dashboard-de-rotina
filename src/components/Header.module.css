@@ -49,6 +49,17 @@
   justify-content: flex-end;
 }
 
+.loadingMsg {
+  font: 600 11px Inter, sans-serif;
+  color: #8a72a0;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 .refreshAll {
   display: inline-flex;
   align-items: center;
