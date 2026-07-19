@@ -67,6 +67,10 @@
   text-overflow: ellipsis;
 }
 
+.hojeCard .cardTitle {
+  font: var(--fs-card-title);
+}
+
 .saudeCard .cardTitle {
   color: #3f6b57;
 }
