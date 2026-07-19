@@ -103,15 +103,18 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   useAppBadge(counts.geralTotal);
 
   // Freezes today's starting workload the first time every source has
-  // finished its first load — capturing it any earlier would undercount
-  // whatever hasn't come back from HubSpot/Reminders/Notion/TickTick yet.
-  // Falls back to capturing with whatever's loaded after 15s so one stuck
-  // source can't block the baseline forever.
+  // finished its first load AND at least 16s have passed since mount —
+  // /api/reminders resolves fast regardless of freshness, but the
+  // sync-on-load Atalho round-trip (see syncReminders) only lands via its
+  // own polling through 15s, so waiting on loading flags alone captures a
+  // stale Reminders count. Falls back to capturing with whatever's loaded
+  // once that 16s minimum passes, so one stuck source can't block forever.
   const allSourcesLoaded =
     status === 'ready' && !hubspot.loading && !dealsWithoutTasks.loading && !reminders.loading && !notion.loading && !ticktick.loading;
   const baselineCapturedRef = useRef(false);
   const geralTotalRef = useRef(counts.geralTotal);
   geralTotalRef.current = counts.geralTotal;
+  const mountedAtRef = useRef(Date.now());
 
   const captureBaseline = useCallback(() => {
     if (baselineCapturedRef.current) return;
@@ -122,11 +125,12 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   }, [state.dayProgressDate, dispatch, forceReset]);
 
   useEffect(() => {
-    if (allSourcesLoaded) {
+    const remindersSettleDelay = Math.max(0, 16000 - (Date.now() - mountedAtRef.current));
+    if (allSourcesLoaded && remindersSettleDelay === 0) {
       captureBaseline();
       return;
     }
-    const timer = setTimeout(captureBaseline, 15000);
+    const timer = setTimeout(captureBaseline, Math.max(remindersSettleDelay, 1000));
     return () => clearTimeout(timer);
   }, [allSourcesLoaded, captureBaseline]);
 
