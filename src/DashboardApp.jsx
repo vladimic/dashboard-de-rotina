@@ -8,8 +8,8 @@ import { useReminders } from './hooks/useReminders';
 import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useAppBadge } from './hooks/useAppBadge';
-import { computeAgenda, computeCounts, computeHabits, computeSleepWeek, computeGoals } from './utils/derived';
-import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey } from './utils/format';
+import { computeAgenda, computeCounts, computeHabits, computeHabitGroup, computeSleepWeek, computeGoals } from './utils/derived';
+import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
 import HojeView from './views/HojeView';
@@ -110,6 +110,12 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     ticktick.loading;
 
   const agenda = computeAgenda(state, calendar);
+  const habitDays = lastNDateKeys(7);
+  const habitTracker = {
+    days: habitDays,
+    bons: computeHabitGroup(state.habitosBons, state.habitosLog, habitDays),
+    ruins: computeHabitGroup(state.habitosRuins, state.habitosLog, habitDays),
+  };
   const counts = computeCounts(
     state,
     hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total,
@@ -230,6 +236,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           onSyncReminders={syncReminders}
           notion={notion}
           ticktick={ticktick}
+          habitTracker={habitTracker}
         />
       )}
       {state.page === 'saude' && (

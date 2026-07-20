@@ -1,4 +1,4 @@
-import { formatHourLabel, hourFloatInAgendaTZ } from './format';
+import { formatHourLabel, hourFloatInAgendaTZ, shiftDateKey } from './format';
 
 const DAY_START = 7;
 const DAY_END = 22;
@@ -109,6 +109,41 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     hubspotTotal,
     geralTotal,
   };
+}
+
+// Consecutive 'done' days counting back from today, treating 'skipped' days
+// as neutral (they don't add to the streak but don't break it either) and
+// stopping at the first blank day — except today itself, which is still "in
+// progress" and shouldn't zero out an otherwise-intact streak just because
+// it hasn't been marked yet.
+function habitStreak(log, habitId, todayKey) {
+  let streak = 0;
+  let key = todayKey;
+  let isToday = true;
+  for (let i = 0; i < 3650; i++) {
+    const mark = log[key]?.[habitId];
+    if (mark === 'done') {
+      streak++;
+    } else if (mark !== 'skipped' && !isToday) {
+      break;
+    }
+    isToday = false;
+    key = shiftDateKey(key, -1);
+  }
+  return streak;
+}
+
+// Shared by the "good" and "to avoid" habit lists — days is the 7-key strip
+// from lastNDateKeys(7), oldest first with today last.
+export function computeHabitGroup(list, log, days) {
+  const todayKey = days[days.length - 1];
+  const rows = list.map((h) => ({
+    ...h,
+    streak: habitStreak(log, h.id, todayKey),
+    marks: days.map((d) => log[d]?.[h.id] || null),
+  }));
+  const pend = list.filter((h) => !log[todayKey]?.[h.id]).length;
+  return { rows, pend, total: list.length };
 }
 
 export function computeHabits(state) {

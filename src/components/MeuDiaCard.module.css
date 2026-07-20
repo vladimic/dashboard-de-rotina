@@ -27,6 +27,13 @@
   color: #5b4a63;
 }
 
+.toggleIcon {
+  font: 600 15px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+  line-height: 1;
+}
+
 .refresh {
   font: 600 19.5px Inter, sans-serif;
   color: #a897ad;

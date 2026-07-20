@@ -114,8 +114,36 @@ export function dashboardReducer(state, action) {
       };
     }
 
+    case 'ADD_HABITO': {
+      const text = (state[action.textKey] || '').trim();
+      if (!text) return state;
+      const item = { id: Date.now(), label: text };
+      return {
+        ...state,
+        [action.listKey]: [...state[action.listKey], item],
+        [action.textKey]: '',
+      };
+    }
+
     case 'SET_TEXT_FIELD':
       return { ...state, [action.key]: action.value };
+
+    // Cycles a single day's mark for one habit: blank -> done -> skipped ->
+    // blank. 'skipped' is a neutral pass (doesn't break the streak, doesn't
+    // add to it either) — for an excused day, not a failure.
+    case 'CYCLE_HABITO_MARK': {
+      const { dateKey, habitId } = action;
+      const dayLog = state.habitosLog[dateKey] || {};
+      const current = dayLog[habitId];
+      const next = current === undefined ? 'done' : current === 'done' ? 'skipped' : undefined;
+      const nextDayLog = { ...dayLog };
+      if (next === undefined) {
+        delete nextDayLog[habitId];
+      } else {
+        nextDayLog[habitId] = next;
+      }
+      return { ...state, habitosLog: { ...state.habitosLog, [dateKey]: nextDayLog } };
+    }
 
     case 'TOGGLE_HABIT':
       return {

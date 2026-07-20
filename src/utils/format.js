@@ -94,3 +94,27 @@ export function currentWeekResetKey(date = new Date()) {
   anchor.setUTCDate(anchor.getUTCDate() - daysSinceReset);
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(anchor);
 }
+
+// "YYYY-MM-DD" for "today" in AGENDA_TIMEZONE, regardless of the device's
+// own timezone.
+export function dateKeySaoPaulo(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: AGENDA_TIMEZONE }).format(date);
+}
+
+// Calendar-day arithmetic anchored at UTC noon (same trick as
+// currentWeekResetKey above) so it never slips a day across a DST boundary —
+// operates purely on the "YYYY-MM-DD" string, not on wall-clock time.
+export function shiftDateKey(key, days) {
+  const d = new Date(`${key}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(d);
+}
+
+// Last n date keys ending in "today" (per AGENDA_TIMEZONE), oldest first —
+// the habit tracker's 7-day strip uses this with the last entry as today.
+export function lastNDateKeys(n, date = new Date()) {
+  const todayKey = dateKeySaoPaulo(date);
+  const keys = [];
+  for (let i = n - 1; i >= 0; i--) keys.push(shiftDateKey(todayKey, -i));
+  return keys;
+}
