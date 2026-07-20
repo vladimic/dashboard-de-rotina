@@ -146,6 +146,8 @@ export function createSeedState() {
     newManhaLink: '',
     newNoiteLink: '',
     newSemanaLink: '',
+    newHabitoBomLink: '',
+    newHabitoRuimLink: '',
     dragId: null,
     dragList: null,
 

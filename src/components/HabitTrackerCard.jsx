@@ -1,6 +1,6 @@
 import styles from './HabitTrackerCard.module.css';
 
-function EditRows({ items, onUpdateText, onRemoveItem, onDragStart, onDrop }) {
+function EditRows({ items, onUpdateText, onUpdateLink, onRemoveItem, onDragStart, onDrop }) {
   return items.map((h) => (
     <div
       key={h.id}
@@ -10,31 +10,47 @@ function EditRows({ items, onUpdateText, onRemoveItem, onDragStart, onDrop }) {
       onDrop={() => onDrop(h.id)}
       className={styles.editRow}
     >
-      <span className={styles.dragHandle}>⠿</span>
-      <input className={styles.editInput} value={h.label} onChange={(e) => onUpdateText(h.id, e.target.value)} />
-      <span className={styles.removeBtn} onClick={() => onRemoveItem(h.id)}>
-        ×
-      </span>
+      <div className={styles.editRowTop}>
+        <span className={styles.dragHandle}>⠿</span>
+        <input className={styles.editInput} value={h.label} onChange={(e) => onUpdateText(h.id, e.target.value)} />
+        <span className={styles.removeBtn} onClick={() => onRemoveItem(h.id)}>
+          ×
+        </span>
+      </div>
+      <input
+        className={styles.linkInput}
+        value={h.link || ''}
+        onChange={(e) => onUpdateLink(h.id, e.target.value)}
+        placeholder="Link (opcional)"
+      />
     </div>
   ));
 }
 
-function AddRow({ value, onChange, onAdd, placeholder }) {
+function AddRow({ value, onChange, onAdd, placeholder, linkValue, onLinkChange }) {
   return (
-    <div className={styles.addRow}>
+    <>
+      <div className={styles.addRow}>
+        <input
+          className={styles.addInput}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onAdd();
+          }}
+          placeholder={placeholder}
+        />
+        <button type="button" className={styles.addBtn} onClick={onAdd}>
+          +
+        </button>
+      </div>
       <input
-        className={styles.addInput}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') onAdd();
-        }}
-        placeholder={placeholder}
+        className={styles.addLinkInput}
+        value={linkValue || ''}
+        onChange={(e) => onLinkChange(e.target.value)}
+        placeholder="Link (opcional)"
       />
-      <button type="button" className={styles.addBtn} onClick={onAdd}>
-        +
-      </button>
-    </div>
+    </>
   );
 }
 
@@ -48,6 +64,12 @@ function HabitRows({ rows, days, badColor, onCycleMark }) {
   return rows.map((h) => {
     const todayMark = h.marks[h.marks.length - 1] || 'blank';
     const labelColor = todayMark !== 'blank' ? MARKED_LABEL_COLOR : badColor;
+    const labelStyle = labelColor ? { color: labelColor } : undefined;
+    const labelContent = (
+      <>
+        {h.label} <span className={styles.streak}>({h.streak})</span>
+      </>
+    );
     return (
       <div key={h.id} className={styles.habitRow}>
         <div
@@ -58,9 +80,15 @@ function HabitRows({ rows, days, badColor, onCycleMark }) {
           {todayMark === 'done' && '✓'}
           {todayMark === 'skipped' && '–'}
         </div>
-        <div className={styles.habitLabel} style={labelColor ? { color: labelColor } : undefined}>
-          {h.label} <span className={styles.streak}>({h.streak})</span>
-        </div>
+        {h.link ? (
+          <a href={h.link} target="_blank" rel="noreferrer" className={styles.habitLabel} style={labelStyle}>
+            {labelContent}
+          </a>
+        ) : (
+          <div className={styles.habitLabel} style={labelStyle}>
+            {labelContent}
+          </div>
+        )}
         <div className={styles.days}>
           {days.map((d, i) => (
             <div key={d} className={styles.cell} data-state={h.marks[i] || 'blank'} />
@@ -82,15 +110,21 @@ export default function HabitTrackerCard({
   onCycleMark,
   newBomText,
   onNewBomTextChange,
+  newBomLink,
+  onNewBomLinkChange,
   onAddBom,
   onUpdateBomText,
+  onUpdateBomLink,
   onRemoveBom,
   onDragStartBom,
   onDropBom,
   newRuimText,
   onNewRuimTextChange,
+  newRuimLink,
+  onNewRuimLinkChange,
   onAddRuim,
   onUpdateRuimText,
+  onUpdateRuimLink,
   onRemoveRuim,
   onDragStartRuim,
   onDropRuim,
@@ -124,11 +158,27 @@ export default function HabitTrackerCard({
             </span>
           </div>
           {edit ? (
-            <EditRows items={bons.rows} onUpdateText={onUpdateBomText} onRemoveItem={onRemoveBom} onDragStart={onDragStartBom} onDrop={onDropBom} />
+            <EditRows
+              items={bons.rows}
+              onUpdateText={onUpdateBomText}
+              onUpdateLink={onUpdateBomLink}
+              onRemoveItem={onRemoveBom}
+              onDragStart={onDragStartBom}
+              onDrop={onDropBom}
+            />
           ) : (
             <HabitRows rows={bons.rows} days={days} onCycleMark={onCycleMark} />
           )}
-          {edit && <AddRow value={newBomText} onChange={onNewBomTextChange} onAdd={onAddBom} placeholder="Novo hábito..." />}
+          {edit && (
+            <AddRow
+              value={newBomText}
+              onChange={onNewBomTextChange}
+              onAdd={onAddBom}
+              placeholder="Novo hábito..."
+              linkValue={newBomLink}
+              onLinkChange={onNewBomLinkChange}
+            />
+          )}
 
           <div className={styles.divider} />
 
@@ -139,11 +189,27 @@ export default function HabitTrackerCard({
             </span>
           </div>
           {edit ? (
-            <EditRows items={ruins.rows} onUpdateText={onUpdateRuimText} onRemoveItem={onRemoveRuim} onDragStart={onDragStartRuim} onDrop={onDropRuim} />
+            <EditRows
+              items={ruins.rows}
+              onUpdateText={onUpdateRuimText}
+              onUpdateLink={onUpdateRuimLink}
+              onRemoveItem={onRemoveRuim}
+              onDragStart={onDragStartRuim}
+              onDrop={onDropRuim}
+            />
           ) : (
             <HabitRows rows={ruins.rows} days={days} badColor="#b5546b" onCycleMark={onCycleMark} />
           )}
-          {edit && <AddRow value={newRuimText} onChange={onNewRuimTextChange} onAdd={onAddRuim} placeholder="Novo item a evitar..." />}
+          {edit && (
+            <AddRow
+              value={newRuimText}
+              onChange={onNewRuimTextChange}
+              onAdd={onAddRuim}
+              placeholder="Novo item a evitar..."
+              linkValue={newRuimLink}
+              onLinkChange={onNewRuimLinkChange}
+            />
+          )}
         </>
       )}
     </div>

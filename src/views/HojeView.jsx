@@ -41,9 +41,10 @@ function useChecklistHandlers(dispatch, listKey, editKey, openKey, newTextKey, n
   };
 }
 
-function useHabitListHandlers(dispatch, listKey, newTextKey, confirm) {
+function useHabitListHandlers(dispatch, listKey, newTextKey, newLinkKey, confirm) {
   return {
     onUpdateText: useCallback((id, value) => dispatch({ type: 'UPDATE_ITEM_TEXT', listKey, id, value }), [dispatch, listKey]),
+    onUpdateLink: useCallback((id, value) => dispatch({ type: 'UPDATE_ITEM_LINK', listKey, id, value }), [dispatch, listKey]),
     onRemoveItem: useCallback(
       async (id) => {
         if (!(await confirm('Remover este hábito?'))) return;
@@ -54,7 +55,11 @@ function useHabitListHandlers(dispatch, listKey, newTextKey, confirm) {
     onDragStart: useCallback((id) => dispatch({ type: 'DRAG_START', listKey, id }), [dispatch, listKey]),
     onDrop: useCallback((targetId) => dispatch({ type: 'DROP_ON', listKey, targetId }), [dispatch, listKey]),
     onNewTextChange: useCallback((value) => dispatch({ type: 'SET_TEXT_FIELD', key: newTextKey, value }), [dispatch, newTextKey]),
-    onAddItem: useCallback(() => dispatch({ type: 'ADD_HABITO', listKey, textKey: newTextKey }), [dispatch, listKey, newTextKey]),
+    onNewLinkChange: useCallback((value) => dispatch({ type: 'SET_TEXT_FIELD', key: newLinkKey, value }), [dispatch, newLinkKey]),
+    onAddItem: useCallback(
+      () => dispatch({ type: 'ADD_HABITO', listKey, textKey: newTextKey, linkKey: newLinkKey }),
+      [dispatch, listKey, newTextKey, newLinkKey]
+    ),
   };
 }
 
@@ -78,8 +83,8 @@ export default function HojeView({
   const semanaHandlers = useChecklistHandlers(dispatch, 'semana', 'semanaEdit', 'semanaOpen', 'newSemanaText', 'newSemanaLink', confirm);
   const semanaPend = state.semana.filter((s) => !s.done).length;
 
-  const habitosBonsHandlers = useHabitListHandlers(dispatch, 'habitosBons', 'newHabitoBomText', confirm);
-  const habitosRuinsHandlers = useHabitListHandlers(dispatch, 'habitosRuins', 'newHabitoRuimText', confirm);
+  const habitosBonsHandlers = useHabitListHandlers(dispatch, 'habitosBons', 'newHabitoBomText', 'newHabitoBomLink', confirm);
+  const habitosRuinsHandlers = useHabitListHandlers(dispatch, 'habitosRuins', 'newHabitoRuimText', 'newHabitoRuimLink', confirm);
   const onCycleHabitoMark = useCallback(
     (habitId, dateKey) => dispatch({ type: 'CYCLE_HABITO_MARK', habitId, dateKey }),
     [dispatch]
@@ -132,15 +137,21 @@ export default function HojeView({
           onCycleMark={onCycleHabitoMark}
           newBomText={state.newHabitoBomText}
           onNewBomTextChange={habitosBonsHandlers.onNewTextChange}
+          newBomLink={state.newHabitoBomLink}
+          onNewBomLinkChange={habitosBonsHandlers.onNewLinkChange}
           onAddBom={habitosBonsHandlers.onAddItem}
           onUpdateBomText={habitosBonsHandlers.onUpdateText}
+          onUpdateBomLink={habitosBonsHandlers.onUpdateLink}
           onRemoveBom={habitosBonsHandlers.onRemoveItem}
           onDragStartBom={habitosBonsHandlers.onDragStart}
           onDropBom={habitosBonsHandlers.onDrop}
           newRuimText={state.newHabitoRuimText}
           onNewRuimTextChange={habitosRuinsHandlers.onNewTextChange}
+          newRuimLink={state.newHabitoRuimLink}
+          onNewRuimLinkChange={habitosRuinsHandlers.onNewLinkChange}
           onAddRuim={habitosRuinsHandlers.onAddItem}
           onUpdateRuimText={habitosRuinsHandlers.onUpdateText}
+          onUpdateRuimLink={habitosRuinsHandlers.onUpdateLink}
           onRemoveRuim={habitosRuinsHandlers.onRemoveItem}
           onDragStartRuim={habitosRuinsHandlers.onDragStart}
           onDropRuim={habitosRuinsHandlers.onDrop}

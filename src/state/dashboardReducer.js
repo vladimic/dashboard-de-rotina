@@ -120,11 +120,13 @@ export function dashboardReducer(state, action) {
     case 'ADD_HABITO': {
       const text = (state[action.textKey] || '').trim();
       if (!text) return state;
-      const item = { id: Date.now(), label: text };
+      const link = action.linkKey ? (state[action.linkKey] || '').trim() : '';
+      const item = { id: Date.now(), label: text, ...(link ? { link } : {}) };
       return {
         ...state,
         [action.listKey]: [...state[action.listKey], item],
         [action.textKey]: '',
+        ...(action.linkKey ? { [action.linkKey]: '' } : {}),
       };
     }
 
