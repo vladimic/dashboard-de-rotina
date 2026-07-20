@@ -117,18 +117,6 @@ a.label {
   color: #8a72a0;
 }
 
-.due {
-  font: 500 10px Inter, sans-serif;
-  color: #a897ad;
-}
-
-.due[data-overdue='true'] {
-  color: #b5546b;
-}
-
-.due[data-ok='true'] {
-  color: #3f6b57;
-}
 
 .error {
   font: 500 12px Inter, sans-serif;

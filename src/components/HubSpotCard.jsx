@@ -6,9 +6,11 @@ const OVERDUE_COLOR = '#b5546b';
 function TaskRow({ task }) {
   const overdue = task.due === 'vencido';
   const textStyle = overdue ? { color: OVERDUE_COLOR } : undefined;
+  const emoji = overdue ? '🔴 ' : '✅ ';
   const content = task.dealName ? (
     <>
       <div className={styles.dealName} style={textStyle}>
+        {emoji}
         {task.dealName}
       </div>
       <div className={styles.taskName} style={textStyle}>
@@ -17,6 +19,7 @@ function TaskRow({ task }) {
     </>
   ) : (
     <div className={styles.dealName} style={textStyle}>
+      {emoji}
       {task.title}
     </div>
   );
@@ -29,16 +32,6 @@ function TaskRow({ task }) {
         </a>
       ) : (
         <div className={styles.label}>{content}</div>
-      )}
-      {overdue && (
-        <div className={styles.due} data-overdue="true">
-          vencido
-        </div>
-      )}
-      {task.due === 'hoje' && (
-        <div className={styles.due} data-ok="true">
-          ok
-        </div>
       )}
     </div>
   );

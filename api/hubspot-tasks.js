@@ -94,8 +94,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    const { startOfDay } = todayBoundsMs();
-
     // Task -> associated deal ids
     const assocRes = await hubspotFetch(token, '/crm/v4/associations/tasks/deals/batch/read', {
       method: 'POST',
@@ -143,9 +141,14 @@ export default async function handler(req, res) {
       return groupsByLabel.get(label);
     }
 
+    // "Vencido" is judged against the actual moment of this request (day AND
+    // time), not just whether it falls before today's midnight — a task due
+    // at 15:00 today is overdue by 16:00 today, not only starting tomorrow.
+    const now = Date.now();
+
     for (const task of tasks) {
       const dueMs = Number(task.properties.hs_timestamp);
-      const isOverdue = dueMs < startOfDay;
+      const isOverdue = dueMs < now;
       if (isOverdue) vencidas += 1;
       else hoje += 1;
 
@@ -166,7 +169,7 @@ export default async function handler(req, res) {
       ([stageLabel, groupTasks]) => ({ stageLabel, tasks: groupTasks })
     );
 
-    res.status(200).json({ updatedAt: new Date().toISOString(), vencidas, hoje, groups, tasksUrl });
+    res.status(200).json({ updatedAt: new Date(now).toISOString(), vencidas, hoje, groups, tasksUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || 'Unknown error fetching HubSpot tasks.' });
