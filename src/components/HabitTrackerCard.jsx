@@ -39,24 +39,30 @@ function AddRow({ value, onChange, onAdd, placeholder }) {
 }
 
 function HabitRows({ rows, days, badColor, onCycleMark }) {
-  return rows.map((h) => (
-    <div key={h.id} className={styles.habitRow}>
-      <div className={styles.habitLabel} style={badColor ? { color: badColor } : undefined}>
-        {h.label} <span className={styles.streak}>({h.streak})</span>
+  const todayKey = days[days.length - 1];
+  return rows.map((h) => {
+    const todayMark = h.marks[h.marks.length - 1] || 'blank';
+    return (
+      <div key={h.id} className={styles.habitRow}>
+        <div
+          className={styles.checkbox}
+          data-state={todayMark}
+          onClick={() => onCycleMark(h.id, todayKey)}
+        >
+          {todayMark === 'done' && '✓'}
+          {todayMark === 'skipped' && '–'}
+        </div>
+        <div className={styles.habitLabel} style={badColor ? { color: badColor } : undefined}>
+          {h.label} <span className={styles.streak}>({h.streak})</span>
+        </div>
+        <div className={styles.days}>
+          {days.map((d, i) => (
+            <div key={d} className={styles.cell} data-state={h.marks[i] || 'blank'} />
+          ))}
+        </div>
       </div>
-      <div className={styles.days}>
-        {days.map((d, i) => (
-          <div
-            key={d}
-            className={styles.cell}
-            data-state={h.marks[i] || 'blank'}
-            data-bad={badColor ? 'true' : undefined}
-            onClick={() => onCycleMark(h.id, d)}
-          />
-        ))}
-      </div>
-    </div>
-  ));
+    );
+  });
 }
 
 export default function HabitTrackerCard({
@@ -120,8 +126,7 @@ export default function HabitTrackerCard({
 
           <div className={styles.divider} />
 
-          <div className={styles.groupHeader}>
-            <span className={styles.groupLabelBad}>A evitar</span>
+          <div className={styles.groupHeaderEnd}>
             <span className={styles.groupCount}>
               {ruins.pend}/{ruins.total}
             </span>
