@@ -162,6 +162,10 @@ export default async function handler(req, res) {
         due: isOverdue ? 'vencido' : 'hoje',
         dealName: deal?.properties?.dealname || null,
         link: dealId ? dealLink(portalId, dealId) : null,
+        // TEMP DEBUG — reverter depois do diagnóstico.
+        debugRaw: task.properties.hs_timestamp,
+        debugDueMs: dueMs,
+        debugNow: now,
       });
     }
 

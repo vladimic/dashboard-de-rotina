@@ -16,11 +16,21 @@ function TaskRow({ task }) {
       <div className={styles.taskName} style={textStyle}>
         {task.title}
       </div>
+      {task.debugRaw !== undefined && (
+        <div style={{ fontSize: 9, color: '#a897ad' }}>
+          DEBUG raw={String(task.debugRaw)} dueMs={task.debugDueMs} now={task.debugNow} due={task.due}
+        </div>
+      )}
     </>
   ) : (
     <div className={styles.dealName} style={textStyle}>
       {emoji}
       {task.title}
+      {task.debugRaw !== undefined && (
+        <div style={{ fontSize: 9, color: '#a897ad' }}>
+          DEBUG raw={String(task.debugRaw)} dueMs={task.debugDueMs} now={task.debugNow} due={task.due}
+        </div>
+      )}
     </div>
   );
   return (
