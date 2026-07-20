@@ -8,7 +8,7 @@ const TABS = [
   { key: 'backlog', label: 'Backlog' },
 ];
 
-export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData }) {
+export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData, badgeCount }) {
   const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
 
   return (
@@ -35,7 +35,7 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
             Atualizar tudo
           </button>
           {notificationsBlocked && (
-            <button type="button" className={styles.refreshAll} onClick={requestNotificationPermission}>
+            <button type="button" className={styles.refreshAll} onClick={() => requestNotificationPermission(badgeCount)}>
               Ativar notificações
             </button>
           )}

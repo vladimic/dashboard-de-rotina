@@ -243,6 +243,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
+        badgeCount={counts.geralTotal}
       />
 
       <SummaryStrip
