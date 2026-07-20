@@ -9,10 +9,14 @@ function cacheKey(userId) {
   return `dashboard-de-rotina/state/v1/${userId}`;
 }
 
+// Merged with createSeedState() so a cache saved before a new field existed
+// (e.g. an older session, from before this session's feature work) can't
+// leave that field undefined on the very first paint, ahead of the
+// Supabase fetch below (which already merges the same way).
 function loadCache(userId) {
   try {
     const raw = localStorage.getItem(cacheKey(userId));
-    return raw ? JSON.parse(raw) : null;
+    return raw ? { ...createSeedState(), ...JSON.parse(raw) } : null;
   } catch {
     return null;
   }
