@@ -40,8 +40,8 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
             <div className={styles.geralValue}>{counts.geralTotal}</div>
           </div>
         </div>
-        <StatCard title="HubSpot Tasks" value={lists.hubspotTasksTotal} className={styles.hojeCard} />
-        <StatCard title="HubSpot Deals" value={lists.hubspotDealsTotal} className={styles.hojeCard} />
+        <StatCard title="Hábitos" value={counts.habitosPend} className={styles.hojeCard} />
+        <StatCard title="HubSpot" value={counts.hubspotTotal} className={styles.hojeCard} />
         <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} />
         <StatCard title="Notion" value={lists.notionTotal} className={styles.hojeCard} />
         <div className={styles.progressRow}>

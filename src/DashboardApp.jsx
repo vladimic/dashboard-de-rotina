@@ -72,6 +72,16 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // a one-off manual trigger, not something meant to stay in a bookmark.
   const forceReset = new URLSearchParams(window.location.search).get('forceReset') === '1';
 
+  // ?clearHabitLog=1 wipes every day's habit marks once — a one-off manual
+  // trigger, not something meant to stay in a bookmark.
+  const clearHabitLog = new URLSearchParams(window.location.search).get('clearHabitLog') === '1';
+  const clearedHabitLogRef = useRef(false);
+  useEffect(() => {
+    if (!clearHabitLog || clearedHabitLogRef.current || status !== 'ready') return;
+    clearedHabitLogRef.current = true;
+    dispatch({ type: 'CLEAR_HABITOS_LOG' });
+  }, [clearHabitLog, status, dispatch]);
+
   // First load of the day only — ask before wiping Starting Day/Ending Day.
   // Saying no leaves them exactly as-is until tomorrow's prompt.
   const askedRef = useRef(false);
@@ -121,7 +131,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total,
     reminders.total,
     notion.total,
-    ticktick.total
+    ticktick.total,
+    habitTracker.bons.pend + habitTracker.ruins.pend
   );
   useAppBadge(counts.geralTotal);
 
@@ -215,8 +226,6 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         weight={state.weight}
         lists={{
           lembretesTotal: reminders.total,
-          hubspotTasksTotal: hubspot.vencidas + hubspot.hoje,
-          hubspotDealsTotal: dealsWithoutTasks.total,
           ticktickTotal: ticktick.total,
           notionTotal: notion.total,
         }}

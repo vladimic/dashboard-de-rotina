@@ -55,10 +55,11 @@
   color: #a897ad;
 }
 
-.groupHeaderEnd {
-  display: flex;
-  justify-content: flex-end;
-  padding: 4px 0;
+.groupLabelBad {
+  font: 600 11px Inter, sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #b5546b;
 }
 
 .groupCount {
@@ -101,9 +102,9 @@
 }
 
 .checkbox[data-state='skipped'] {
-  background: #e3d6e8;
-  border-color: #e3d6e8;
-  color: #a897ad;
+  background: #e3a6ae;
+  border-color: #e3a6ae;
+  color: #fff;
 }
 
 .habitLabel {
@@ -140,8 +141,8 @@
 }
 
 .cell[data-state='skipped'] {
-  background: #e3d6e8;
-  border-color: #e3d6e8;
+  background: #e3a6ae;
+  border-color: #e3a6ae;
 }
 
 .editRow {

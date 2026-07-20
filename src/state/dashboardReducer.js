@@ -128,6 +128,9 @@ export function dashboardReducer(state, action) {
     case 'SET_TEXT_FIELD':
       return { ...state, [action.key]: action.value };
 
+    case 'CLEAR_HABITOS_LOG':
+      return { ...state, habitosLog: {} };
+
     // Cycles a single day's mark for one habit: blank -> done -> skipped ->
     // blank. 'skipped' is a neutral pass (doesn't break the streak, doesn't
     // add to it either) — for an excused day, not a failure.

@@ -112,7 +112,7 @@ export default function HabitTrackerCard({
       {open && (
         <>
           <div className={styles.groupHeader}>
-            <span className={styles.groupLabel}>Hábitos</span>
+            <span className={styles.groupLabel}>Hábitos Diários</span>
             <span className={styles.groupCount}>
               {bons.pend}/{bons.total}
             </span>
@@ -126,7 +126,8 @@ export default function HabitTrackerCard({
 
           <div className={styles.divider} />
 
-          <div className={styles.groupHeaderEnd}>
+          <div className={styles.groupHeader}>
+            <span className={styles.groupLabelBad}>Hábitos a Evitar</span>
             <span className={styles.groupCount}>
               {ruins.pend}/{ruins.total}
             </span>
