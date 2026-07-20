@@ -3,6 +3,10 @@ import styles from './HubSpotCard.module.css';
 
 const OVERDUE_COLOR = '#b5546b';
 
+function stageLabelStyle(projectLabel) {
+  return projectLabel === 'Vencidos' ? { color: OVERDUE_COLOR } : undefined;
+}
+
 function TaskRow({ task }) {
   const textStyle = task.overdue ? { color: OVERDUE_COLOR } : undefined;
   return (
@@ -92,7 +96,7 @@ export default function GroupedTaskCard({
         return (
           <div key={group.projectLabel} className={styles.group}>
             <div className={styles.stageLabel} onClick={() => toggleGroup(group.projectLabel)}>
-              <span>
+              <span style={stageLabelStyle(group.projectLabel)}>
                 {group.projectLabel} ({group.tasks.length})
               </span>
               <span className={styles.chevron}>{isCollapsed ? '▸' : '▾'}</span>

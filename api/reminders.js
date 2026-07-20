@@ -43,6 +43,13 @@ export default async function handler(req, res) {
     const rawReminders = Array.isArray(row?.data) ? row.data : [];
     const { startOfDay, endOfDay } = getDayBoundsMs(0, TIMEZONE);
 
+    // Overdue is judged against the moment the Shortcut last synced, not the
+    // live clock — a reminder that was still upcoming as of the last sync
+    // shouldn't silently flip to "vencido" just because time passed before
+    // the next sync runs.
+    const parsedUpdatedAt = row?.updated_at ? new Date(row.updated_at).getTime() : NaN;
+    const now = Number.isNaN(parsedUpdatedAt) ? Date.now() : parsedUpdatedAt;
+
     const vencidas = [];
     const hojeSemHorario = [];
     const hojeComHorario = [];
@@ -64,8 +71,15 @@ export default async function handler(req, res) {
         // reminder genuinely due at 00:00 sharp would be misclassified.
         const { hour, minute } = formatTimeParts(due, TIMEZONE);
         const hasTime = !(hour === '00' && minute === '00');
-        if (hasTime) hojeComHorario.push({ ...entry, timeLabel: `${hour}:${minute}` });
-        else hojeSemHorario.push(entry);
+        if (hasTime) {
+          const timed = { ...entry, timeLabel: `${hour}:${minute}` };
+          // Already past its time as of the last sync — belongs in Vencidos,
+          // not Hoje Programado.
+          if (dueMs < now) vencidas.push(timed);
+          else hojeComHorario.push(timed);
+        } else {
+          hojeSemHorario.push(entry);
+        }
       }
     }
 
@@ -73,16 +87,18 @@ export default async function handler(req, res) {
     hojeSemHorario.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
     hojeComHorario.sort((a, b) => a.dueMs - b.dueMs);
 
-    const now = Date.now();
     const groups = [
-      { projectLabel: 'Vencidos', tasks: vencidas.map((r) => ({ id: r.id, label: r.title, overdue: true })) },
+      {
+        projectLabel: 'Vencidos',
+        tasks: vencidas.map((r) => ({
+          id: r.id,
+          label: r.timeLabel ? `${r.timeLabel} · ${r.title}` : r.title,
+          overdue: true,
+        })),
+      },
       {
         projectLabel: 'Hoje Programado',
-        tasks: hojeComHorario.map((r) => ({
-          id: r.id,
-          label: `${r.timeLabel} · ${r.title}`,
-          overdue: r.dueMs < now,
-        })),
+        tasks: hojeComHorario.map((r) => ({ id: r.id, label: `${r.timeLabel} · ${r.title}` })),
       },
       { projectLabel: 'Hoje Sem Horário', tasks: hojeSemHorario.map((r) => ({ id: r.id, label: r.title })) },
     ].filter((g) => g.tasks.length > 0);

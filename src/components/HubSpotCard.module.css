@@ -126,6 +126,10 @@ a.label {
   color: #b5546b;
 }
 
+.due[data-ok='true'] {
+  color: #3f6b57;
+}
+
 .error {
   font: 500 12px Inter, sans-serif;
   color: #8a3f56;

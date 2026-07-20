@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react';
 import styles from './HubSpotCard.module.css';
 
+const OVERDUE_COLOR = '#b5546b';
+
 function TaskRow({ task }) {
+  const overdue = task.due === 'vencido';
+  const textStyle = overdue ? { color: OVERDUE_COLOR } : undefined;
   const content = task.dealName ? (
     <>
-      <div className={styles.dealName}>{task.dealName}</div>
-      <div className={styles.taskName}>{task.title}</div>
+      <div className={styles.dealName} style={textStyle}>
+        {task.dealName}
+      </div>
+      <div className={styles.taskName} style={textStyle}>
+        {task.title}
+      </div>
     </>
   ) : (
-    <div className={styles.dealName}>{task.title}</div>
+    <div className={styles.dealName} style={textStyle}>
+      {task.title}
+    </div>
   );
   return (
     <div className={styles.row}>
@@ -20,9 +30,14 @@ function TaskRow({ task }) {
       ) : (
         <div className={styles.label}>{content}</div>
       )}
-      {task.due === 'vencido' && (
+      {overdue && (
         <div className={styles.due} data-overdue="true">
           vencido
+        </div>
+      )}
+      {task.due === 'hoje' && (
+        <div className={styles.due} data-ok="true">
+          ok
         </div>
       )}
     </div>
