@@ -80,10 +80,40 @@
   color: #c3b3c9;
 }
 
-.signOut {
+.emailMenu {
+  position: relative;
   cursor: pointer;
-  text-decoration: underline;
-  color: #a897ad;
+  padding: 4px 0;
+}
+
+.emailMenu:hover .dropdown {
+  display: block;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(91, 74, 99, 0.22);
+  z-index: 20;
+  min-width: 130px;
+}
+
+.dropdownItem {
+  font: 600 11px Inter, sans-serif;
+  color: #5b4a63;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dropdownItem:hover {
+  background: #f3ecf5;
 }
 
 .version {

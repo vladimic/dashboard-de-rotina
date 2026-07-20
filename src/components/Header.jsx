@@ -8,7 +8,7 @@ const TABS = [
   { key: 'backlog', label: 'Backlog' },
 ];
 
-export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut }) {
+export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData }) {
   const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
 
   return (
@@ -42,13 +42,22 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
         </div>
         {onSignOut && (
           <div className={styles.account}>
-            {userEmail && <span className={styles.email}>{userEmail}</span>}
+            {userEmail && (
+              <div className={styles.emailMenu}>
+                <span className={styles.email}>{userEmail}</span>
+                <div className={styles.dropdown}>
+                  <div className={styles.dropdownItem} onClick={onExportData}>
+                    Exportar dados
+                  </div>
+                  <div className={styles.dropdownItem} onClick={onSignOut}>
+                    Sair
+                  </div>
+                </div>
+              </div>
+            )}
             <span className={styles.version} title="Versão do dashboard">
               v{APP_VERSION}
             </span>
-            <button type="button" className={styles.signOut} onClick={onSignOut}>
-              Sair
-            </button>
           </div>
         )}
       </div>

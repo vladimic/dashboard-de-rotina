@@ -9,7 +9,7 @@ import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useAppBadge } from './hooks/useAppBadge';
 import { computeAgenda, computeCounts, computeHabits, computeHabitGroup, computeSleepWeek, computeGoals } from './utils/derived';
-import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys } from './utils/format';
+import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
 import HojeView from './views/HojeView';
@@ -200,6 +200,21 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const todayLong = formatTodayLong();
   const updatedAt = formatClock(Date.now());
 
+  // Manual JSON snapshot of the full saved state — a backup independent of
+  // Supabase, since the free tier doesn't include point-in-time recovery.
+  const handleExportData = useCallback(() => {
+    const filename = `${dateKeySaoPaulo()} Cockpit Produtividade ${userEmail}.json`;
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [state, userEmail]);
+
   if (status === 'loading') {
     return (
       <div className={styles.card} style={{ background: CARD_BG.hoje }}>
@@ -227,6 +242,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           ticktick.refresh();
         }}
         onSignOut={onSignOut}
+        onExportData={handleExportData}
       />
 
       <SummaryStrip
