@@ -38,10 +38,16 @@ function AddRow({ value, onChange, onAdd, placeholder }) {
   );
 }
 
+// Same muted color ChecklistCard uses for a checked-off item — a marked
+// (done or skipped) habit fades the same way a finished Starting Day item
+// does, regardless of which list it's in.
+const MARKED_LABEL_COLOR = '#c3b3c9';
+
 function HabitRows({ rows, days, badColor, onCycleMark }) {
   const todayKey = days[days.length - 1];
   return rows.map((h) => {
     const todayMark = h.marks[h.marks.length - 1] || 'blank';
+    const labelColor = todayMark !== 'blank' ? MARKED_LABEL_COLOR : badColor;
     return (
       <div key={h.id} className={styles.habitRow}>
         <div
@@ -52,7 +58,7 @@ function HabitRows({ rows, days, badColor, onCycleMark }) {
           {todayMark === 'done' && '✓'}
           {todayMark === 'skipped' && '–'}
         </div>
-        <div className={styles.habitLabel} style={badColor ? { color: badColor } : undefined}>
+        <div className={styles.habitLabel} style={labelColor ? { color: labelColor } : undefined}>
           {h.label} <span className={styles.streak}>({h.streak})</span>
         </div>
         <div className={styles.days}>
