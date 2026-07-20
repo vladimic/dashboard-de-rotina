@@ -8,6 +8,15 @@ import { hubspotFetch, fetchStageLabelMap, sortByStage, dealLink } from './_lib/
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NO_DEAL_LABEL = 'Sem negócio';
 
+// hs_timestamp normally comes back as an ISO date string (e.g.
+// "2026-07-20T11:00:00Z"), but handle a raw epoch-ms string too in case that
+// ever changes — Number() on an ISO string silently yields NaN, which made
+// every task "not overdue" forever.
+function parseHubspotTimestamp(raw) {
+  if (raw == null) return NaN;
+  return /^\d+$/.test(String(raw)) ? Number(raw) : new Date(raw).getTime();
+}
+
 // Start-of-today / end-of-today as epoch ms, computed in TIMEZONE rather
 // than the server's UTC clock, so "hoje" matches the user's actual day.
 function todayBoundsMs() {
@@ -147,7 +156,7 @@ export default async function handler(req, res) {
     const now = Date.now();
 
     for (const task of tasks) {
-      const dueMs = Number(task.properties.hs_timestamp);
+      const dueMs = parseHubspotTimestamp(task.properties.hs_timestamp);
       const isOverdue = dueMs < now;
       if (isOverdue) vencidas += 1;
       else hoje += 1;
@@ -162,10 +171,6 @@ export default async function handler(req, res) {
         due: isOverdue ? 'vencido' : 'hoje',
         dealName: deal?.properties?.dealname || null,
         link: dealId ? dealLink(portalId, dealId) : null,
-        // TEMP DEBUG — reverter depois do diagnóstico.
-        debugRaw: task.properties.hs_timestamp,
-        debugDueMs: dueMs,
-        debugNow: now,
       });
     }
 
