@@ -122,7 +122,7 @@ export function createSeedState() {
     downloadsCount: 61,
     backlogCount: 128,
     meuDiaOpen: true,
-    habitosOpen: true,
+    habitosOpen: false,
     manhaOpen: false,
     noiteOpen: false,
     semanaOpen: false,

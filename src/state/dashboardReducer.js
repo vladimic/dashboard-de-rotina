@@ -49,6 +49,9 @@ export function dashboardReducer(state, action) {
     case 'TOGGLE_FLAG':
       return { ...state, [action.key]: !state[action.key] };
 
+    case 'SET_FLAG':
+      return { ...state, [action.key]: action.value };
+
     case 'REFRESH':
       return { ...state, [action.key]: Date.now() };
 

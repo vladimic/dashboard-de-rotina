@@ -82,6 +82,19 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     dispatch({ type: 'CLEAR_HABITOS_LOG' });
   }, [clearHabitLog, status, dispatch]);
 
+  // ?fixOpenState=1 applies the new Hábitos-collapsed/Meu-Dia-expanded
+  // defaults to an already-saved session once — the seed defaults below only
+  // cover brand-new state, not one that was hydrated from Supabase before
+  // these defaults changed.
+  const fixOpenState = new URLSearchParams(window.location.search).get('fixOpenState') === '1';
+  const fixedOpenStateRef = useRef(false);
+  useEffect(() => {
+    if (!fixOpenState || fixedOpenStateRef.current || status !== 'ready') return;
+    fixedOpenStateRef.current = true;
+    dispatch({ type: 'SET_FLAG', key: 'habitosOpen', value: false });
+    dispatch({ type: 'SET_FLAG', key: 'meuDiaOpen', value: true });
+  }, [fixOpenState, status, dispatch]);
+
   // First load of the day only — ask before wiping Starting Day/Ending Day.
   // Saying no leaves them exactly as-is until tomorrow's prompt.
   const askedRef = useRef(false);
