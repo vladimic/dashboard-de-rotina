@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDashboardState } from './state/useDashboardState';
 import { useConfirm } from './components/ConfirmContext';
 import { useHubspotTasks } from './hooks/useHubspotTasks';
@@ -149,6 +149,16 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   );
   useAppBadge(counts.geralTotal);
 
+  // Geral and the progress bar stay frozen at their last stable values while
+  // any source is still loading, instead of jumping around as each source
+  // resolves at its own pace — they snap to the real total in one move once
+  // everything has finished. Other individual tiles (Starting Day, HubSpot,
+  // etc.) keep updating live; this only covers the consolidated numbers.
+  const [displayGeralTotal, setDisplayGeralTotal] = useState(counts.geralTotal);
+  useEffect(() => {
+    if (!anyLoading) setDisplayGeralTotal(counts.geralTotal);
+  }, [anyLoading, counts.geralTotal]);
+
   // Freezes today's starting workload the first time every source has
   // finished its first load AND at least 16s have passed since mount —
   // /api/reminders resolves fast regardless of freshness, but the
@@ -190,9 +200,10 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   }, [allSourcesLoaded, captureBaseline]);
 
   const dayProgressBaseline = state.dayProgressDate === new Date().toDateString() ? state.dayProgressBaseline : 0;
-  const dayProgressDone = Math.max(0, dayProgressBaseline - counts.geralTotal);
+  const dayProgressDone = Math.max(0, dayProgressBaseline - displayGeralTotal);
   const dayProgressPercent =
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
+  const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
   const habits = computeHabits(state);
   const { sleepWeek, sleepAvg } = computeSleepWeek(state);
   const goals = computeGoals(state);
@@ -237,7 +248,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           hubspot.refresh();
           dealsWithoutTasks.refresh();
           calendar.refresh();
-          reminders.refresh();
+          syncReminders();
           notion.refresh();
           ticktick.refresh();
         }}
@@ -248,7 +259,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
 
       <SummaryStrip
         page={state.page}
-        counts={counts}
+        counts={summaryCounts}
         habits={habits}
         water={state.water}
         waterTarget={state.waterTarget}
