@@ -97,15 +97,25 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
 
   // First load of the day only — ask before wiping Starting Day/Ending Day.
   // Saying no leaves them exactly as-is until tomorrow's prompt.
+  //
+  // dailyResetResolvedRef tracks whether this decision is settled yet — the
+  // day-progress baseline capture below must not run until it is, otherwise
+  // answering the prompt late (the user stepped away) locks in a baseline
+  // computed against the stale pre-reset counts instead of the real ones.
   const askedRef = useRef(false);
+  const dailyResetResolvedRef = useRef(false);
   useEffect(() => {
     if (status !== 'ready' || askedRef.current) return;
     const todayKey = new Date().toDateString();
-    if (!forceReset && state.lastResetDate === todayKey) return;
+    if (!forceReset && state.lastResetDate === todayKey) {
+      dailyResetResolvedRef.current = true;
+      return;
+    }
     askedRef.current = true;
     (async () => {
       const reset = await confirm('Reiniciar as checklists "Starting Day" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
       dispatch({ type: 'APPLY_DAILY_RESET', reset });
+      dailyResetResolvedRef.current = true;
     })();
   }, [status, state.lastResetDate, confirm, dispatch, forceReset]);
 
@@ -188,6 +198,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     if (baselineCapturedRef.current) return undefined;
     let interval;
     const check = () => {
+      if (!dailyResetResolvedRef.current) return;
       const elapsed = Date.now() - mountedAtRef.current;
       if ((allSourcesLoaded && elapsed >= MIN_WAIT_MS) || elapsed >= MAX_WAIT_MS) {
         captureBaseline();
