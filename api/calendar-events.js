@@ -66,9 +66,18 @@ function makeEntry(summary, start, end, idKey, color, meta = {}) {
   };
 }
 
+// How far outside the target day to search for RRULE candidate dates when
+// expanding a recurring event. A RECURRENCE-ID override can move an
+// occurrence to a different day than the base rule (e.g. a weekly Sunday
+// meeting moved to Saturday one time) — node-ical only looks up an override
+// for dates its RRULE actually generates inside the search window, so a
+// same-day-only window never generates the original Sunday candidate and
+// silently drops the moved event. Padding the *candidate search* window
+// (instances are still filtered against the real day below) catches those
+// without widening what actually gets returned.
+const RECURRENCE_SEARCH_PAD_MS = 10 * 24 * 60 * 60 * 1000;
+
 function eventsInRange(data, rangeStartMs, rangeEndMs, color) {
-  const rangeStart = new Date(rangeStartMs);
-  const rangeEnd = new Date(rangeEndMs);
   const out = [];
 
   for (const key of Object.keys(data)) {
@@ -78,7 +87,10 @@ function eventsInRange(data, rangeStartMs, rangeEndMs, color) {
     if (ev.datetype === 'date') continue; // all-day events don't fit the hour ruler
 
     if (ev.rrule) {
-      const instances = ical.expandRecurringEvent(ev, { from: rangeStart, to: rangeEnd });
+      const instances = ical.expandRecurringEvent(ev, {
+        from: new Date(rangeStartMs - RECURRENCE_SEARCH_PAD_MS),
+        to: new Date(rangeEndMs + RECURRENCE_SEARCH_PAD_MS),
+      });
       for (const inst of instances) {
         if (inst.isFullDay) continue;
         const instEnd = inst.end || new Date(inst.start.getTime() + 60 * 60 * 1000);
