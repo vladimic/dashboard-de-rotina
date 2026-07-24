@@ -68,9 +68,15 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     syncReminders();
   }, [syncReminders]);
 
-  // ?forceReset=1 bypasses the "already done today/this week" gates below —
-  // a one-off manual trigger, not something meant to stay in a bookmark.
+  // ?forceReset=1 bypasses the "already done today" gate below — a one-off
+  // manual trigger, not something meant to stay in a bookmark.
   const forceReset = new URLSearchParams(window.location.search).get('forceReset') === '1';
+
+  // ?forceWeekReset=1 bypasses the "already done this week" gate below —
+  // kept separate from forceReset so triggering it doesn't also re-ask the
+  // daily Starting/Ending Day prompt (which would risk recapturing today's
+  // progress baseline against an already-in-progress day).
+  const forceWeekReset = new URLSearchParams(window.location.search).get('forceWeekReset') === '1';
 
   // ?clearHabitLog=1 wipes every day's habit marks once — a one-off manual
   // trigger, not something meant to stay in a bookmark.
@@ -125,13 +131,13 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   useEffect(() => {
     if (status !== 'ready' || weekAskedRef.current) return;
     const weekKey = currentWeekResetKey();
-    if (state.lastWeekResetDate === weekKey) return;
+    if (!forceWeekReset && state.lastWeekResetDate === weekKey) return;
     weekAskedRef.current = true;
     (async () => {
       const reset = await confirm('Reiniciar a checklist "Ending Week" desta semana?', 'Reiniciar', 'Deixar como está');
       dispatch({ type: 'APPLY_WEEK_RESET', reset, key: weekKey });
     })();
-  }, [status, state.lastWeekResetDate, confirm, dispatch]);
+  }, [status, state.lastWeekResetDate, confirm, dispatch, forceWeekReset]);
 
   const anyLoading =
     status !== 'ready' ||
