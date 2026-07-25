@@ -21,6 +21,14 @@ export default function ChecklistCard({
   onNewLinkChange,
   onAddItem,
 }) {
+  // Editing renders nothing while the card is collapsed (both edit- and
+  // view-mode bodies are gated on `open`) — force it open so "Editar"
+  // actually shows something to edit instead of silently doing nothing.
+  const handleEditClick = () => {
+    if (!edit && !open) onToggleOpen();
+    onToggleEdit();
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
@@ -32,7 +40,7 @@ export default function ChecklistCard({
           <div className={styles.pend}>
             {pend}/{total}
           </div>
-          <div className={styles.editLink} onClick={onToggleEdit}>
+          <div className={styles.editLink} onClick={handleEditClick}>
             {edit ? 'Concluir' : 'Editar'}
           </div>
         </div>

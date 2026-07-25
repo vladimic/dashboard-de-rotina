@@ -137,6 +137,14 @@ export default function HabitTrackerCard({
   const pend = bons.pend + ruins.pend;
   const total = bons.total + ruins.total;
 
+  // Everything below (both edit- and view-mode rows) is gated on `open` —
+  // force it open so "Editar" actually shows something to edit instead of
+  // silently doing nothing while the card is collapsed.
+  const handleEditClick = () => {
+    if (!edit && !open) onToggleOpen();
+    onToggleEdit();
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
@@ -148,7 +156,7 @@ export default function HabitTrackerCard({
           <div className={styles.pend}>
             {pend}/{total}
           </div>
-          <div className={styles.editLink} onClick={onToggleEdit}>
+          <div className={styles.editLink} onClick={handleEditClick}>
             {edit ? 'Concluir' : 'Editar'}
           </div>
         </div>
