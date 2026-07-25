@@ -1,6 +1,6 @@
 import styles from './HabitTrackerCard.module.css';
 
-function EditRows({ items, onUpdateText, onUpdateLink, onRemoveItem, onDragStart, onDrop }) {
+function EditRows({ items, days, onCycleMark, onUpdateText, onUpdateLink, onRemoveItem, onDragStart, onDrop }) {
   return items.map((h) => (
     <div
       key={h.id}
@@ -23,6 +23,11 @@ function EditRows({ items, onUpdateText, onUpdateLink, onRemoveItem, onDragStart
         onChange={(e) => onUpdateLink(h.id, e.target.value)}
         placeholder="Link (opcional)"
       />
+      <div className={styles.editDays}>
+        {days.map((d, i) => (
+          <div key={d} className={styles.cell} data-state={h.marks[i] || 'blank'} onClick={() => onCycleMark(h.id, d)} />
+        ))}
+      </div>
     </div>
   ));
 }
@@ -160,6 +165,8 @@ export default function HabitTrackerCard({
           {edit ? (
             <EditRows
               items={bons.rows}
+              days={days}
+              onCycleMark={onCycleMark}
               onUpdateText={onUpdateBomText}
               onUpdateLink={onUpdateBomLink}
               onRemoveItem={onRemoveBom}
@@ -191,6 +198,8 @@ export default function HabitTrackerCard({
           {edit ? (
             <EditRows
               items={ruins.rows}
+              days={days}
+              onCycleMark={onCycleMark}
               onUpdateText={onUpdateRuimText}
               onUpdateLink={onUpdateRuimLink}
               onRemoveItem={onRemoveRuim}

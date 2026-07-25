@@ -199,6 +199,18 @@ a.habitLabel {
   outline: none;
 }
 
+.editDays {
+  display: flex;
+  gap: 5px;
+  margin: 6px 0 2px 18px;
+}
+
+.editDays .cell {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+}
+
 .addRow {
   display: flex;
   gap: 6px;
