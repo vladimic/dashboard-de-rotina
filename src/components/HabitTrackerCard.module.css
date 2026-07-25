@@ -237,3 +237,14 @@ a.habitLabel {
   outline: none;
   box-sizing: border-box;
 }
+
+@media (max-width: 680px) {
+  .checkbox {
+    width: 20px;
+    height: 20px;
+  }
+
+  .habitRow {
+    padding: 5px 0;
+  }
+}

@@ -26,6 +26,13 @@ body {
   padding: 32px 20px;
 }
 
+@media (max-width: 680px) {
+  #root {
+    overflow-x: hidden;
+    padding: 0;
+  }
+}
+
 input {
   font-family: inherit;
 }

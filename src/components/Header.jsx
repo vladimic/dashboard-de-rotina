@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { APP_VERSION } from '../version';
 import { requestNotificationPermission } from '../hooks/useAppBadge';
 import styles from './Header.module.css';
@@ -10,6 +11,19 @@ const TABS = [
 
 export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData, badgeCount }) {
   const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
+
+  // Hover-to-open only works with a mouse — on touch there's no hover, so
+  // the menu also opens on tap and closes on an outside tap.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onDocClick = (e) => {
+      if (!menuRef.current?.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [menuOpen]);
 
   return (
     <div className={styles.header}>
@@ -43,13 +57,30 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
         {onSignOut && (
           <div className={styles.account}>
             {userEmail && (
-              <div className={styles.emailMenu}>
+              <div
+                className={styles.emailMenu}
+                data-open={menuOpen}
+                ref={menuRef}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
                 <span className={styles.email}>{userEmail}</span>
                 <div className={styles.dropdown}>
-                  <div className={styles.dropdownItem} onClick={onExportData}>
+                  <div
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onExportData();
+                    }}
+                  >
                     Exportar dados
                   </div>
-                  <div className={styles.dropdownItem} onClick={onSignOut}>
+                  <div
+                    className={styles.dropdownItem}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onSignOut();
+                    }}
+                  >
                     Sair
                   </div>
                 </div>

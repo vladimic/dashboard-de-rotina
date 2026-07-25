@@ -150,3 +150,14 @@
   font: 500 12px Inter, sans-serif;
   cursor: pointer;
 }
+
+@media (max-width: 680px) {
+  .checkbox {
+    width: 19px;
+    height: 19px;
+  }
+
+  .viewRow {
+    padding: 4px 0;
+  }
+}

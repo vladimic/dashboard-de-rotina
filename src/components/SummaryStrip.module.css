@@ -15,6 +15,13 @@
   padding: 8px;
 }
 
+.kpiScroll {
+  /* Disappears from layout so its children place directly into the parent
+     grid on desktop — the wrapper only does something on mobile, where it
+     becomes the horizontal-scroll strip (see media query below). */
+  display: contents;
+}
+
 .progressRow {
   grid-column: 1 / -1;
 }
@@ -148,4 +155,57 @@
   color: #fff;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+@media (max-width: 680px) {
+  .strip {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Whichever group belongs to the page you're not on today just wastes
+     vertical space on a phone — the desktop "dim but visible" treatment
+     only makes sense when both fit on screen at once. */
+  .hojeGroup[data-dim='true'],
+  .saudeGroup[data-dim='true'] {
+    display: none;
+  }
+
+  .hojeGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .kpiScroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 2px;
+  }
+
+  .card {
+    flex: none;
+    width: 84px;
+    scroll-snap-align: start;
+  }
+
+  .geralCard {
+    flex: none;
+    width: 118px;
+    scroll-snap-align: start;
+  }
+
+  .progressRow {
+    grid-column: unset;
+  }
+
+  .saudeGroup {
+    flex-wrap: wrap;
+  }
+
+  .saudeCard {
+    flex: 1 1 calc(50% - 4px);
+  }
 }

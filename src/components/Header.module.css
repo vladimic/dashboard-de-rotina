@@ -86,7 +86,8 @@
   padding: 4px 0;
 }
 
-.emailMenu:hover .dropdown {
+.emailMenu:hover .dropdown,
+.emailMenu[data-open='true'] .dropdown {
   display: block;
 }
 
@@ -122,4 +123,78 @@
   background: #f3ecf5;
   border-radius: 8px;
   padding: 2px 6px;
+}
+
+@media (max-width: 680px) {
+  .header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .date {
+    flex: 1 1 auto;
+    text-align: left;
+    font-size: 18px;
+  }
+
+  .right {
+    flex: none;
+  }
+
+  .rightTop {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .updatedAt {
+    display: none;
+  }
+
+  .refreshAll {
+    padding: 7px 10px;
+  }
+
+  .email {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .emailMenu {
+    padding: 8px 0;
+  }
+
+  .dropdown {
+    padding: 8px;
+  }
+
+  .dropdownItem {
+    padding: 10px 12px;
+  }
+
+  /* Top segmented tabs become a fixed, thumb-reachable bottom bar — the
+     same buttons and click handlers, just repositioned. Hover-to-open the
+     account dropdown doesn't exist on touch, so Header.jsx also toggles it
+     on tap (data-open) — the hover rule above still covers desktop/mouse. */
+  .tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    background: #fff;
+    box-shadow: 0 -2px 14px rgba(91, 74, 99, 0.16);
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    gap: 6px;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 11px 6px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
 }

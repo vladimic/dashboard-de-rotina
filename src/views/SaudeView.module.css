@@ -18,3 +18,13 @@
   flex-direction: column;
   gap: 14px;
 }
+
+@media (max-width: 680px) {
+  .columns {
+    flex-direction: column;
+  }
+
+  .fixedCol {
+    width: 100%;
+  }
+}

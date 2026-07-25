@@ -15,3 +15,9 @@
 .col:first-child {
   gap: 10px;
 }
+
+@media (max-width: 680px) {
+  .columns {
+    flex-direction: column;
+  }
+}
