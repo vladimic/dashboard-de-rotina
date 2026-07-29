@@ -113,9 +113,9 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
   };
 }
 
-// Consecutive 'done' days counting back from today, treating 'skipped' days
-// as neutral (they don't add to the streak but don't break it either) and
-// stopping at the first blank day — except today itself, which is still "in
+// Consecutive 'done' days counting back from today, stopping at the first
+// non-'done' day — 'skipped' (shown red) counts as not done and breaks the
+// streak just like a blank day — except today itself, which is still "in
 // progress" and shouldn't zero out an otherwise-intact streak just because
 // it hasn't been marked yet.
 function habitStreak(log, habitId, todayKey) {
@@ -126,7 +126,7 @@ function habitStreak(log, habitId, todayKey) {
     const mark = log[key]?.[habitId];
     if (mark === 'done') {
       streak++;
-    } else if (mark !== 'skipped' && !isToday) {
+    } else if (!isToday) {
       break;
     }
     isToday = false;

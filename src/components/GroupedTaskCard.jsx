@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './HubSpotCard.module.css';
 
 const OVERDUE_COLOR = '#b5546b';
@@ -39,9 +39,17 @@ export default function GroupedTaskCard({
   const [collapsed, setCollapsed] = useState({});
   const allCollapsed = groups.length > 0 && groups.every((g) => collapsed[g.projectLabel]);
 
-  // Always start retracted — both on first load and every time a refresh
-  // brings in a new `groups` snapshot.
+  // Start retracted on first load, and re-retract if the actual set of
+  // groups changes (e.g. a stage empties out or a new one appears). A
+  // background refresh that returns the same set of labels — which happens
+  // often, since reminders re-fetch several times per sync — gets a new
+  // `groups` array reference but shouldn't fight the user's manual
+  // expand/collapse choices.
+  const prevLabelsRef = useRef(null);
   useEffect(() => {
+    const labels = groups.map((g) => g.projectLabel).sort().join('|');
+    if (labels === prevLabelsRef.current) return;
+    prevLabelsRef.current = labels;
     setCollapsed(Object.fromEntries(groups.map((g) => [g.projectLabel, true])));
   }, [groups]);
 

@@ -137,8 +137,8 @@ export function dashboardReducer(state, action) {
       return { ...state, habitosLog: {} };
 
     // Cycles a single day's mark for one habit: blank -> done -> skipped ->
-    // blank. 'skipped' is a neutral pass (doesn't break the streak, doesn't
-    // add to it either) — for an excused day, not a failure.
+    // blank. 'skipped' (shown red) counts as not done and breaks the streak,
+    // same as a blank day.
     case 'CYCLE_HABITO_MARK': {
       const { dateKey, habitId } = action;
       const dayLog = state.habitosLog[dateKey] || {};
