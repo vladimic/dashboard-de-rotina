@@ -106,9 +106,14 @@
   border-radius: 12px;
   padding: 7px 9px;
   box-shadow: 0 1px 3px rgba(91, 74, 99, 0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  /* Splitting into two equal tracks with the same row-gap as .hojeGroup's
+     grid makes each track exactly as tall as one row of stat cards (their
+     combined height + the gap between them, minus this same gap, halved) —
+     so centering content in .geralTop lines up with .card's own centered
+     title+value the same way it does for every card in row 1. */
+  grid-template-rows: 1fr 1fr;
+  row-gap: 7px;
 }
 
 .geralTitle {
@@ -122,9 +127,9 @@
 
 .geralTop {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
 }
 
 .geralBottom {
