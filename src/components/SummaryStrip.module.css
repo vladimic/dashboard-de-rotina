@@ -147,6 +147,20 @@
   color: #fff;
 }
 
+.geralValueCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.geralSubtotal {
+  font: 700 16px Inter, sans-serif;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.65);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .geralValue {
   /* Deliberately its own size, bigger than the shared --fs-kpi-value used by
      every other summary card — this is the one number meant to dominate. */
