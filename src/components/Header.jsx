@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { APP_VERSION } from '../version';
+import { VERSION_HISTORY } from '../versionHistory';
 import { requestNotificationPermission } from '../hooks/useAppBadge';
 import styles from './Header.module.css';
 
@@ -15,6 +16,7 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
   // Hover-to-open only works with a mouse — on touch there's no hover, so
   // the menu also opens on tap and closes on an outside tap.
   const [menuOpen, setMenuOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -76,6 +78,16 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
                   </div>
                   <div
                     className={styles.dropdownItem}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      setHistoryOpen(true);
+                    }}
+                  >
+                    Histórico de Versões
+                  </div>
+                  <div
+                    className={styles.dropdownItem}
                     onClick={() => {
                       setMenuOpen(false);
                       onSignOut();
@@ -92,6 +104,29 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
           </div>
         )}
       </div>
+      {historyOpen && (
+        <div className={styles.historyOverlay} onClick={() => setHistoryOpen(false)}>
+          <div className={styles.historyDialog} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.historyHeader}>
+              <span>Histórico de Versões</span>
+              <span className={styles.historyClose} onClick={() => setHistoryOpen(false)}>
+                ✕
+              </span>
+            </div>
+            <div className={styles.historyList}>
+              {VERSION_HISTORY.map((entry) => (
+                <div key={entry.version} className={styles.historyItem}>
+                  <div className={styles.historyItemHead}>
+                    <span className={styles.historyVersion}>v{entry.version}</span>
+                    <span className={styles.historyDate}>{entry.date}</span>
+                  </div>
+                  <div className={styles.historySummary}>{entry.summary}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
