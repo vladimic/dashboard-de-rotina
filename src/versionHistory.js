@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 100, date: '2026-07-30', summary: 'Sobe o subcontador do card Geral para o topo, alinhado com os números da 1ª linha, usando a mesma fonte deles' },
   { version: 99, date: '2026-07-30', summary: 'Histórico de Versões todo em português; novo contador (Meu Dia + Lembretes + Notion + HubSpot) acima do Total Geral, dentro da caixa Geral; reordena os quadros de resumo: 1ª linha Meu Dia/Lembretes/Notion/HubSpot, 2ª linha Starting Day/Ending Day/TickTick/Hábitos' },
   { version: 98, date: '2026-07-30', summary: 'Adiciona Histórico de Versões: ao passar o mouse sobre o e-mail e clicar no item do menu, mostra a lista completa de versões com data e descrição de cada uma' },
   { version: 97, date: '2026-07-29', summary: 'Corrige contagem de sequência de hábitos ao pular um dia (agora quebra o streak, como um dia em branco); corrige card de Lembretes recolhendo sozinho a cada atualização em segundo plano' },

@@ -28,7 +28,12 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
           <StatCard title="Notion" value={lists.notionTotal} className={styles.hojeCard} />
           <StatCard title="HubSpot" value={counts.hubspotTotal} className={styles.hojeCard} />
           <div className={styles.geralCard}>
-            <div className={styles.geralTitle}>Geral</div>
+            <div className={styles.geralTop}>
+              <div className={styles.geralTitle}>Geral</div>
+              <div className={styles.geralSubtotal}>
+                {counts.meuDiaCount + lists.lembretesTotal + lists.notionTotal + counts.hubspotTotal}
+              </div>
+            </div>
             <div className={styles.geralBottom}>
               <div
                 className={styles.geralRing}
@@ -38,12 +43,7 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
               >
                 <div className={styles.geralRingInner}>{dayProgress.percent}%</div>
               </div>
-              <div className={styles.geralValueCol}>
-                <div className={styles.geralSubtotal}>
-                  {counts.meuDiaCount + lists.lembretesTotal + lists.notionTotal + counts.hubspotTotal}
-                </div>
-                <div className={styles.geralValue}>{counts.geralTotal}</div>
-              </div>
+              <div className={styles.geralValue}>{counts.geralTotal}</div>
             </div>
           </div>
           <StatCard title="Starting Day" value={counts.manhaPend} className={styles.hojeCard} />
