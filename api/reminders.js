@@ -7,21 +7,52 @@
 // most recently into overdue / due-today-no-time / due-today-with-time.
 
 import { createClient } from '@supabase/supabase-js';
-import { getDayBoundsMs } from './_lib/dateRange.js';
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 
-function formatTimeParts(date, timeZone) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hourCycle: 'h23',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).formatToParts(date);
-  return {
-    hour: parts.find((p) => p.type === 'hour').value,
-    minute: parts.find((p) => p.type === 'minute').value,
-  };
+const ISO_WITH_OFFSET = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})$/;
+
+// Reads the reminder's own local date/time exactly as the Shortcut wrote it,
+// instead of reprojecting the absolute instant into a fixed app timezone.
+// This matters while traveling: the Shortcut serializes the reminder's due
+// date using the device's *current* timezone offset, so converting that
+// instant into a different fixed zone (e.g. always America/Sao_Paulo) can
+// shift the displayed clock time and even push a "due today" reminder to
+// before or after the fixed zone's midnight, misclassifying it as overdue.
+function parseReminderLocal(dueDateStr, due) {
+  const match = ISO_WITH_OFFSET.exec(dueDateStr);
+  if (!match) {
+    // Fallback for unexpected formats: project through the fixed app timezone.
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TIMEZONE,
+      hourCycle: 'h23',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).formatToParts(due);
+    const dtf = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit' });
+    return {
+      dateKey: dtf.format(due),
+      hour: parts.find((p) => p.type === 'hour').value,
+      minute: parts.find((p) => p.type === 'minute').value,
+      todayKey: dtf.format(new Date()),
+    };
+  }
+
+  const [, y, mo, d, h, mi, , offsetRaw] = match;
+  let offsetMinutes = 0;
+  if (offsetRaw !== 'Z') {
+    const sign = offsetRaw[0] === '-' ? -1 : 1;
+    const oh = Number(offsetRaw.slice(1, 3));
+    const om = Number(offsetRaw.slice(-2));
+    offsetMinutes = sign * (oh * 60 + om);
+  }
+
+  // "Today" is judged in that same offset, so a reminder set while traveling
+  // lines up with the day the Reminders app itself shows on that device.
+  const shifted = new Date(Date.now() + offsetMinutes * 60000);
+  const todayKey = `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}-${String(shifted.getUTCDate()).padStart(2, '0')}`;
+
+  return { dateKey: `${y}-${mo}-${d}`, hour: h, minute: mi, todayKey };
 }
 
 export default async function handler(req, res) {
@@ -41,7 +72,6 @@ export default async function handler(req, res) {
     if (error) throw new Error(error.message);
 
     const rawReminders = Array.isArray(row?.data) ? row.data : [];
-    const { startOfDay, endOfDay } = getDayBoundsMs(0, TIMEZONE);
 
     // Overdue is judged against the moment the Shortcut last synced, not the
     // live clock — a reminder that was still upcoming as of the last sync
@@ -61,15 +91,15 @@ export default async function handler(req, res) {
       const dueMs = due.getTime();
 
       const entry = { id: r.id || r.title, title: r.title || '(sem título)', dueMs };
+      const { dateKey, hour, minute, todayKey } = parseReminderLocal(r.dueDate, due);
 
-      if (dueMs < startOfDay) {
+      if (dateKey < todayKey) {
         vencidas.push(entry);
-      } else if (dueMs <= endOfDay) {
+      } else if (dateKey === todayKey) {
         // No reliable "has time" flag comes from Shortcuts, so a reminder
-        // due at exactly midnight in the local timezone is treated as
-        // date-only — true for the vast majority of real reminders, but a
-        // reminder genuinely due at 00:00 sharp would be misclassified.
-        const { hour, minute } = formatTimeParts(due, TIMEZONE);
+        // due at exactly midnight local time is treated as date-only — true
+        // for the vast majority of real reminders, but a reminder genuinely
+        // due at 00:00 sharp would be misclassified.
         const hasTime = !(hour === '00' && minute === '00');
         if (hasTime) {
           const timed = { ...entry, timeLabel: `${hour}:${minute}` };
