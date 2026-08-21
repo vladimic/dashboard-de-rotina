@@ -300,7 +300,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           ticktickTotal: ticktick.total,
           notionTotal: notion.total,
         }}
-        dayProgress={{ percent: dayProgressPercent, done: dayProgressDone, total: dayProgressBaseline }}
+        dayProgressPercent={dayProgressPercent}
       />
 
       {state.page === 'hoje' && (

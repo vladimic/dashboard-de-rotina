@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 105, date: '2026-08-21', summary: 'Remove a barra "Progresso do dia" do cabeçalho; o card Geral (anel de % + total) fica no lugar dela. O painel de Saúde ao lado agora acompanha a altura do bloco Hoje automaticamente' },
   { version: 104, date: '2026-08-21', summary: 'Adiciona "Reiniciar dia" ao menu de conta: pergunta se quer zerar as checklists Starting Day/Ending Day e refaz o baseline de progresso do dia com o total atual, como se fosse a primeira abertura do dia' },
   { version: 103, date: '2026-08-21', summary: 'Menu de conta agora abre por um botão (☰) ao lado do e-mail em vez de passar o mouse; número da versão sobe para o topo, ao lado de "atualizado às"' },
   { version: 102, date: '2026-08-06', summary: 'Corrige Lembretes durante viagem: usa a data e hora gravadas no próprio lembrete (fuso do aparelho) em vez de sempre converter para o fuso de São Paulo — resolve horário exibido errado e lembretes de hoje aparecendo como vencidos' },

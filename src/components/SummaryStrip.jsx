@@ -1,4 +1,3 @@
-import DayProgressBar from './DayProgressBar';
 import styles from './SummaryStrip.module.css';
 
 function StatCard({ title, value, suffix, className }) {
@@ -13,7 +12,7 @@ function StatCard({ title, value, suffix, className }) {
   );
 }
 
-export default function SummaryStrip({ page, counts, habits, water, waterTarget, sleepHours, weight, lists, dayProgress }) {
+export default function SummaryStrip({ page, counts, habits, water, waterTarget, sleepHours, weight, lists, dayProgressPercent }) {
   const isHoje = page === 'hoje';
   const isSaude = page === 'saude';
 
@@ -38,10 +37,10 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
               <div
                 className={styles.geralRing}
                 style={{
-                  background: `conic-gradient(#8fd9b6 ${dayProgress.percent * 3.6}deg, rgba(255,255,255,0.18) 0deg)`,
+                  background: `conic-gradient(#8fd9b6 ${dayProgressPercent * 3.6}deg, rgba(255,255,255,0.18) 0deg)`,
                 }}
               >
-                <div className={styles.geralRingInner}>{dayProgress.percent}%</div>
+                <div className={styles.geralRingInner}>{dayProgressPercent}%</div>
               </div>
               <div className={styles.geralValue}>{counts.geralTotal}</div>
             </div>
@@ -50,9 +49,6 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
           <StatCard title="Ending Day" value={counts.noitePend} className={styles.hojeCard} />
           <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} />
           <StatCard title="Hábitos" value={counts.habitosPend} className={styles.hojeCard} />
-        </div>
-        <div className={styles.progressRow}>
-          <DayProgressBar percent={dayProgress.percent} done={dayProgress.done} total={dayProgress.total} />
         </div>
       </div>
 
