@@ -243,6 +243,18 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     URL.revokeObjectURL(url);
   }, [state, userEmail]);
 
+  // Manual equivalent of today's first-load flow (see the daily-reset effect
+  // above): asks to reset Starting Day/Ending Day, then re-freezes the
+  // day-progress baseline against the current total. Dispatched directly
+  // instead of reloading with ?forceReset=1 since everything's already
+  // loaded by the time the user reaches this menu — no need to wait out the
+  // 16-30s source-loading window that a fresh page load has to.
+  const handleResetDay = useCallback(async () => {
+    const reset = await confirm('Reiniciar as checklists "Starting Day" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
+    dispatch({ type: 'APPLY_DAILY_RESET', reset });
+    dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: new Date().toDateString(), baseline: counts.geralTotal });
+  }, [confirm, dispatch, counts.geralTotal]);
+
   if (status === 'loading') {
     return (
       <div className={styles.card} style={{ background: CARD_BG.hoje }}>
@@ -271,6 +283,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
+        onResetDay={handleResetDay}
         badgeCount={counts.geralTotal}
       />
 

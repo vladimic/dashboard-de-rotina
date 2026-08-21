@@ -10,7 +10,7 @@ const TABS = [
   { key: 'backlog', label: 'Backlog' },
 ];
 
-export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData, badgeCount }) {
+export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData, onResetDay, badgeCount }) {
   const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -89,6 +89,15 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
                   }}
                 >
                   Histórico de Versões
+                </div>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onResetDay();
+                  }}
+                >
+                  Reiniciar dia
                 </div>
                 <div
                   className={styles.dropdownItem}
