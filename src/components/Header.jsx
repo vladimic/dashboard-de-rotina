@@ -13,8 +13,6 @@ const TABS = [
 export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData, badgeCount }) {
   const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
 
-  // Hover-to-open only works with a mouse — on touch there's no hover, so
-  // the menu also opens on tap and closes on an outside tap.
   const [menuOpen, setMenuOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const menuRef = useRef(null);
@@ -46,6 +44,9 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
       <div className={styles.right}>
         <div className={styles.rightTop}>
           {loading && <div className={styles.loadingMsg}>Carregando informações...</div>}
+          <span className={styles.version} title="Versão do dashboard">
+            v{APP_VERSION}
+          </span>
           <div className={styles.updatedAt}>atualizado às {updatedAt}</div>
           <button type="button" className={styles.refreshAll} onClick={onRefreshAll}>
             Atualizar tudo
@@ -58,49 +59,48 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
         </div>
         {onSignOut && (
           <div className={styles.account}>
-            {userEmail && (
-              <div
-                className={styles.emailMenu}
-                data-open={menuOpen}
-                ref={menuRef}
+            {userEmail && <span className={styles.email}>{userEmail}</span>}
+            <div className={styles.emailMenu} data-open={menuOpen} ref={menuRef}>
+              <button
+                type="button"
+                className={styles.menuButton}
+                aria-label="Abrir menu"
                 onClick={() => setMenuOpen((o) => !o)}
               >
-                <span className={styles.email}>{userEmail}</span>
-                <div className={styles.dropdown}>
-                  <div
-                    className={styles.dropdownItem}
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onExportData();
-                    }}
-                  >
-                    Exportar dados
-                  </div>
-                  <div
-                    className={styles.dropdownItem}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpen(false);
-                      setHistoryOpen(true);
-                    }}
-                  >
-                    Histórico de Versões
-                  </div>
-                  <div
-                    className={styles.dropdownItem}
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onSignOut();
-                    }}
-                  >
-                    Sair
-                  </div>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </button>
+              <div className={styles.dropdown}>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onExportData();
+                  }}
+                >
+                  Exportar dados
+                </div>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setHistoryOpen(true);
+                  }}
+                >
+                  Histórico de Versões
+                </div>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onSignOut();
+                  }}
+                >
+                  Sair
                 </div>
               </div>
-            )}
-            <span className={styles.version} title="Versão do dashboard">
-              v{APP_VERSION}
-            </span>
+            </div>
           </div>
         )}
       </div>

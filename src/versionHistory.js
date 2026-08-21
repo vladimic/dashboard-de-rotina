@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 103, date: '2026-08-21', summary: 'Menu de conta agora abre por um botão (☰) ao lado do e-mail em vez de passar o mouse; número da versão sobe para o topo, ao lado de "atualizado às"' },
   { version: 102, date: '2026-08-06', summary: 'Corrige Lembretes durante viagem: usa a data e hora gravadas no próprio lembrete (fuso do aparelho) em vez de sempre converter para o fuso de São Paulo — resolve horário exibido errado e lembretes de hoje aparecendo como vencidos' },
   { version: 101, date: '2026-07-30', summary: 'Corrige o alinhamento do subcontador do card Geral: agora fica exatamente na mesma altura do número da HubSpot na 1ª linha' },
   { version: 100, date: '2026-07-30', summary: 'Sobe o subcontador do card Geral para o topo, alinhado com os números da 1ª linha, usando a mesma fonte deles' },

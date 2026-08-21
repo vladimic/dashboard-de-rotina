@@ -82,11 +82,24 @@
 
 .emailMenu {
   position: relative;
-  cursor: pointer;
-  padding: 4px 0;
 }
 
-.emailMenu:hover .dropdown,
+.menuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: #c3b3c9;
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: #f3ecf5;
+  color: #5b4a63;
+}
+
 .emailMenu[data-open='true'] .dropdown {
   display: block;
 }
@@ -244,8 +257,9 @@
     white-space: nowrap;
   }
 
-  .emailMenu {
-    padding: 8px 0;
+  .menuButton {
+    width: 30px;
+    height: 30px;
   }
 
   .dropdown {
@@ -257,9 +271,7 @@
   }
 
   /* Top segmented tabs become a fixed, thumb-reachable bottom bar — the
-     same buttons and click handlers, just repositioned. Hover-to-open the
-     account dropdown doesn't exist on touch, so Header.jsx also toggles it
-     on tap (data-open) — the hover rule above still covers desktop/mouse. */
+     same buttons and click handlers, just repositioned. */
   .tabs {
     position: fixed;
     left: 0;
