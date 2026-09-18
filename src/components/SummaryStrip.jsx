@@ -1,8 +1,13 @@
 import styles from './SummaryStrip.module.css';
 
-function StatCard({ title, value, suffix, className }) {
+function StatCard({ title, value, suffix, className, done }) {
   return (
-    <div className={`${styles.card} ${className || ''}`}>
+    <div className={`${styles.card} ${className || ''} ${done ? styles.cardDone : ''}`}>
+      {done && (
+        <div className={styles.doneBadge}>
+          <span className={styles.doneBadgeCheck}>✓</span>
+        </div>
+      )}
       <div className={styles.cardTitle}>{title}</div>
       <div className={styles.cardValue}>
         {value}
@@ -22,10 +27,10 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
     <div className={styles.strip}>
       <div className={styles.hojeGroup} data-dim={isSaude}>
         <div className={styles.kpiScroll}>
-          <StatCard title="Meu Dia" value={counts.meuDiaCount} className={styles.hojeCard} />
-          <StatCard title="Lembretes" value={lists.lembretesTotal} className={styles.hojeCard} />
-          <StatCard title="Notion" value={lists.notionTotal} className={styles.hojeCard} />
-          <StatCard title="HubSpot" value={counts.hubspotTotal} className={styles.hojeCard} />
+          <StatCard title="Meu Dia" value={counts.meuDiaCount} className={styles.hojeCard} done={counts.meuDiaCount === 0} />
+          <StatCard title="Lembretes" value={lists.lembretesTotal} className={styles.hojeCard} done={lists.lembretesTotal === 0} />
+          <StatCard title="Notion" value={lists.notionTotal} className={styles.hojeCard} done={lists.notionTotal === 0} />
+          <StatCard title="HubSpot" value={counts.hubspotTotal} className={styles.hojeCard} done={counts.hubspotTotal === 0} />
           <div className={styles.geralCard}>
             <div className={styles.geralTop}>
               <div className={styles.geralTitle}>Geral</div>
@@ -45,10 +50,10 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
               <div className={styles.geralValue}>{counts.geralTotal}</div>
             </div>
           </div>
-          <StatCard title="Starting Day" value={counts.manhaPend} className={styles.hojeCard} />
-          <StatCard title="Ending Day" value={counts.noitePend} className={styles.hojeCard} />
-          <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} />
-          <StatCard title="Hábitos" value={counts.habitosPend} className={styles.hojeCard} />
+          <StatCard title="Starting Day" value={counts.manhaPend} className={styles.hojeCard} done={counts.manhaPend === 0} />
+          <StatCard title="Ending Day" value={counts.noitePend} className={styles.hojeCard} done={counts.noitePend === 0} />
+          <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} done={lists.ticktickTotal === 0} />
+          <StatCard title="Hábitos" value={counts.habitosPend} className={styles.hojeCard} done={counts.habitosPend === 0} />
         </div>
       </div>
 

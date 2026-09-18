@@ -42,6 +42,7 @@
 }
 
 .card {
+  position: relative;
   min-width: 0;
   background: #fff;
   border-radius: 12px;
@@ -59,6 +60,33 @@
 .saudeCard {
   flex: 1;
   box-shadow: 0 1px 3px rgba(63, 107, 87, 0.1);
+}
+
+/* A block with nothing pending — 3px mint outline + a small check badge in
+   the top-right corner, in the same #8fd9b6 already used for "done" states
+   (habit checkmarks, the Geral ring) elsewhere in the dashboard. */
+.cardDone {
+  padding: 6px 8px;
+  border: 3px solid #8fd9b6;
+}
+
+.doneBadge {
+  position: absolute;
+  top: -8px;
+  right: 5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #8fd9b6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doneBadgeCheck {
+  font: 700 11px Inter, sans-serif;
+  color: #1f4d3a;
+  line-height: 1;
 }
 
 .cardTitle {
