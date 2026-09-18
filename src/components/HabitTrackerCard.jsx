@@ -1,18 +1,16 @@
 import { weekdayLetter } from '../utils/format';
 import styles from './HabitTrackerCard.module.css';
 
+// Sits on the same row as the group title, right-aligned above the day
+// cells in the rows below it (same width/gap as `.days` there).
 function DaysHeader({ days }) {
   return (
-    <div className={styles.daysHeader}>
-      <div className={styles.checkboxSpacer} />
-      <div className={styles.daysHeaderSpacer} />
-      <div className={styles.days}>
-        {days.map((d) => (
-          <div key={d} className={styles.dayLetter}>
-            {weekdayLetter(d)}
-          </div>
-        ))}
-      </div>
+    <div className={styles.days}>
+      {days.map((d) => (
+        <div key={d} className={styles.dayLetter}>
+          {weekdayLetter(d)}
+        </div>
+      ))}
     </div>
   );
 }
@@ -182,12 +180,14 @@ export default function HabitTrackerCard({
       {open && (
         <>
           <div className={styles.groupHeader}>
-            <span className={styles.groupLabel}>Hábitos Diários</span>
-            <span className={styles.groupCount}>
-              {bons.pend}/{bons.total}
-            </span>
+            <div className={styles.groupHeaderLeft}>
+              <span className={styles.groupLabel}>Hábitos Diários</span>
+              <span className={styles.groupCount}>
+                {bons.pend}/{bons.total}
+              </span>
+            </div>
+            {!edit && <DaysHeader days={days} />}
           </div>
-          {!edit && <DaysHeader days={days} />}
           {edit ? (
             <EditRows
               items={bons.rows}
@@ -216,12 +216,14 @@ export default function HabitTrackerCard({
           <div className={styles.divider} />
 
           <div className={styles.groupHeader}>
-            <span className={styles.groupLabelBad}>Hábitos a Evitar</span>
-            <span className={styles.groupCount}>
-              {ruins.pend}/{ruins.total}
-            </span>
+            <div className={styles.groupHeaderLeft}>
+              <span className={styles.groupLabelBad}>Hábitos a Evitar</span>
+              <span className={styles.groupCount}>
+                {ruins.pend}/{ruins.total}
+              </span>
+            </div>
+            {!edit && <DaysHeader days={days} />}
           </div>
-          {!edit && <DaysHeader days={days} />}
           {edit ? (
             <EditRows
               items={ruins.rows}
