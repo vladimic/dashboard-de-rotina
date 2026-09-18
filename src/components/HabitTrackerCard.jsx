@@ -181,13 +181,13 @@ export default function HabitTrackerCard({
 
       {open && (
         <>
-          {!edit && <DaysHeader days={days} />}
           <div className={styles.groupHeader}>
             <span className={styles.groupLabel}>Hábitos Diários</span>
             <span className={styles.groupCount}>
               {bons.pend}/{bons.total}
             </span>
           </div>
+          {!edit && <DaysHeader days={days} />}
           {edit ? (
             <EditRows
               items={bons.rows}
@@ -221,6 +221,7 @@ export default function HabitTrackerCard({
               {ruins.pend}/{ruins.total}
             </span>
           </div>
+          {!edit && <DaysHeader days={days} />}
           {edit ? (
             <EditRows
               items={ruins.rows}

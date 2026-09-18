@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 107, date: '2026-09-18', summary: 'Hábitos: contador fica colado ao lado do título de cada grupo (Diários/A Evitar), e o cabeçalho com a letra do dia da semana repete acima dos quadradinhos de cada grupo, bem mais próximo deles' },
   { version: 106, date: '2026-09-18', summary: 'Ending Week agora reinicia em qualquer horário de sexta-feira (não só depois das 14h); bloco de Hábitos ganha um cabeçalho com a letra do dia da semana acima dos quadradinhos' },
   { version: 105, date: '2026-08-21', summary: 'Remove a barra "Progresso do dia" do cabeçalho; o card Geral (anel de % + total) fica no lugar dela. O painel de Saúde ao lado agora acompanha a altura do bloco Hoje automaticamente' },
   { version: 104, date: '2026-08-21', summary: 'Adiciona "Reiniciar dia" ao menu de conta: pergunta se quer zerar as checklists Starting Day/Ending Day e refaz o baseline de progresso do dia com o total atual, como se fosse a primeira abertura do dia' },

@@ -67,8 +67,8 @@
 
 .groupHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 6px;
   padding: 4px 0;
 }
 
