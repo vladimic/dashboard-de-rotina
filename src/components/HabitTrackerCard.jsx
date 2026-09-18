@@ -1,4 +1,21 @@
+import { weekdayLetter } from '../utils/format';
 import styles from './HabitTrackerCard.module.css';
+
+function DaysHeader({ days }) {
+  return (
+    <div className={styles.daysHeader}>
+      <div className={styles.checkboxSpacer} />
+      <div className={styles.daysHeaderSpacer} />
+      <div className={styles.days}>
+        {days.map((d) => (
+          <div key={d} className={styles.dayLetter}>
+            {weekdayLetter(d)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function EditRows({ items, days, onCycleMark, onUpdateText, onUpdateLink, onRemoveItem, onDragStart, onDrop }) {
   return items.map((h) => (
@@ -164,6 +181,7 @@ export default function HabitTrackerCard({
 
       {open && (
         <>
+          {!edit && <DaysHeader days={days} />}
           <div className={styles.groupHeader}>
             <span className={styles.groupLabel}>Hábitos Diários</span>
             <span className={styles.groupCount}>

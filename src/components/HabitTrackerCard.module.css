@@ -41,6 +41,30 @@
   text-decoration: underline;
 }
 
+.daysHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.checkboxSpacer {
+  width: 16px;
+  flex: none;
+}
+
+.daysHeaderSpacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.dayLetter {
+  width: 14px;
+  text-align: center;
+  font: 600 10px Inter, sans-serif;
+  color: #a897ad;
+}
+
 .groupHeader {
   display: flex;
   justify-content: space-between;
@@ -254,6 +278,10 @@ a.habitLabel {
   .checkbox {
     width: 20px;
     height: 20px;
+  }
+
+  .checkboxSpacer {
+    width: 20px;
   }
 
   .habitRow {

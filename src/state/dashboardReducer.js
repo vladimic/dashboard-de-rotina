@@ -194,7 +194,7 @@ export function dashboardReducer(state, action) {
       return { ...state, dayProgressDate: action.date, dayProgressBaseline: action.baseline };
     }
 
-    // Asked once per week, right after the Friday-14:00 boundary passes (see
+    // Asked once per week, on first load on or after Friday (see
     // DashboardApp's week-reset effect) — mirrors APPLY_DAILY_RESET but for
     // the "Ending Week" checklist only.
     case 'APPLY_WEEK_RESET': {

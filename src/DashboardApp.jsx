@@ -125,8 +125,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     })();
   }, [status, state.lastResetDate, confirm, dispatch, forceReset]);
 
-  // First load after the Friday-14:00 boundary passes — ask before wiping
-  // "Ending Week". Saying no leaves it as-is until next week's prompt.
+  // First load on or after Friday — ask before wiping "Ending Week".
+  // Saying no leaves it as-is until next week's prompt.
   const weekAskedRef = useRef(false);
   useEffect(() => {
     if (status !== 'ready' || weekAskedRef.current) return;
