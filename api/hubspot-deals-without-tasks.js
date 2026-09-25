@@ -10,8 +10,10 @@ const OTHER_STAGE_LABEL = 'Outro estágio';
 // Stages that shouldn't count as "sem tarefa" — mostly cold/dead/closed
 // buckets where an open task wouldn't be expected anyway.
 const EXCLUDED_STAGES = [
+  'inbox',
   'potencial',
   'remarketing',
+  'contato quente',
   'contato morno',
   'contato frio',
   'closed lost',

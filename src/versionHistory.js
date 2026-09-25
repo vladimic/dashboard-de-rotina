@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 110, date: '2026-09-25', summary: 'HubSpot - Deals sem Tarefa: exclui deals nos estágios Inbox e Contato Quente, além dos já excluídos' },
   { version: 109, date: '2026-09-18', summary: 'Cards do resumo (Meu Dia, Lembretes, Notion, HubSpot, Starting/Ending Day, TickTick, Hábitos) ganham contorno verde de 3px + selo de check quando o bloco zera' },
   { version: 108, date: '2026-09-18', summary: 'Hábitos: remove a linha extra do cabeçalho de dias da semana — agora ele fica na mesma linha do título do grupo (à direita, acima dos quadradinhos), sem espaço em branco entre o título e o primeiro hábito' },
   { version: 107, date: '2026-09-18', summary: 'Hábitos: contador fica colado ao lado do título de cada grupo (Diários/A Evitar), e o cabeçalho com a letra do dia da semana repete acima dos quadradinhos de cada grupo, bem mais próximo deles' },
