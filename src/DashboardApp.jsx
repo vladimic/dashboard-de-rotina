@@ -40,7 +40,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const syncReminders = useCallback(() => {
     refreshReminders();
     window.location.href = syncRemindersShortcutUrl();
-    [3000, 6000, 10000, 15000].forEach((delay) => setTimeout(refreshReminders, delay));
+    // The Atalho loops once per reminder (format date + build dict) before
+    // it can POST — with a few dozen+ reminders that loop alone can run
+    // past 15s, so the old cutoff could stop polling before the webhook
+    // write actually landed, leaving the dashboard stuck on stale data.
+    [3000, 6000, 10000, 15000, 20000, 30000, 45000].forEach((delay) => setTimeout(refreshReminders, delay));
   }, [refreshReminders]);
 
   // Also catches the moment the round-trip to the Atalhos app returns here.
