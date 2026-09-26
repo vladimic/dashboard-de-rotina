@@ -58,6 +58,8 @@ function UsdPopover({ series, period, onPeriodChange }) {
   const values = points.map((p) => p.bid);
   const linePoints = hasData ? buildLinePoints(values) : [];
   const pct = hasData ? ((values[values.length - 1] - values[0]) / values[0]) * 100 : null;
+  const minVal = hasData ? Math.min(...values) : null;
+  const maxVal = hasData ? Math.max(...values) : null;
   const color = pct != null && pct < 0 ? RED : GREEN;
   const areaPoints = hasData
     ? [`${CHART_PAD},${CHART_H - CHART_PAD}`, ...linePoints, `${(CHART_W - CHART_PAD).toFixed(1)},${CHART_H - CHART_PAD}`].join(' ')
@@ -132,9 +134,19 @@ function UsdPopover({ series, period, onPeriodChange }) {
             )}
           </div>
           <div className={styles.usdChartLabels}>
-            <div className={styles.usdChartLabelStart}>
-              <span>{fmtChartDate(points[0].date)}</span>
-              <span className={styles.usdChartLabelValue}>{fmtBRL(points[0].bid)}</span>
+            <div className={styles.usdChartStats}>
+              <div className={styles.usdChartStat}>
+                <span>{fmtChartDate(points[0].date)}</span>
+                <span className={styles.usdChartLabelValue}>{fmtBRL(points[0].bid)}</span>
+              </div>
+              <div className={styles.usdChartStat}>
+                <span>Mínimo</span>
+                <span className={styles.usdChartLabelValue}>{fmtBRL(minVal)}</span>
+              </div>
+              <div className={styles.usdChartStat}>
+                <span>Máximo</span>
+                <span className={styles.usdChartLabelValue}>{fmtBRL(maxVal)}</span>
+              </div>
             </div>
             <span>{fmtChartDate(points[points.length - 1].date)}</span>
           </div>
@@ -184,7 +196,7 @@ export default function Header({
   }, [menuOpen]);
 
   const [usdOpen, setUsdOpen] = useState(false);
-  const [usdPeriod, setUsdPeriod] = useState(30);
+  const [usdPeriod, setUsdPeriod] = useState(7);
   const usdRef = useRef(null);
   useEffect(() => {
     if (!usdOpen) return undefined;
@@ -244,19 +256,21 @@ export default function Header({
       </div>
       <div className={styles.right}>
         <div className={styles.rightTop}>
-          <span className={styles.version} title="Versão do dashboard">
-            v{APP_VERSION}
-          </span>
           <div className={styles.updatedAt}>atualizado às {updatedAt}</div>
-          <button type="button" className={styles.refreshAll} onClick={onRefreshAll}>
-            Atualizar tudo
-          </button>
-          {notificationsBlocked && (
-            <button type="button" className={styles.refreshAll} onClick={() => requestNotificationPermission(badgeCount)}>
-              Ativar notificações
+          <div className={styles.rightButtons}>
+            <button type="button" className={styles.refreshAll} onClick={onRefreshAll}>
+              Atualizar tudo
             </button>
-          )}
+            {notificationsBlocked && (
+              <button type="button" className={styles.refreshAll} onClick={() => requestNotificationPermission(badgeCount)}>
+                Ativar notificações
+              </button>
+            )}
+          </div>
         </div>
+        <span className={styles.version} title="Versão do dashboard">
+          v{APP_VERSION}
+        </span>
         {onSignOut && (
           <div className={styles.account}>
             <div className={styles.accountText}>

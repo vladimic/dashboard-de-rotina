@@ -188,7 +188,12 @@
   color: #c3b3c9;
 }
 
-.usdChartLabelStart {
+.usdChartStats {
+  display: flex;
+  gap: 12px;
+}
+
+.usdChartStat {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -223,21 +228,38 @@
   color: #5b4a63;
 }
 
+/* A 3-column grid instead of two independently-right-aligned flex rows —
+   needed so "vXXX" (row 2) can share an exact column with "atualizado às"
+   (row 1) regardless of how wide either row's other content is. .rightTop
+   and .account stay as display:contents wrappers purely for JSX grouping;
+   their children are the actual grid cells, explicitly placed below. */
 .right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  column-gap: 10px;
+  row-gap: 4px;
+  justify-items: end;
+  align-items: center;
   flex: 1;
 }
 
 .rightTop {
+  display: contents;
   font: 500 12px Inter, sans-serif;
   color: #b59cb0;
+}
+
+.updatedAt {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.rightButtons {
+  grid-column: 3;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 10px;
-  justify-content: flex-end;
 }
 
 /* Sits under the email (see .accountText) instead of next to the version
@@ -267,14 +289,14 @@
 }
 
 .account {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: contents;
   font: 500 10px Inter, sans-serif;
   color: #c3b3c9;
 }
 
 .accountText {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -282,6 +304,8 @@
 }
 
 .emailMenu {
+  grid-column: 3;
+  grid-row: 2;
   position: relative;
 }
 
@@ -332,6 +356,8 @@
 }
 
 .version {
+  grid-column: 2;
+  grid-row: 2;
   font: 600 9px 'SF Mono', Menlo, monospace;
   color: #c3b3c9;
   background: #f3ecf5;
@@ -456,13 +482,20 @@
     width: min(300px, calc(100vw - 32px));
   }
 
+  /* The 3-column grid exists for desktop's version/"atualizado às" column
+     alignment — mobile hides updatedAt entirely (below) and wraps the
+     header anyway, so it reverts to a plain right-aligned flex column. */
   .right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
     flex: none;
   }
 
-  .rightTop {
-    justify-content: flex-end;
+  .rightButtons {
     flex-wrap: wrap;
+    justify-content: flex-end;
     row-gap: 6px;
   }
 
