@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 114, date: '2026-09-26', summary: 'Cotação do dólar: cache no edge da Vercel não funcionava (deployment protection desativa cache), troca pra cache real no Supabase (usd_quote_cache) — precisa criar a tabela, ver instrução' },
   { version: 113, date: '2026-09-25', summary: 'Corrige cotação do dólar não carregando (429 da AwesomeAPI): resposta agora fica em cache no edge da Vercel por 5min, reduzindo as chamadas reais à API e evitando o rate limit' },
   { version: 112, date: '2026-09-25', summary: 'Adiciona cotação do dólar no cabeçalho, ao lado da data: variação do dia + popover com gráfico e % de 7d/30d/90d/365d (fonte: AwesomeAPI — UOL bloqueia scraping via WAF). Atualiza só ao abrir o dash, no botão de refresh ou no "Atualizar tudo"' },
   { version: 111, date: '2026-09-25', summary: 'Lembretes: sync com o Atalho continua tentando por até 45s (antes parava em 15s) — com muitos lembretes o loop do Atalho pode demorar mais que isso pra terminar e postar os dados filtrados' },
