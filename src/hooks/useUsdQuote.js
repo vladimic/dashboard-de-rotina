@@ -15,7 +15,12 @@ export function useUsdQuote() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/usd-quote?t=${Date.now()}`, { cache: 'no-store' });
+      // No cache-busting query param here (unlike the other hooks) — the
+      // stable URL is what lets Vercel's edge cache shield the AwesomeAPI
+      // rate limit (see api/usd-quote.js). "Refresh" still re-renders with
+      // whatever's currently cached; a genuinely new quote shows up once
+      // that cache window rolls over.
+      const res = await fetch('/api/usd-quote');
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to load USD quote');
       setData(json);

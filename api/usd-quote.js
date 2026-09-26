@@ -7,7 +7,15 @@
 // AwesomeAPI tracks the same underlying market rate.
 
 export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 'no-store');
+  // Vercel's serverless functions share outbound IPs across many unrelated
+  // projects, so AwesomeAPI's rate limit (429) can trip from barely any
+  // traffic of our own. Letting Vercel's edge cache this response for a few
+  // minutes — instead of "no-store" — cuts real upstream calls down to
+  // roughly one per window regardless of how often the dashboard is opened
+  // or the refresh button is clicked; stale-while-revalidate keeps serving
+  // the last good quote instead of erroring while a fresh one is fetched in
+  // the background. A stale-by-a-few-minutes FX quote is fine for this use.
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=1800');
 
   try {
     const [lastRes, dailyRes] = await Promise.all([
