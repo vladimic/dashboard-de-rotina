@@ -1,58 +1,57 @@
 // Vercel serverless function. Fetches the USD/BRL quote (current + daily
-// closes for the last year) from AwesomeAPI (economia.awesomeapi.com.br) —
-// a free, key-less market data API. UOL's own cambio page was the original
-// target, but it sits behind an Akamai WAF that returns a 403 "Access
-// Denied" to any non-browser request (confirmed even with a real browser
-// User-Agent), so it can't be scraped reliably from a serverless function.
-// AwesomeAPI tracks the same underlying market rate.
+// closes for the last year) from the Banco Central do Brasil's own PTAX
+// API (olinda.bcb.gov.br) — the official Brazilian exchange rate, published
+// once per business day. Two other sources were tried first: UOL's cambio
+// page sits behind an Akamai WAF that 403s any non-browser request, and
+// AwesomeAPI (a free third-party aggregator) rate-limited (429) every
+// single call from this deployment — Vercel functions share outbound IPs
+// across many unrelated projects, so that 429 likely wasn't even about our
+// own traffic. BCB's API is free, key-less, and has shown no such issue.
 //
-// AwesomeAPI's free tier rate-limits (429) surprisingly fast — Vercel
-// functions share outbound IPs across many unrelated projects, so even
-// light traffic from this dashboard alone can trip it. A Vercel edge
-// Cache-Control header was tried first, but this project's deployment has
-// "Deployment Protection" on, and Vercel doesn't cache responses on
-// protected deployments — so instead this caches in Supabase (same
-// pattern as reminders_cache): serve straight from cache within
-// CACHE_TTL_MS, and on a genuine refetch, fall back to the last cached
-// value (even if stale) rather than erroring if AwesomeAPI 429s.
+// Still cached in Supabase (same pattern as reminders_cache) so a burst of
+// page loads/refreshes doesn't turn into a burst of upstream calls, and a
+// transient failure falls back to the last known-good quote instead of
+// erroring outright.
 
 import { createClient } from '@supabase/supabase-js';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+function fmtMMDDYYYY(date) {
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${mm}-${dd}-${date.getFullYear()}`;
+}
+
 async function fetchFresh() {
-  const [lastRes, dailyRes] = await Promise.all([
-    fetch('https://economia.awesomeapi.com.br/last/USD-BRL'),
-    // 365 daily closes is enough to cover every period the header offers
-    // (7/30/90/365d) from one request instead of four.
-    fetch('https://economia.awesomeapi.com.br/json/daily/USD-BRL/365'),
-  ]);
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(start.getDate() - 370); // comfortably covers 365 days of trading data
 
-  if (!lastRes.ok) throw new Error(`AwesomeAPI /last failed (${lastRes.status})`);
-  if (!dailyRes.ok) throw new Error(`AwesomeAPI /daily failed (${dailyRes.status})`);
+  const url =
+    'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)' +
+    `?@dataInicial='${fmtMMDDYYYY(start)}'&@dataFinalCotacao='${fmtMMDDYYYY(today)}'&$top=1000&$format=json`;
 
-  const lastJson = await lastRes.json();
-  const dailyJson = await dailyRes.json();
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`BCB PTAX failed (${res.status})`);
+  const json = await res.json();
+  const rows = json.value || [];
+  if (rows.length === 0) throw new Error('BCB PTAX returned no data.');
 
-  const quote = lastJson.USDBRL;
-  if (!quote) throw new Error('Unexpected AwesomeAPI /last response shape.');
-
-  const dtf = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' });
-
-  // AwesomeAPI returns newest-first; reverse to oldest-first for the chart.
-  const series = [...dailyJson]
-    .reverse()
-    .map((d) => ({ date: dtf.format(new Date(Number(d.timestamp) * 1000)), bid: Number(d.bid) }))
+  // dataHoraCotacao is already "YYYY-MM-DD HH:mm:ss..." in Brasília local
+  // time (BCB is a Brazilian government service), so the first 10 chars
+  // are the date key directly — no timezone conversion needed.
+  const series = rows
+    .map((r) => ({ date: r.dataHoraCotacao.slice(0, 10), bid: Number(r.cotacaoVenda) }))
     .filter((p) => Number.isFinite(p.bid));
 
-  const timestampMs = Number(quote.timestamp) * 1000;
+  const last = series[series.length - 1];
+  const prev = series.length > 1 ? series[series.length - 2] : null;
+  const pctChange = prev ? ((last.bid - prev.bid) / prev.bid) * 100 : 0;
 
   return {
-    updatedAt: Number.isFinite(timestampMs) ? new Date(timestampMs).toISOString() : new Date().toISOString(),
-    current: {
-      bid: Number(quote.bid),
-      pctChange: Number(quote.pctChange),
-    },
+    updatedAt: new Date().toISOString(),
+    current: { bid: last.bid, pctChange },
     series,
   };
 }
@@ -91,8 +90,8 @@ export default async function handler(req, res) {
       if (writeError) console.error('Failed to cache USD quote:', writeError.message);
       res.status(200).json(payload);
     } catch (fetchErr) {
-      // AwesomeAPI failed (e.g. 429) — serve the last known-good quote
-      // instead of erroring outright, even if it's older than the TTL.
+      // BCB failed — serve the last known-good quote instead of erroring
+      // outright, even if it's older than the TTL.
       if (row?.data) {
         res.status(200).json(row.data);
         return;
