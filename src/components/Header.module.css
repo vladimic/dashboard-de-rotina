@@ -24,6 +24,17 @@
   color: #fff;
 }
 
+/* .dateCol and .usdCol are each their own flex:1 slot — same width as
+   .tabs and .right — so the date centers in its own space exactly like
+   before the USD box existed, and the USD box gets an equally-sized,
+   independently centered slot right after it, instead of the two
+   competing for space inside one shared centered group. */
+.dateCol {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+}
+
 .date {
   font: 700 26px Inter, sans-serif;
   color: #5b4a63;
@@ -31,16 +42,13 @@
   white-space: nowrap;
 }
 
-/* Two of these sit around .usdWrap — equal flex:1 grow means the USD box
-   lands exactly at the midpoint between the date and .right (which is
-   flex:none, so it hugs its own content with no internal slack, keeping
-   that midpoint honest instead of drifting toward .right's own padding). */
-.usdSpacer {
+.usdCol {
+  display: flex;
+  justify-content: center;
   flex: 1;
 }
 
 .usdWrap {
-  flex: none;
   position: relative;
 }
 
@@ -132,7 +140,7 @@
 
 .usdPeriodRow {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   margin-bottom: 8px;
   font: 700 16px Inter, sans-serif;
 }
@@ -220,7 +228,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
-  flex: none;
+  flex: 1;
 }
 
 .rightTop {
@@ -236,7 +244,7 @@
    badge — small enough to fit in that row without growing .account past
    the height the menu button already sets. */
 .loadingMsg {
-  font: 700 7px Inter, sans-serif;
+  font: 700 8px Inter, sans-serif;
   color: #8fd9b6;
   animation: pulse 1.4s ease-in-out infinite;
 }
@@ -419,18 +427,22 @@
     row-gap: 8px;
   }
 
-  .date {
+  .dateCol {
     flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+
+  .date {
     text-align: left;
     font-size: 18px;
   }
 
-  /* Growing spacers make sense on desktop's single row; on mobile the
-     header wraps, so a fixed small gap between date and the USD box
-     reads better than two flex:1 regions fighting the wrap. */
-  .usdSpacer {
+  /* A dedicated centered flex:1 slot makes sense on desktop's single row;
+     on mobile the header wraps, so the USD box just sits right after the
+     date with a small fixed gap instead of claiming its own column. */
+  .usdCol {
     flex: none;
-    width: 8px;
+    margin-left: 8px;
   }
 
   .usdValue {

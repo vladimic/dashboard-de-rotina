@@ -210,36 +210,38 @@ export default function Header({
           </button>
         ))}
       </div>
-      <div className={styles.date}>{todayLong}</div>
-      <div className={styles.usdSpacer} />
-      {usd && (
-        <div className={styles.usdWrap} ref={usdRef}>
-          <div className={styles.usdPill} onClick={() => setUsdOpen((o) => !o)}>
-            <span className={styles.usdLabel}>USD</span>
-            <span className={styles.usdValue}>{usd.current ? fmtBRL(usd.current.bid) : '···'}</span>
-            {usd.current && (
-              <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
-                {fmtPct(usd.current.pctChange)}
+      <div className={styles.dateCol}>
+        <div className={styles.date}>{todayLong}</div>
+      </div>
+      <div className={styles.usdCol}>
+        {usd && (
+          <div className={styles.usdWrap} ref={usdRef}>
+            <div className={styles.usdPill} onClick={() => setUsdOpen((o) => !o)}>
+              <span className={styles.usdLabel}>USD</span>
+              <span className={styles.usdValue}>{usd.current ? fmtBRL(usd.current.bid) : '···'}</span>
+              {usd.current && (
+                <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
+                  {fmtPct(usd.current.pctChange)}
+                </span>
+              )}
+              <span className={styles.usdChevron} data-open={usdOpen}>
+                ▾
               </span>
-            )}
-            <span className={styles.usdChevron} data-open={usdOpen}>
-              ▾
-            </span>
-            <span
-              className={styles.usdRefresh}
-              title="Atualizar cotação"
-              onClick={(e) => {
-                e.stopPropagation();
-                usd.refresh();
-              }}
-            >
-              ⟳
-            </span>
+              <span
+                className={styles.usdRefresh}
+                title="Atualizar cotação"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  usd.refresh();
+                }}
+              >
+                ⟳
+              </span>
+            </div>
+            {usdOpen && <UsdPopover series={usd.series} period={usdPeriod} onPeriodChange={setUsdPeriod} />}
           </div>
-          {usdOpen && <UsdPopover series={usd.series} period={usdPeriod} onPeriodChange={setUsdPeriod} />}
-        </div>
-      )}
-      <div className={styles.usdSpacer} />
+        )}
+      </div>
       <div className={styles.right}>
         <div className={styles.rightTop}>
           <span className={styles.version} title="Versão do dashboard">

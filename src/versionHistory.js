@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 118, date: '2026-09-26', summary: 'Cabeçalho: data volta pra coluna própria centralizada (como era antes), box do dólar ganha sua própria coluna centralizada ao lado — sem mais um empurrar o outro; % do período volta pra direita; fonte de "Carregando informações" um pouco maior' },
   { version: 117, date: '2026-09-26', summary: 'Cabeçalho: "Carregando informações" menor, debaixo do e-mail; box do dólar centralizado de verdade entre a data e a versão; refresh embutido no box; popover do dólar com fonte real (Yahoo, clicável), tooltip no gráfico ao passar o mouse, cotação sob a data inicial, e sem mais "Variação no período"' },
   { version: 115, date: '2026-09-26', summary: 'Cotação do dólar: AwesomeAPI dava 429 em toda chamada vinda da Vercel; troca pra fonte oficial do Banco Central (PTAX), sem rate limit e mais legítima como fonte' },
   { version: 114, date: '2026-09-26', summary: 'Cotação do dólar: cache no edge da Vercel não funcionava (deployment protection desativa cache), troca pra cache real no Supabase (usd_quote_cache) — precisa criar a tabela, ver instrução' },
