@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 120, date: '2026-09-26', summary: 'Corrige coluna direita do cabeçalho: faltava alinhar o grid inteiro à borda direita (só o conteúdo de cada célula estava alinhado), deixando "atualizado às"/versão/e-mail flutuando longe da borda em vez de coladas nela como antes' },
   { version: 119, date: '2026-09-26', summary: 'Gráfico do dólar: período padrão vira 7 dias; Mínimo e Máximo da janela aparecem ao lado da cotação inicial; versão do dashboard move pra linha do e-mail, alinhada embaixo de "atualizado às" (grid de 3 colunas no lugar de duas linhas soltas)' },
   { version: 117, date: '2026-09-26', summary: 'Cabeçalho: "Carregando informações" menor, debaixo do e-mail; box do dólar centralizado de verdade entre a data e a versão; refresh embutido no box; popover do dólar com fonte real (Yahoo, clicável), tooltip no gráfico ao passar o mouse, cotação sob a data inicial, e sem mais "Variação no período"' },
   { version: 115, date: '2026-09-26', summary: 'Cotação do dólar: AwesomeAPI dava 429 em toda chamada vinda da Vercel; troca pra fonte oficial do Banco Central (PTAX), sem rate limit e mais legítima como fonte' },
