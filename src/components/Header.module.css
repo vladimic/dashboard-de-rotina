@@ -228,18 +228,18 @@
   color: #5b4a63;
 }
 
-/* A 3-column grid instead of two independently-right-aligned flex rows —
-   needed so "vXXX" (row 2) can share an exact column with "atualizado às"
-   (row 1) regardless of how wide either row's other content is. .rightTop
-   and .account stay as display:contents wrappers purely for JSX grouping;
-   their children are the actual grid cells, explicitly placed below. */
+/* A 2-column grid instead of independently-right-aligned flex rows —
+   needed so "vXXX" (row 2) shares column 1 with "atualizado às" (row 1),
+   both left-aligned within it, regardless of how wide either row's other
+   content is. Column 2 holds "everything else" per row as its own
+   right-aligned flex group (buttons on row 1; email + menu on row 2).
+   .rightTop stays a display:contents wrapper purely for JSX grouping. */
 .right {
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: auto auto;
   column-gap: 10px;
   row-gap: 4px;
   justify-content: end;
-  justify-items: end;
   align-items: center;
   flex: 1;
 }
@@ -251,21 +251,23 @@
 }
 
 .updatedAt {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 1;
+  justify-self: start;
 }
 
 .rightButtons {
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 1;
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-self: end;
 }
 
 /* Sits under the email (see .accountText) instead of next to the version
-   badge — small enough to fit in that row without growing .account past
-   the height the menu button already sets. */
+   badge — small enough to fit in that row without growing .accountRight
+   past the height the menu button already sets. */
 .loadingMsg {
   font: 700 8px Inter, sans-serif;
   color: #8fd9b6;
@@ -289,15 +291,18 @@
   cursor: pointer;
 }
 
-.account {
-  display: contents;
+.accountRight {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font: 500 10px Inter, sans-serif;
   color: #c3b3c9;
 }
 
 .accountText {
-  grid-column: 1;
-  grid-row: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -305,8 +310,6 @@
 }
 
 .emailMenu {
-  grid-column: 3;
-  grid-row: 2;
   position: relative;
 }
 
@@ -357,8 +360,9 @@
 }
 
 .version {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 2;
+  justify-self: start;
   font: 600 9px 'SF Mono', Menlo, monospace;
   color: #c3b3c9;
   background: #f3ecf5;
@@ -483,7 +487,7 @@
     width: min(300px, calc(100vw - 32px));
   }
 
-  /* The 3-column grid exists for desktop's version/"atualizado às" column
+  /* The 2-column grid exists for desktop's version/"atualizado às" column
      alignment — mobile hides updatedAt entirely (below) and wraps the
      header anyway, so it reverts to a plain right-aligned flex column. */
   .right {

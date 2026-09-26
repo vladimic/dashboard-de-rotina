@@ -272,7 +272,7 @@ export default function Header({
           v{APP_VERSION}
         </span>
         {onSignOut && (
-          <div className={styles.account}>
+          <div className={styles.accountRight}>
             <div className={styles.accountText}>
               {userEmail && <span className={styles.email}>{userEmail}</span>}
               {loading && <span className={styles.loadingMsg}>Carregando informações...</span>}
