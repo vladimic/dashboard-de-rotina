@@ -24,6 +24,9 @@ const CHART_PAD = 4;
 const GREEN = '#3fa578';
 const RED = '#c4506a';
 
+const USD_SOURCE_LABEL = 'Yahoo Finance';
+const USD_SOURCE_URL = 'https://finance.yahoo.com/quote/USDBRL=X';
+
 function fmtBRL(v) {
   return `R$ ${v.toFixed(3).replace('.', ',')}`;
 }
@@ -60,6 +63,19 @@ function UsdPopover({ series, period, onPeriodChange }) {
     ? [`${CHART_PAD},${CHART_H - CHART_PAD}`, ...linePoints, `${(CHART_W - CHART_PAD).toFixed(1)},${CHART_H - CHART_PAD}`].join(' ')
     : '';
 
+  const svgRef = useRef(null);
+  const [hover, setHover] = useState(null);
+
+  const handleMouseMove = (e) => {
+    if (!hasData || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = ((e.clientX - rect.left) / rect.width) * CHART_W;
+    const step = (CHART_W - CHART_PAD * 2) / (points.length - 1 || 1);
+    const index = Math.max(0, Math.min(points.length - 1, Math.round((relX - CHART_PAD) / step)));
+    const [px, py] = linePoints[index].split(',').map(Number);
+    setHover({ index, x: px, y: py });
+  };
+
   return (
     <div className={styles.usdPopover} onClick={(e) => e.stopPropagation()}>
       <div className={styles.usdTabs}>
@@ -74,32 +90,67 @@ function UsdPopover({ series, period, onPeriodChange }) {
           </div>
         ))}
       </div>
-      <div className={styles.usdPeriodRow}>
-        <span>Variação no período</span>
-        {pct != null && <span style={{ color }}>{fmtPct(pct)}</span>}
-      </div>
+      {pct != null && (
+        <div className={styles.usdPeriodRow}>
+          <span style={{ color }}>{fmtPct(pct)}</span>
+        </div>
+      )}
       {hasData ? (
         <>
-          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className={styles.usdSvg}>
-            <polyline points={areaPoints} fill={`${color}1f`} stroke="none" />
-            <polyline
-              points={linePoints.join(' ')}
-              fill="none"
-              stroke={color}
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          </svg>
+          <div className={styles.usdChartWrap}>
+            <svg
+              ref={svgRef}
+              viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+              className={styles.usdSvg}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHover(null)}
+            >
+              <polyline points={areaPoints} fill={`${color}1f`} stroke="none" />
+              <polyline
+                points={linePoints.join(' ')}
+                fill="none"
+                stroke={color}
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+              {hover && (
+                <>
+                  <line x1={hover.x} y1={CHART_PAD} x2={hover.x} y2={CHART_H - CHART_PAD} stroke="#e3d6e8" strokeWidth="1" />
+                  <circle cx={hover.x} cy={hover.y} r="3" fill={color} stroke="#fff" strokeWidth="1.5" />
+                </>
+              )}
+            </svg>
+            {hover && (
+              <div
+                className={styles.usdTooltip}
+                style={{ left: `${(hover.x / CHART_W) * 100}%`, top: `${(hover.y / CHART_H) * 100}%` }}
+              >
+                <div className={styles.usdTooltipDate}>{fmtChartDate(points[hover.index].date)}</div>
+                <div className={styles.usdTooltipValue}>{fmtBRL(points[hover.index].bid)}</div>
+              </div>
+            )}
+          </div>
           <div className={styles.usdChartLabels}>
-            <span>{fmtChartDate(points[0].date)}</span>
+            <div className={styles.usdChartLabelStart}>
+              <span>{fmtChartDate(points[0].date)}</span>
+              <span className={styles.usdChartLabelValue}>{fmtBRL(points[0].bid)}</span>
+            </div>
             <span>{fmtChartDate(points[points.length - 1].date)}</span>
           </div>
         </>
       ) : (
         <div className={styles.usdChartEmpty}>Sem dados suficientes ainda.</div>
       )}
-      <div className={styles.usdSource}>fonte: AwesomeAPI</div>
+      <a
+        className={styles.usdSource}
+        href={USD_SOURCE_URL}
+        target="_blank"
+        rel="noreferrer"
+        onClick={(e) => e.stopPropagation()}
+      >
+        fonte: {USD_SOURCE_LABEL}
+      </a>
     </div>
   );
 }
@@ -159,24 +210,22 @@ export default function Header({
           </button>
         ))}
       </div>
-      <div className={styles.dateGroup}>
-        <div className={styles.date}>{todayLong}</div>
-
-        {usd && (
-          <div className={styles.usdWrap} ref={usdRef}>
-            <div className={styles.usdPill} onClick={() => setUsdOpen((o) => !o)}>
-              <span className={styles.usdLabel}>USD</span>
-              <span className={styles.usdValue}>{usd.current ? fmtBRL(usd.current.bid) : '···'}</span>
-              {usd.current && (
-                <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
-                  {fmtPct(usd.current.pctChange)}
-                </span>
-              )}
-              <span className={styles.usdChevron} data-open={usdOpen}>
-                ▾
+      <div className={styles.date}>{todayLong}</div>
+      <div className={styles.usdSpacer} />
+      {usd && (
+        <div className={styles.usdWrap} ref={usdRef}>
+          <div className={styles.usdPill} onClick={() => setUsdOpen((o) => !o)}>
+            <span className={styles.usdLabel}>USD</span>
+            <span className={styles.usdValue}>{usd.current ? fmtBRL(usd.current.bid) : '···'}</span>
+            {usd.current && (
+              <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
+                {fmtPct(usd.current.pctChange)}
               </span>
-            </div>
-            <div
+            )}
+            <span className={styles.usdChevron} data-open={usdOpen}>
+              ▾
+            </span>
+            <span
               className={styles.usdRefresh}
               title="Atualizar cotação"
               onClick={(e) => {
@@ -185,14 +234,14 @@ export default function Header({
               }}
             >
               ⟳
-            </div>
-            {usdOpen && <UsdPopover series={usd.series} period={usdPeriod} onPeriodChange={setUsdPeriod} />}
+            </span>
           </div>
-        )}
-      </div>
+          {usdOpen && <UsdPopover series={usd.series} period={usdPeriod} onPeriodChange={setUsdPeriod} />}
+        </div>
+      )}
+      <div className={styles.usdSpacer} />
       <div className={styles.right}>
         <div className={styles.rightTop}>
-          {loading && <div className={styles.loadingMsg}>Carregando informações...</div>}
           <span className={styles.version} title="Versão do dashboard">
             v{APP_VERSION}
           </span>
@@ -208,7 +257,10 @@ export default function Header({
         </div>
         {onSignOut && (
           <div className={styles.account}>
-            {userEmail && <span className={styles.email}>{userEmail}</span>}
+            <div className={styles.accountText}>
+              {userEmail && <span className={styles.email}>{userEmail}</span>}
+              {loading && <span className={styles.loadingMsg}>Carregando informações...</span>}
+            </div>
             <div className={styles.emailMenu} data-open={menuOpen} ref={menuRef}>
               <button
                 type="button"
