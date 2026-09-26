@@ -7,6 +7,7 @@ import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useReminders } from './hooks/useReminders';
 import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
+import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { computeAgenda, computeCounts, computeHabits, computeHabitGroup, computeSleepWeek, computeGoals } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
@@ -31,6 +32,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const reminders = useReminders();
   const notion = useNotionTasks();
   const ticktick = useTickTickTasks();
+  const usdQuote = useUsdQuote();
   const confirm = useConfirm();
 
   // Fires the Atalho, re-fetches the cache it just filled, and polls a few
@@ -284,11 +286,13 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           syncReminders();
           notion.refresh();
           ticktick.refresh();
+          usdQuote.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
         onResetDay={handleResetDay}
         badgeCount={counts.geralTotal}
+        usd={usdQuote}
       />
 
       <SummaryStrip

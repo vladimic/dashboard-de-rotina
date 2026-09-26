@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 112, date: '2026-09-25', summary: 'Adiciona cotação do dólar no cabeçalho, ao lado da data: variação do dia + popover com gráfico e % de 7d/30d/90d/365d (fonte: AwesomeAPI — UOL bloqueia scraping via WAF). Atualiza só ao abrir o dash, no botão de refresh ou no "Atualizar tudo"' },
   { version: 111, date: '2026-09-25', summary: 'Lembretes: sync com o Atalho continua tentando por até 45s (antes parava em 15s) — com muitos lembretes o loop do Atalho pode demorar mais que isso pra terminar e postar os dados filtrados' },
   { version: 110, date: '2026-09-25', summary: 'HubSpot - Deals sem Tarefa: exclui deals nos estágios Inbox e Contato Quente, além dos já excluídos' },
   { version: 109, date: '2026-09-18', summary: 'Cards do resumo (Meu Dia, Lembretes, Notion, HubSpot, Starting/Ending Day, TickTick, Hábitos) ganham contorno verde de 3px + selo de check quando o bloco zera' },

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { APP_VERSION } from '../version';
 import { VERSION_HISTORY } from '../versionHistory';
 import { requestNotificationPermission } from '../hooks/useAppBadge';
+import { dateKeySaoPaulo, shiftDateKey } from '../utils/format';
 import styles from './Header.module.css';
 
 const TABS = [
@@ -10,7 +11,113 @@ const TABS = [
   { key: 'backlog', label: 'Backlog' },
 ];
 
-export default function Header({ page, todayLong, updatedAt, loading, userEmail, onGoPage, onRefreshAll, onSignOut, onExportData, onResetDay, badgeCount }) {
+const USD_PERIODS = [
+  { key: 7, label: '7d' },
+  { key: 30, label: '30d' },
+  { key: 90, label: '90d' },
+  { key: 365, label: '365d' },
+];
+
+const CHART_W = 280;
+const CHART_H = 100;
+const CHART_PAD = 4;
+const GREEN = '#3fa578';
+const RED = '#c4506a';
+
+function fmtBRL(v) {
+  return `R$ ${v.toFixed(3).replace('.', ',')}`;
+}
+
+function fmtPct(v) {
+  return `${v >= 0 ? '+' : ''}${v.toFixed(2).replace('.', ',')}%`;
+}
+
+function fmtChartDate(dateKey) {
+  const [, m, d] = dateKey.split('-');
+  return `${d}/${m}`;
+}
+
+function buildLinePoints(values) {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 0.001;
+  return values.map((v, i) => {
+    const x = CHART_PAD + (i / (values.length - 1 || 1)) * (CHART_W - CHART_PAD * 2);
+    const y = CHART_PAD + (1 - (v - min) / range) * (CHART_H - CHART_PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+}
+
+function UsdPopover({ series, period, onPeriodChange }) {
+  const cutoff = shiftDateKey(dateKeySaoPaulo(), -period);
+  const points = series.filter((p) => p.date >= cutoff);
+  const hasData = points.length >= 2;
+  const values = points.map((p) => p.bid);
+  const linePoints = hasData ? buildLinePoints(values) : [];
+  const pct = hasData ? ((values[values.length - 1] - values[0]) / values[0]) * 100 : null;
+  const color = pct != null && pct < 0 ? RED : GREEN;
+  const areaPoints = hasData
+    ? [`${CHART_PAD},${CHART_H - CHART_PAD}`, ...linePoints, `${(CHART_W - CHART_PAD).toFixed(1)},${CHART_H - CHART_PAD}`].join(' ')
+    : '';
+
+  return (
+    <div className={styles.usdPopover} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.usdTabs}>
+        {USD_PERIODS.map((p) => (
+          <div
+            key={p.key}
+            className={styles.usdTab}
+            data-active={period === p.key}
+            onClick={() => onPeriodChange(p.key)}
+          >
+            {p.label}
+          </div>
+        ))}
+      </div>
+      <div className={styles.usdPeriodRow}>
+        <span>Variação no período</span>
+        {pct != null && <span style={{ color }}>{fmtPct(pct)}</span>}
+      </div>
+      {hasData ? (
+        <>
+          <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className={styles.usdSvg}>
+            <polyline points={areaPoints} fill={`${color}1f`} stroke="none" />
+            <polyline
+              points={linePoints.join(' ')}
+              fill="none"
+              stroke={color}
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className={styles.usdChartLabels}>
+            <span>{fmtChartDate(points[0].date)}</span>
+            <span>{fmtChartDate(points[points.length - 1].date)}</span>
+          </div>
+        </>
+      ) : (
+        <div className={styles.usdChartEmpty}>Sem dados suficientes ainda.</div>
+      )}
+      <div className={styles.usdSource}>fonte: AwesomeAPI</div>
+    </div>
+  );
+}
+
+export default function Header({
+  page,
+  todayLong,
+  updatedAt,
+  loading,
+  userEmail,
+  onGoPage,
+  onRefreshAll,
+  onSignOut,
+  onExportData,
+  onResetDay,
+  badgeCount,
+  usd,
+}) {
   const notificationsBlocked = 'Notification' in window && Notification.permission !== 'granted';
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,6 +131,18 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
   }, [menuOpen]);
+
+  const [usdOpen, setUsdOpen] = useState(false);
+  const [usdPeriod, setUsdPeriod] = useState(30);
+  const usdRef = useRef(null);
+  useEffect(() => {
+    if (!usdOpen) return undefined;
+    const onDocClick = (e) => {
+      if (!usdRef.current?.contains(e.target)) setUsdOpen(false);
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [usdOpen]);
 
   return (
     <div className={styles.header}>
@@ -40,7 +159,37 @@ export default function Header({ page, todayLong, updatedAt, loading, userEmail,
           </button>
         ))}
       </div>
-      <div className={styles.date}>{todayLong}</div>
+      <div className={styles.dateGroup}>
+        <div className={styles.date}>{todayLong}</div>
+
+        {usd && (
+          <div className={styles.usdWrap} ref={usdRef}>
+            <div className={styles.usdPill} onClick={() => setUsdOpen((o) => !o)}>
+              <span className={styles.usdLabel}>USD</span>
+              <span className={styles.usdValue}>{usd.current ? fmtBRL(usd.current.bid) : '···'}</span>
+              {usd.current && (
+                <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
+                  {fmtPct(usd.current.pctChange)}
+                </span>
+              )}
+              <span className={styles.usdChevron} data-open={usdOpen}>
+                ▾
+              </span>
+            </div>
+            <div
+              className={styles.usdRefresh}
+              title="Atualizar cotação"
+              onClick={(e) => {
+                e.stopPropagation();
+                usd.refresh();
+              }}
+            >
+              ⟳
+            </div>
+            {usdOpen && <UsdPopover series={usd.series} period={usdPeriod} onPeriodChange={setUsdPeriod} />}
+          </div>
+        )}
+      </div>
       <div className={styles.right}>
         <div className={styles.rightTop}>
           {loading && <div className={styles.loadingMsg}>Carregando informações...</div>}
