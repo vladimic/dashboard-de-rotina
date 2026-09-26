@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 116, date: '2026-09-26', summary: 'Cotação do dólar: PTAX do Banco Central é só a média/fechamento do dia, não o câmbio negociado na hora; troca pra Yahoo Finance (USDBRL=X), que traz a cotação ao vivo + histórico num request só' },
   { version: 115, date: '2026-09-26', summary: 'Cotação do dólar: AwesomeAPI dava 429 em toda chamada vinda da Vercel; troca pra fonte oficial do Banco Central (PTAX), sem rate limit e mais legítima como fonte' },
   { version: 114, date: '2026-09-26', summary: 'Cotação do dólar: cache no edge da Vercel não funcionava (deployment protection desativa cache), troca pra cache real no Supabase (usd_quote_cache) — precisa criar a tabela, ver instrução' },
   { version: 113, date: '2026-09-25', summary: 'Corrige cotação do dólar não carregando (429 da AwesomeAPI): resposta agora fica em cache no edge da Vercel por 5min, reduzindo as chamadas reais à API e evitando o rate limit' },

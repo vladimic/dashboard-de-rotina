@@ -1,12 +1,16 @@
-// Vercel serverless function. Fetches the USD/BRL quote (current + daily
-// closes for the last year) from the Banco Central do Brasil's own PTAX
-// API (olinda.bcb.gov.br) — the official Brazilian exchange rate, published
-// once per business day. Two other sources were tried first: UOL's cambio
-// page sits behind an Akamai WAF that 403s any non-browser request, and
-// AwesomeAPI (a free third-party aggregator) rate-limited (429) every
-// single call from this deployment — Vercel functions share outbound IPs
-// across many unrelated projects, so that 429 likely wasn't even about our
-// own traffic. BCB's API is free, key-less, and has shown no such issue.
+// Vercel serverless function. Fetches the USD/BRL quote (live commercial
+// rate + daily closes for the last year) from Yahoo Finance's chart API
+// (query1.finance.yahoo.com, symbol "USDBRL=X") — unofficial/undocumented
+// but very widely used (the yfinance Python library and countless personal
+// finance tools rely on the same endpoint), free, no key.
+//
+// Two other sources were tried first and ruled out: UOL's cambio page sits
+// behind an Akamai WAF that 403s any non-browser request; the Banco
+// Central's PTAX API is official but only a once-a-day average/close, not
+// the live traded rate this needs; AwesomeAPI (a free third-party
+// aggregator, does offer a live rate) rate-limited (429) every single call
+// from this deployment — Vercel functions share outbound IPs across many
+// unrelated projects, so that 429 likely wasn't even about our own traffic.
 //
 // Still cached in Supabase (same pattern as reminders_cache) so a burst of
 // page loads/refreshes doesn't turn into a burst of upstream calls, and a
@@ -17,41 +21,32 @@ import { createClient } from '@supabase/supabase-js';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
-function fmtMMDDYYYY(date) {
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${mm}-${dd}-${date.getFullYear()}`;
-}
-
 async function fetchFresh() {
-  const today = new Date();
-  const start = new Date(today);
-  start.setDate(start.getDate() - 370); // comfortably covers 365 days of trading data
-
-  const url =
-    'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)' +
-    `?@dataInicial='${fmtMMDDYYYY(start)}'&@dataFinalCotacao='${fmtMMDDYYYY(today)}'&$top=1000&$format=json`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`BCB PTAX failed (${res.status})`);
+  const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/USDBRL=X?interval=1d&range=1y', {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+  });
+  if (!res.ok) throw new Error(`Yahoo Finance failed (${res.status})`);
   const json = await res.json();
-  const rows = json.value || [];
-  if (rows.length === 0) throw new Error('BCB PTAX returned no data.');
+  const result = json?.chart?.result?.[0];
+  if (!result) throw new Error('Unexpected Yahoo Finance response shape.');
 
-  // dataHoraCotacao is already "YYYY-MM-DD HH:mm:ss..." in Brasília local
-  // time (BCB is a Brazilian government service), so the first 10 chars
-  // are the date key directly — no timezone conversion needed.
-  const series = rows
-    .map((r) => ({ date: r.dataHoraCotacao.slice(0, 10), bid: Number(r.cotacaoVenda) }))
+  const meta = result.meta || {};
+  const timestamps = result.timestamp || [];
+  const closes = result.indicators?.quote?.[0]?.close || [];
+
+  const dtf = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const series = timestamps
+    .map((t, i) => ({ date: dtf.format(new Date(t * 1000)), bid: closes[i] }))
     .filter((p) => Number.isFinite(p.bid));
 
-  const last = series[series.length - 1];
-  const prev = series.length > 1 ? series[series.length - 2] : null;
-  const pctChange = prev ? ((last.bid - prev.bid) / prev.bid) * 100 : 0;
+  if (!Number.isFinite(meta.regularMarketPrice)) throw new Error('Unexpected Yahoo Finance meta shape.');
 
   return {
     updatedAt: new Date().toISOString(),
-    current: { bid: last.bid, pctChange },
+    current: {
+      bid: Number(meta.regularMarketPrice),
+      pctChange: Number(meta.regularMarketChangePercent) || 0,
+    },
     series,
   };
 }
@@ -90,8 +85,8 @@ export default async function handler(req, res) {
       if (writeError) console.error('Failed to cache USD quote:', writeError.message);
       res.status(200).json(payload);
     } catch (fetchErr) {
-      // BCB failed — serve the last known-good quote instead of erroring
-      // outright, even if it's older than the TTL.
+      // Yahoo Finance failed — serve the last known-good quote instead of
+      // erroring outright, even if it's older than the TTL.
       if (row?.data) {
         res.status(200).json(row.data);
         return;
