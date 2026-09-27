@@ -75,8 +75,21 @@
   white-space: nowrap;
 }
 
+.usdPctStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
 .usdDailyPct {
   font: 700 11px Inter, sans-serif;
+}
+
+.usdUpdatedAt {
+  font: 500 9px Inter, sans-serif;
+  color: #a897ad;
+  white-space: nowrap;
 }
 
 .usdChevron {

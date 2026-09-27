@@ -35,6 +35,12 @@ function fmtPct(v) {
   return `${v >= 0 ? '+' : ''}${v.toFixed(2).replace('.', ',')}%`;
 }
 
+function fmtUsdUpdatedAt(iso) {
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function fmtChartDate(dateKey) {
   const [, m, d] = dateKey.split('-');
   return `${d}/${m}`;
@@ -232,8 +238,11 @@ export default function Header({
               <span className={styles.usdLabel}>USD</span>
               <span className={styles.usdValue}>{usd.current ? fmtBRL(usd.current.bid) : '···'}</span>
               {usd.current && (
-                <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
-                  {fmtPct(usd.current.pctChange)}
+                <span className={styles.usdPctStack}>
+                  <span style={{ color: usd.current.pctChange < 0 ? RED : GREEN }} className={styles.usdDailyPct}>
+                    {fmtPct(usd.current.pctChange)}
+                  </span>
+                  {usd.updatedAt && <span className={styles.usdUpdatedAt}>{fmtUsdUpdatedAt(usd.updatedAt)}</span>}
                 </span>
               )}
               <span className={styles.usdChevron} data-open={usdOpen}>

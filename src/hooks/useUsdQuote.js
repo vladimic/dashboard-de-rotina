@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
+const AUTO_REFRESH_MS = 60 * 60 * 1000;
+
 const EMPTY = { current: null, series: [], updatedAt: null };
 
 // Fetches the USD/BRL quote + historical daily closes from the
-// /api/usd-quote serverless function. Only on mount (dashboard open) and
-// on manual refresh — no polling interval, per the header's "atualizado
-// quando eu quiser" behavior shared with the other summary cards.
+// /api/usd-quote serverless function. On mount, on manual refresh, and
+// automatically every hour — unlike the other summary cards, which only
+// refresh when asked, the quote keeps itself current while the tab is open.
 export function useUsdQuote() {
   const [data, setData] = useState(EMPTY);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,8 @@ export function useUsdQuote() {
 
   useEffect(() => {
     refresh();
+    const id = setInterval(refresh, AUTO_REFRESH_MS);
+    return () => clearInterval(id);
   }, [refresh]);
 
   return { ...data, loading, error, refresh };
