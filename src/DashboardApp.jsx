@@ -232,7 +232,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const goals = computeGoals(state);
 
   const todayLong = formatTodayLong();
-  const updatedAt = formatClock(Date.now());
+  // Only moves on dashboard open and "Atualizar tudo" — individual panel
+  // refreshes (e.g. the USD quote's hourly auto-refresh) re-render the app
+  // but must not bump this timestamp.
+  const [refreshedAt, setRefreshedAt] = useState(() => Date.now());
+  const updatedAt = formatClock(refreshedAt);
 
   // Manual JSON snapshot of the full saved state — a backup independent of
   // Supabase, since the free tier doesn't include point-in-time recovery.
@@ -279,6 +283,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         userEmail={userEmail}
         onGoPage={(page) => dispatch({ type: 'GO_PAGE', page })}
         onRefreshAll={() => {
+          setRefreshedAt(Date.now());
           dispatch({ type: 'REFRESH_ALL' });
           hubspot.refresh();
           dealsWithoutTasks.refresh();
