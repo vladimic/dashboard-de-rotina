@@ -93,6 +93,16 @@ async function notionFetch(url, options, attempts = 3) {
   }
 }
 
+// Builds the error shown on the card. Notion-side failures (5xx, 429) get a
+// plain-language message since there's nothing to fix on our end; the raw
+// response still goes to the server log for troubleshooting.
+function notionError(label, status, text) {
+  console.error(`${label} (${status}): ${text}`);
+  if (status === 429) return new Error('o Notion está limitando as requisições agora. Tente de novo em alguns minutos.');
+  if (status >= 500) return new Error('o Notion está fora do ar no momento (problema do lado deles). Tente de novo mais tarde.');
+  return new Error(`${label} (${status}): ${text}`);
+}
+
 // The "query a database" endpoint doesn't reliably return every item of a
 // relation property (Notion caps/truncates inline relation values). The
 // "retrieve a page property item" endpoint is the reliable, paginated
@@ -133,7 +143,7 @@ async function buildProjectByTaskId(token, projectsDbId) {
     });
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Projetos database query failed (${res.status}): ${text}`);
+      throw notionError('Projetos database query failed', res.status, text);
     }
     const data = await res.json();
     for (const projectPage of data.results || []) {
@@ -184,7 +194,7 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(`Notion query failed (${response.status}): ${text}`);
+      throw notionError('Notion query failed', response.status, text);
     }
 
     const data = await response.json();
