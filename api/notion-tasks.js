@@ -79,6 +79,20 @@ function pageTitle(page) {
   return arr.map((t) => t.plain_text).join('') || null;
 }
 
+// Notion occasionally returns transient 5xx errors (e.g. "Cross-cell
+// memcached access is not allowed") or 429 rate limits that succeed on a
+// retry. Retries those with a short backoff, honoring Retry-After on 429.
+async function notionFetch(url, options, attempts = 3) {
+  for (let i = 0; ; i++) {
+    const res = await fetch(url, options);
+    const retryable = res.status === 429 || res.status >= 500;
+    if (!retryable || i >= attempts - 1) return res;
+    const retryAfter = Number(res.headers.get('retry-after'));
+    const delayMs = retryAfter > 0 ? Math.min(retryAfter * 1000, 5000) : 400 * 2 ** i;
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+}
+
 // The "query a database" endpoint doesn't reliably return every item of a
 // relation property (Notion caps/truncates inline relation values). The
 // "retrieve a page property item" endpoint is the reliable, paginated
@@ -89,7 +103,7 @@ async function fetchRelationIds(pageId, propertyId, token) {
   do {
     const url = new URL(`https://api.notion.com/v1/pages/${pageId}/properties/${propertyId}`);
     if (cursor) url.searchParams.set('start_cursor', cursor);
-    const res = await fetch(url, {
+    const res = await notionFetch(url, {
       headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION },
     });
     if (!res.ok) return ids;
@@ -108,7 +122,7 @@ async function buildProjectByTaskId(token, projectsDbId) {
   const map = new Map();
   let cursor;
   do {
-    const res = await fetch(`https://api.notion.com/v1/databases/${projectsDbId}/query`, {
+    const res = await notionFetch(`https://api.notion.com/v1/databases/${projectsDbId}/query`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -154,7 +168,7 @@ export default async function handler(req, res) {
     // "on or before today", which is exactly the stale-looking bug reported.
     const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
 
-    const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+    const response = await notionFetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,

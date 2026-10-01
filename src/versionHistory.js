@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 124, date: '2026-10-01', summary: 'Notion: erros temporários do servidor deles (500, 429) agora são tentados de novo automaticamente até 3 vezes antes de mostrar "Não deu pra carregar"' },
   { version: 123, date: '2026-09-27', summary: 'Setinha ▾ e botão ⟳ do dólar maiores e na mesma cor da data da cotação; "atualizado às" só muda ao abrir o dashboard ou em "Atualizar tudo" — refreshes de painéis isolados (ex.: dólar de hora em hora) não mexem mais nele' },
   { version: 122, date: '2026-09-27', summary: 'Box do dólar: data (dd/mm) e hora da última atualização da cotação embaixo da variação %; cotação passa a se atualizar sozinha de hora em hora' },
   { version: 121, date: '2026-09-26', summary: 'Versão do dashboard alinha pela esquerda com "atualizado às" (antes era pela direita); e-mail passa a ficar à direita da versão em vez de antes dela' },
