@@ -5,6 +5,11 @@ import { supabase } from '../lib/supabaseClient';
 
 const SAVE_DEBOUNCE_MS = 600;
 
+// View-only fields that always start fresh when the dashboard is opened,
+// regardless of what the last session left saved (e.g. the Agenda always
+// opens on today, even if it was left on "amanhã").
+const OPEN_RESET = { agendaDay: 'hoje' };
+
 function cacheKey(userId) {
   return `dashboard-de-rotina/state/v1/${userId}`;
 }
@@ -16,7 +21,7 @@ function cacheKey(userId) {
 function loadCache(userId) {
   try {
     const raw = localStorage.getItem(cacheKey(userId));
-    return raw ? { ...createSeedState(), ...JSON.parse(raw) } : null;
+    return raw ? { ...createSeedState(), ...JSON.parse(raw), ...OPEN_RESET } : null;
   } catch {
     return null;
   }
@@ -54,7 +59,7 @@ export function useDashboardState(userId) {
       }
 
       if (data?.data) {
-        dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...data.data } });
+        dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...data.data, ...OPEN_RESET } });
       } else {
         const seed = createSeedState();
         dispatch({ type: 'HYDRATE', state: seed });
