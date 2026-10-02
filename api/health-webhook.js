@@ -6,7 +6,7 @@
 //   GET  ?type=weight  → { since } — the newest sample already stored, so the
 //                        Shortcut only fetches what's new. A far-past date
 //                        when nothing is stored yet, so the first run pulls
-//                        the whole history.
+//                        the whole history. &full=1 forces that again.
 //   POST { type, samples: [{ date, endDate?, value, unit?, source? }] }
 //                      → upserts every sample (duplicates are overwritten).
 //
@@ -108,7 +108,10 @@ export default async function handler(req, res) {
     }
     const firstSince =
       type === 'sleep' ? new Date(Date.now() - SLEEP_FIRST_SYNC_DAYS * 86400000).toISOString() : FIRST_SYNC_SINCE;
-    res.status(200).json({ since: data?.[0]?.start_at || firstSince });
+    // ?full=1 ignores what's already stored and returns the first-sync date
+    // again — for re-pulling the whole window after a partial/test run.
+    const full = req.query.full === '1';
+    res.status(200).json({ since: (!full && data?.[0]?.start_at) || firstSince });
     return;
   }
 
