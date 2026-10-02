@@ -24,13 +24,13 @@ as pesagens do Saúde e envia para `/api/health-webhook`, que grava na tabela
 ## Montando o atalho
 
 No app **Atalhos** → **+** → nome **Sincronizar Saúde**. Ações, em ordem
-(troque `SEU-DOMINIO` pelo endereço do dashboard):
+:
 
 1. **Texto** → cole o valor de `HEALTH_WEBHOOK_SECRET`.
    Renomeie a variável para **Segredo** (toque no ícone da ação → Renomear).
 
 2. **Obter Conteúdo do URL**
-   - URL: `https://SEU-DOMINIO/api/health-webhook?type=weight`
+   - URL: `https://dashboard-de-rotina.vercel.app/api/health-webhook?type=weight`
    - Método: **GET**
    - Cabeçalhos: `Authorization` = `Bearer ` + variável **Segredo**
      (com um espaço depois de "Bearer").
@@ -64,7 +64,7 @@ No app **Atalhos** → **+** → nome **Sincronizar Saúde**. Ações, em ordem
    (onde `Texto Combinado` é a variável da ação 7, inserida no meio)
 
 9. **Obter Conteúdo do URL**
-   - URL: `https://SEU-DOMINIO/api/health-webhook`
+   - URL: `https://dashboard-de-rotina.vercel.app/api/health-webhook`
    - Método: **POST**
    - Cabeçalhos: `Authorization` = `Bearer ` + **Segredo**;
      `Content-Type` = `application/json`
