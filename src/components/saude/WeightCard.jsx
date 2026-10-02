@@ -58,23 +58,25 @@ function evenTicks(min, max, stepDays) {
   return ticks;
 }
 
-// Horizontal dashed line at the current weight, across the whole chart.
-function currentWeightLine(value) {
+// Solid horizontal reference lines across the whole chart: the current
+// weight (red) and the lowest weight in the period on screen (blue).
+function referenceLines(lines) {
   return {
-    id: 'currentWeight',
+    id: 'referenceLines',
     afterDatasetsDraw(chart) {
       const { ctx, chartArea, scales } = chart;
-      const y = scales.y.getPixelForValue(value);
-      if (y < chartArea.top || y > chartArea.bottom) return;
-      ctx.save();
-      ctx.strokeStyle = 'rgba(217, 83, 79, 0.85)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(chartArea.left, y);
-      ctx.lineTo(chartArea.right, y);
-      ctx.stroke();
-      ctx.restore();
+      for (const { value, color } of lines) {
+        const y = scales.y.getPixelForValue(value);
+        if (y < chartArea.top - 1 || y > chartArea.bottom + 1) continue;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y);
+        ctx.lineTo(chartArea.right, y);
+        ctx.stroke();
+        ctx.restore();
+      }
     },
   };
 }
@@ -95,6 +97,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
 
   const config = useMemo(() => {
     const inRange = (p) => p.t >= minT;
+    const inPeriod = daily.filter(inRange);
     const todayNoon = daily.length ? Math.max(daily.at(-1).t, new Date(`${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })}T12:00:00-03:00`).getTime()) : Date.now();
     const xMin = periodDays ? minT : daily[0]?.t;
     const stepDays = TICK_STEP_DAYS[periodDays];
@@ -140,7 +143,12 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
           y: { grid: { color: GRID_COLOR }, ticks: { callback: (v) => kg(v) } },
         },
       },
-      plugins: daily.length ? [currentWeightLine(daily.at(-1).value)] : [],
+      plugins: [
+        referenceLines([
+          ...(inPeriod.length ? [{ value: Math.min(...inPeriod.map((p) => p.value)), color: 'rgba(47, 111, 174, 0.8)' }] : []),
+          ...(daily.length ? [{ value: daily.at(-1).value, color: 'rgba(217, 83, 79, 0.85)' }] : []),
+        ]),
+      ],
     };
   }, [daily, ma7, ma30, periodDays, minT, showMa7, showMa30]);
 

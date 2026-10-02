@@ -10,7 +10,7 @@ import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { useHealthSamples } from './hooks/useHealthSamples';
-import { dailyWeights, weightTrends } from './utils/health';
+import { dailyWeights, sleepNights, weightTrends } from './utils/health';
 import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
@@ -37,6 +37,9 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const usdQuote = useUsdQuote();
   // Read here (not in SaudeView) since the Saúde header strip shows it too.
   const weight = useHealthSamples('weight');
+  // 35 days so the oldest of the 30 charted nights is complete.
+  const sleep = useHealthSamples('sleep', 35);
+  const nights = useMemo(() => sleepNights(sleep.samples), [sleep.samples]);
   const weightSummary = useMemo(() => {
     const latest = weight.samples.at(-1);
     return latest ? { value: latest.value, trends: weightTrends(dailyWeights(weight.samples)) } : null;
@@ -239,6 +242,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const saudeSummary = {
     weight: weightSummary,
     iah: lastIahKey ? state.iahLog[lastIahKey] : null,
+    lastNight: [...nights.values()].sort((a, b) => a.key.localeCompare(b.key)).at(-1) || null,
   };
 
   const todayLong = formatTodayLong();
@@ -303,6 +307,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           ticktick.refresh();
           usdQuote.refresh();
           weight.refresh();
+          sleep.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -340,7 +345,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         />
       )}
       {state.page === 'saude' && (
-        <SaudeView state={state} dispatch={dispatch} weight={weight} />
+        <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
     </div>

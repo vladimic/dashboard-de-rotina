@@ -1,10 +1,10 @@
 import WeightCard from '../components/saude/WeightCard';
 import IahCard from '../components/saude/IahCard';
+import SleepCard from '../components/saude/SleepCard';
 import styles from './SaudeView.module.css';
 
-// Sleep schedule, sleep quality, steps and exercise come next — they need
-// the Shortcut to start sending those Health types too.
-export default function SaudeView({ state, dispatch, weight }) {
+// Sleep schedule, sleep quality, steps and exercise come next.
+export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
   return (
     <div className={styles.stack}>
       <div className={styles.twoCols}>
@@ -16,8 +16,7 @@ export default function SaudeView({ state, dispatch, weight }) {
           showMa30={state.weightShowMa30}
           onToggleMa={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
         />
-        {/* Right half reserved for the next panel. */}
-        <div />
+        <SleepCard nights={nights} loading={sleep.loading} error={sleep.error} />
       </div>
       <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>

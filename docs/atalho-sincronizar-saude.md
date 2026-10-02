@@ -86,6 +86,53 @@ Na 1ª execução o iOS pede permissão para o atalho ler o Peso no Saúde —
 permita. Com muitos anos de pesagens, a 1ª execução pode levar alguns
 minutos: mantenha a tela ligada até terminar.
 
+## Bloco 2: sono
+
+Continue no mesmo atalho, **depois** da última ação do peso (apague o
+"Mostrar Resultado" do peso, se ainda estiver lá). É o mesmo esquema do
+peso, com 5 diferenças: `type=sleep`, tipo **Análise do Sono**, o
+**Formatar Data** também para a **Data de Término**, o texto com
+`endDate`, e o JSON final com `"type":"sleep"`.
+
+Na 1ª vez o servidor manda só os **últimos 60 dias** (o histórico inteiro
+do Watch tem dezenas de milhares de trechos); depois, só o que é novo.
+
+12. **Obter Conteúdo do URL** — GET
+    `https://dashboard-de-rotina.vercel.app/api/health-webhook?type=sleep`,
+    cabeçalho `Authorization` = `Bearer [Segredo]`.
+13. **Obter Valor do Dicionário** → `since` em *Conteúdo do URL* (o desta
+    ação 12).
+14. **Obter Datas de** *Valor do Dicionário* (o da ação 13).
+15. **Ajustar Data** → Adicionar 1 dia a **Data Atual**.
+16. **Encontrar Amostras de Saúde**
+    - **Tipo** é **Análise do Sono**
+    - **Data de Início** está entre *Datas* (ação 14) e *Data Ajustada*
+      (ação 15)
+    - Ordenar por **Data de Início**, **Mais Antigos Primeiro**, Limite
+      desligado
+17. **Repetir com Cada** item em *Amostras de Saúde* (ação 16). Dentro:
+    1. **Formatar Data** → *Item de Repetição* → **Data de Início**
+       (ISO 8601, com horário).
+    2. **Formatar Data** → *Item de Repetição* → **Data de Término**
+       (ISO 8601, com horário).
+    3. **Texto**:
+       ```
+       {"date":"[Data Formatada 1]","endDate":"[Data Formatada 2]","value":"[Valor]","source":"[Fonte]"}
+       ```
+       `Valor` aqui é o nome da fase ("Profundo", "REM", "Essencial",
+       "Acordado", "Na Cama"...).
+18. **Combinar Texto** → *Resultados da Repetição* (deste repetir), com `,`
+19. **Texto**: `{"type":"sleep","samples":[[Texto Combinado]]}`
+20. **Obter Conteúdo do URL** — POST
+    `https://dashboard-de-rotina.vercel.app/api/health-webhook`, cabeçalhos
+    `Authorization` = `Bearer [Segredo]` e `Content-Type` =
+    `application/json`, corpo **Arquivo** = *Texto* (ação 19).
+21. (opcional) **Mostrar Resultado** → *Conteúdo do URL* (ação 20).
+
+As variáveis com o mesmo nome do bloco do peso ("Datas", "Texto",
+"Conteúdo do URL"...) precisam ser as **deste bloco** — ao inserir,
+confira que a etiqueta aponta para a ação logo acima, não para a do peso.
+
 ## Rodando sozinho todo dia
 
 Atalhos → **Automação** → **+** → **Hora do Dia** (ex.: 7h30, diariamente)

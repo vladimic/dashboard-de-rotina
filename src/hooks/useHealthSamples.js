@@ -7,8 +7,9 @@ const PAGE_SIZE = 1000;
 
 // Apple Health samples of one type (pushed by the "Sincronizar Saúde"
 // Shortcut through /api/health-webhook), read straight from Supabase with
-// the logged-in session — RLS limits it to this user's own rows.
-export function useHealthSamples(type) {
+// the logged-in session — RLS limits it to this user's own rows. `days`
+// limits it to the recent past (sleep only charts the last 30 nights).
+export function useHealthSamples(type, days = 0) {
   const [samples, setSamples] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,23 +20,28 @@ export function useHealthSamples(type) {
     try {
       const all = [];
       for (let from = 0; ; from += PAGE_SIZE) {
-        const { data, error: err } = await supabase
-          .from('health_samples')
-          .select('start_at, value, source')
-          .eq('type', type)
-          .order('start_at', { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
+        let query = supabase.from('health_samples').select('start_at, end_at, value, unit, source').eq('type', type);
+        if (days) query = query.gte('start_at', new Date(Date.now() - days * 86400000).toISOString());
+        const { data, error: err } = await query.order('start_at', { ascending: true }).range(from, from + PAGE_SIZE - 1);
         if (err) throw new Error(err.message);
         all.push(...data);
         if (data.length < PAGE_SIZE) break;
       }
-      setSamples(all.map((r) => ({ t: new Date(r.start_at).getTime(), value: r.value, source: r.source })));
+      setSamples(
+        all.map((r) => ({
+          t: new Date(r.start_at).getTime(),
+          end: r.end_at ? new Date(r.end_at).getTime() : null,
+          value: r.value,
+          unit: r.unit,
+          source: r.source,
+        }))
+      );
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [type]);
+  }, [type, days]);
 
   useEffect(() => {
     refresh();

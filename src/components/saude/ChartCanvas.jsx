@@ -50,13 +50,13 @@ export function monthDividerPlugin(axis) {
 
 // x-axis options for thirtyDayAxis() labels: all 30 days shown, weekends
 // in bold.
-export function thirtyDayScale(axis) {
+export function thirtyDayScale(axis, fontSize = 10) {
   return {
     grid: { display: false },
     ticks: {
       autoSkip: false,
       maxRotation: 0,
-      font: (ctx) => ({ size: 10, weight: [0, 6].includes(axis[ctx.index]?.weekday) ? '600' : '400' }),
+      font: (ctx) => ({ size: fontSize, weight: [0, 6].includes(axis[ctx.index]?.weekday) ? '600' : '400' }),
     },
   };
 }

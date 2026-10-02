@@ -100,3 +100,64 @@ export function weightTrends(points, now = Date.now()) {
 }
 
 export const formatKg = (v) => v.toFixed(1).replace('.', ',');
+
+const SIX_HOURS_MS = 6 * 3600000;
+
+// Night a sleep segment belongs to, named after the day you woke up: shifted
+// 6h forward, so anything from 18:00 on counts toward the next morning.
+function nightKey(t) {
+  return dateKeySaoPaulo(new Date(t + SIX_HOURS_MS));
+}
+
+const ASLEEP_STAGES = ['deep', 'core', 'rem', 'asleep'];
+
+// Sleep segments → one summary per night: minutes per stage, total asleep,
+// and when you fell asleep / woke up. When several sources logged the same
+// night (Watch + iPhone, or another sleep app), only one is used — the one
+// with the most stage detail — so the night isn't counted twice.
+export function sleepNights(samples) {
+  const byNight = new Map();
+  for (const s of samples) {
+    if (!s.end) continue;
+    const key = nightKey(s.t);
+    if (!byNight.has(key)) byNight.set(key, new Map());
+    const bySource = byNight.get(key);
+    if (!bySource.has(s.source)) bySource.set(s.source, []);
+    bySource.get(s.source).push(s);
+  }
+
+  const nights = new Map();
+  for (const [key, bySource] of byNight) {
+    const score = (segs) => {
+      const staged = segs.filter((x) => ['deep', 'core', 'rem'].includes(x.unit)).reduce((a, x) => a + x.value, 0);
+      const asleep = segs.filter((x) => x.unit === 'asleep').reduce((a, x) => a + x.value, 0);
+      return staged * 10 + asleep;
+    };
+    const segs = [...bySource.values()].sort((a, b) => score(b) - score(a))[0];
+    const stages = { deep: 0, core: 0, rem: 0, asleep: 0, awake: 0 };
+    let bedtime = Infinity;
+    let wake = -Infinity;
+    for (const x of segs) {
+      if (x.unit in stages) stages[x.unit] += x.value;
+      if (ASLEEP_STAGES.includes(x.unit)) {
+        bedtime = Math.min(bedtime, x.t);
+        wake = Math.max(wake, x.end);
+      }
+    }
+    const asleepMin = ASLEEP_STAGES.reduce((a, k) => a + stages[k], 0);
+    if (asleepMin > 0) nights.set(key, { key, stages, asleepMin, bedtime, wake });
+  }
+  return nights;
+}
+
+// "7h12" from minutes.
+export function formatDuration(min) {
+  const h = Math.floor(min / 60);
+  const m = Math.round(min - h * 60);
+  return m === 60 ? `${h + 1}h00` : `${h}h${String(m).padStart(2, '0')}`;
+}
+
+// "23:41" in São Paulo time.
+export function formatClockSP(t) {
+  return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+}

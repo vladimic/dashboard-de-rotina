@@ -9,11 +9,41 @@
 //                        the whole history.
 //   POST { type, samples: [{ date, endDate?, value, unit?, source? }] }
 //                      → upserts every sample (duplicates are overwritten).
+//
+// Sleep samples ("Análise do Sono") are one row per stage segment: the
+// Shortcut sends the stage name as `value` ("Profundo", "REM", ...) plus
+// start/end; they're stored as value = minutes, unit = normalized stage.
 
 import { createClient } from '@supabase/supabase-js';
 
-const TYPES = new Set(['weight']);
+const TYPES = new Set(['weight', 'sleep']);
 const FIRST_SYNC_SINCE = '2000-01-01T00:00:00Z';
+
+// Years of Apple Watch sleep stages are tens of thousands of segments — far
+// too many for a Shortcut loop — and the dashboard only charts recent
+// nights, so the first sleep sync starts this many days back.
+const SLEEP_FIRST_SYNC_DAYS = 60;
+
+// Health's sleep stage names, in whatever language the iPhone uses.
+const SLEEP_STAGES = [
+  ['inbed', ['na cama', 'in bed', 'inbed', 'em repouso']],
+  ['awake', ['acordad', 'awake', 'desperto']],
+  ['deep', ['profundo', 'deep']],
+  ['rem', ['rem']],
+  ['core', ['essencial', 'core', 'principal', 'leve']],
+  ['asleep', ['dormindo', 'adormecido', 'asleep', 'sono', 'sleep']],
+];
+
+function sleepStage(raw) {
+  const text = String(raw || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  for (const [stage, words] of SLEEP_STAGES) {
+    if (words.some((w) => text.includes(w))) return stage;
+  }
+  return null;
+}
 const UPSERT_CHUNK = 500;
 
 // Health hands back whatever unit the iPhone is set to display.
@@ -76,7 +106,9 @@ export default async function handler(req, res) {
       res.status(500).json({ error: error.message });
       return;
     }
-    res.status(200).json({ since: data?.[0]?.start_at || FIRST_SYNC_SINCE });
+    const firstSince =
+      type === 'sleep' ? new Date(Date.now() - SLEEP_FIRST_SYNC_DAYS * 86400000).toISOString() : FIRST_SYNC_SINCE;
+    res.status(200).json({ since: data?.[0]?.start_at || firstSince });
     return;
   }
 
@@ -88,7 +120,7 @@ export default async function handler(req, res) {
   const type = String(req.body?.type || '');
   const samples = Array.isArray(req.body?.samples) ? req.body.samples : null;
   if (!TYPES.has(type) || !samples) {
-    res.status(400).json({ error: 'Expected a JSON body shaped like { "type": "weight", "samples": [...] }.' });
+    res.status(400).json({ error: 'Expected a JSON body shaped like { "type": "weight" | "sleep", "samples": [...] }.' });
     return;
   }
 
@@ -96,6 +128,17 @@ export default async function handler(req, res) {
   let skipped = 0;
   for (const s of samples) {
     const startAt = parseDate(s?.date);
+    const endAt = parseDate(s?.endDate);
+    if (type === 'sleep') {
+      const stage = sleepStage(s?.value);
+      const minutes = startAt && endAt ? (new Date(endAt) - new Date(startAt)) / 60000 : NaN;
+      if (!stage || !(minutes > 0)) {
+        skipped++;
+        continue;
+      }
+      rows.push({ user_id: userId, type, start_at: startAt, end_at: endAt, value: Math.round(minutes * 10) / 10, unit: stage, source: String(s.source || '') });
+      continue;
+    }
     let value = parseNumber(s?.value);
     if (!startAt || !Number.isFinite(value)) {
       skipped++;
@@ -106,7 +149,7 @@ export default async function handler(req, res) {
       user_id: userId,
       type,
       start_at: startAt,
-      end_at: parseDate(s.endDate),
+      end_at: endAt,
       value: Math.round(value * 1000) / 1000,
       unit: type === 'weight' ? 'kg' : s.unit || null,
       source: String(s.source || ''),
