@@ -26,50 +26,58 @@ as pesagens do Saúde e envia para `/api/health-webhook`, que grava na tabela
 No app **Atalhos** → **+** → nome **Sincronizar Saúde**. Ações, em ordem:
 
 1. **Texto** → cole o valor de `HEALTH_WEBHOOK_SECRET`.
-   Renomeie a variável para **Segredo** (toque no ícone da ação → Renomear).
 
-2. **Obter Conteúdo do URL**
+2. **Definir Variável** → nome **Segredo**, entrada *Texto* (ação 1).
+   Use sempre **Segredo** nos cabeçalhos: o atalho tem outras ações
+   "Texto", e escolher a errada manda o JSON inteiro no cabeçalho
+   (erro `REQUEST_HEADER_TOO_LARGE`).
+
+3. **Obter Conteúdo do URL**
    - URL: `https://dashboard-de-rotina.vercel.app/api/health-webhook?type=weight`
    - Método: **GET**
    - Cabeçalhos: `Authorization` = `Bearer ` + variável **Segredo**
      (com um espaço depois de "Bearer").
 
-3. **Obter Valor do Dicionário** → chave `since` em *Conteúdo do URL*.
+4. **Obter Valor do Dicionário** → chave `since` em *Conteúdo do URL*.
 
-4. **Obter Datas de** *Valor do Dicionário*. Renomeie para **Desde**.
+5. **Obter Datas de** *Valor do Dicionário* (saída: **Datas**).
 
-5. **Encontrar Amostras de Saúde**
+6. **Encontrar Amostras de Saúde**
    - Filtro: **Tipo** é **Peso**
-   - **Adicionar Filtro:** **Data de Início** é **posterior a** variável **Desde**
-   - Ordenar por: **Data de Início**, **Mais Antigo Primeiro**
+   - **Adicionar Filtro:** **Data de Início** **está entre** **Datas** e
+     **Data Atual** (não existe "depois de")
+   - Unidade: **kg**
+   - Ordenar por: **Data de Início**, **Mais Antigos Primeiro**
    - Limite: **desligado**
 
-6. **Repetir com Cada** item em *Amostras de Saúde*. Dentro do repetir:
-   1. **Formatar Data** → *Item de Repetição*, toque nele e escolha
-      **Data de Início**. Formato: **ISO 8601**, **Incluir Hora** ligado.
-   2. **Dicionário** com 4 chaves (todas tipo Texto):
-      - `date` → *Data Formatada*
-      - `value` → *Item de Repetição* → **Valor**
-      - `unit` → *Item de Repetição* → **Unidade**
-      - `source` → *Item de Repetição* → **Nome da Fonte**
+7. **Repetir com Cada** item em *Amostras de Saúde*. Dentro do repetir:
+   1. **Formatar Data** → *Item de Repetição* → propriedade
+      **Data de Início**. Formato: **ISO 8601**, **Incluir Horário** ligado.
+   2. **Texto** (aspas retas, digitadas; `[...]` = variáveis):
+      ```
+      {"date":"[Data Formatada]","value":"[Valor]","unit":"[Unidade]","source":"[Fonte]"}
+      ```
+      `Valor`, `Unidade` e `Fonte` são propriedades do *Item de
+      Repetição*. Se a etiqueta do valor continuar mostrando "Item de
+      Repetição", tudo bem: chega como "86,4 kg" e o servidor extrai o
+      número.
 
-7. (depois do Fim da Repetição) **Combinar Texto** → *Resultados da
+8. (depois do Fim da Repetição) **Combinar Texto** → *Resultados da
    Repetição*, separador **Personalizado** = `,`
 
-8. **Texto**:
+9. **Texto**:
    ```
-   {"type":"weight","samples":[Texto Combinado]}
+   {"type":"weight","samples":[[Texto Combinado]]}
    ```
-   (onde `Texto Combinado` é a variável da ação 7, inserida no meio)
 
-9. **Obter Conteúdo do URL**
-   - URL: `https://dashboard-de-rotina.vercel.app/api/health-webhook`
-   - Método: **POST**
-   - Cabeçalhos: `Authorization` = `Bearer ` + **Segredo**;
-     `Content-Type` = `application/json`
-   - Corpo da Solicitação: **Arquivo** → variável *Texto* (da ação 8)
+10. **Obter Conteúdo do URL**
+    - URL: `https://dashboard-de-rotina.vercel.app/api/health-webhook`
+    - Método: **POST**
+    - Cabeçalhos: `Authorization` = `Bearer ` + **Segredo**;
+      `Content-Type` = `application/json`
+    - Corpo da Solicitação: **Arquivo** → variável *Texto* (da ação 9)
 
-10. (opcional) **Mostrar Notificação** → *Conteúdo do URL* — mostra
+11. (opcional) **Mostrar Notificação** → *Conteúdo do URL* — mostra
     `{"ok":true,"saved":N,...}` para conferir.
 
 Na 1ª execução o iOS pede permissão para o atalho ler o Peso no Saúde —
