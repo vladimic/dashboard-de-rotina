@@ -120,6 +120,9 @@ export function createSeedState() {
     agendaDay: 'hoje',
     // CPAP apnea-hypopnea index typed in daily: { 'YYYY-MM-DD': number }.
     iahLog: {},
+    // Weight chart moving-average toggles, kept across reloads/devices.
+    weightShowMa7: true,
+    weightShowMa30: true,
 
     downloadsCount: 61,
     backlogCount: 128,

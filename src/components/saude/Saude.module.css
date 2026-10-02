@@ -49,7 +49,8 @@
 
 .trend {
   font: 500 11px Inter, sans-serif;
-  padding: 3px 7px;
+  white-space: nowrap;
+  padding: 3px 6px;
   border-radius: 8px;
   background: #eef3f0;
   color: #7fa693;
@@ -79,7 +80,7 @@
 .pill {
   font: 600 11px Inter, sans-serif;
   color: #7fa693;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: 8px;
   border: 1px solid #d5e8de;
   cursor: pointer;
@@ -187,8 +188,9 @@
   color: #3f6b57;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 4px 7px;
+  white-space: nowrap;
   border-radius: 8px;
   border: 1px solid #d5e8de;
   cursor: pointer;
@@ -197,8 +199,7 @@
 .maToggle i {
   display: inline-block;
   width: 14px;
-  height: 3px;
-  border-radius: 2px;
+  border-top: 2px dashed;
 }
 
 .maToggle[data-on='false'] {
@@ -209,3 +210,59 @@
 .maToggle[data-on='false'] i {
   opacity: 0.3;
 }
+
+/* Weight card keeps its whole header on one line — it sits in a half-width
+   column, so everything here is sized to fit side by side. */
+.oneLine {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.oneLine .headerLeft,
+.oneLine .headerRight {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.delta {
+  font-weight: 600;
+}
+
+.delta[data-dir='down'] {
+  color: #2f8a5c;
+}
+
+.delta[data-dir='up'] {
+  color: #c0453a;
+}
+
+.delta[data-dir='flat'] {
+  color: #3f6b57;
+}
+
+.oneLine .bigValue {
+  font-size: 19px;
+  white-space: nowrap;
+}
+
+.oneLine .trends,
+.oneLine .pills {
+  gap: 3px;
+}
+
+.oneLine .trend {
+  padding: 3px 5px;
+  font-size: 10px;
+}
+
+.oneLine .trend b {
+  font-size: 12px;
+  margin-left: 1px;
+}
+
+.oneLine .pill,
+.oneLine .maToggle {
+  padding: 4px 6px;
+  font-size: 10.5px;
+}
+

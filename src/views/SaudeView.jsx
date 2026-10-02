@@ -8,7 +8,14 @@ export default function SaudeView({ state, dispatch, weight }) {
   return (
     <div className={styles.stack}>
       <div className={styles.twoCols}>
-        <WeightCard samples={weight.samples} loading={weight.loading} error={weight.error} onRefresh={weight.refresh} />
+        <WeightCard
+          samples={weight.samples}
+          loading={weight.loading}
+          error={weight.error}
+          showMa7={state.weightShowMa7}
+          showMa30={state.weightShowMa30}
+          onToggleMa={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
+        />
         {/* Right half reserved for the next panel. */}
         <div />
       </div>
