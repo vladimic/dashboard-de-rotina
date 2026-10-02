@@ -266,3 +266,62 @@
   font-size: 10.5px;
 }
 
+
+.lineToggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 5px;
+  border-radius: 8px;
+  border: 1px solid #d5e8de;
+  cursor: pointer;
+}
+
+.lineToggle i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+}
+
+.lineToggle[data-on='false'] {
+  border-style: dashed;
+}
+
+.lineToggle[data-on='false'] i {
+  opacity: 0.25;
+}
+
+/* At the dashboard's narrowest width the one-line weight header is a few
+   px short — drop the redundant "Peso" title there (the kg says it). */
+.card {
+  container-type: inline-size;
+}
+
+@container (max-width: 600px) {
+  .oneLine .title.hideNarrow {
+    display: none;
+  }
+
+  .oneLine .pill,
+  .oneLine .maToggle {
+    padding: 4px 4px;
+  }
+
+  .oneLine .lineToggle {
+    padding: 4px 3px;
+  }
+
+  .oneLine,
+  .oneLine .headerLeft,
+  .oneLine .headerRight {
+    gap: 4px;
+  }
+
+  .oneLine .pills,
+  .oneLine .trends {
+    gap: 2px;
+  }
+
+  .oneLine .trend {
+    padding: 3px 4px;
+  }
+}

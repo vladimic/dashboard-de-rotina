@@ -58,14 +58,15 @@ function evenTicks(min, max, stepDays) {
   return ticks;
 }
 
-// Solid horizontal reference lines across the whole chart: the current
-// weight (red) and the lowest weight in the period on screen (blue).
+// Solid horizontal reference lines across the whole chart, each optionally
+// labelled: the current weight (red, value just right of the plot) and the
+// lowest weight in the period (blue, value just under the lowest point).
 function referenceLines(lines) {
   return {
     id: 'referenceLines',
     afterDatasetsDraw(chart) {
       const { ctx, chartArea, scales } = chart;
-      for (const { value, color } of lines) {
+      for (const { value, color, labelRight, point } of lines) {
         const y = scales.y.getPixelForValue(value);
         if (y < chartArea.top - 1 || y > chartArea.bottom + 1) continue;
         ctx.save();
@@ -75,13 +76,29 @@ function referenceLines(lines) {
         ctx.moveTo(chartArea.left, y);
         ctx.lineTo(chartArea.right, y);
         ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = '600 10px Inter, sans-serif';
+        if (labelRight) {
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(kg(value), chartArea.right + 4, y);
+        }
+        if (point != null) {
+          const x = scales.x.getPixelForValue(point);
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(kg(value), x, y + 5);
+        }
         ctx.restore();
       }
     },
   };
 }
 
-export default function WeightCard({ samples, loading, error, showMa7, showMa30, onToggleMa }) {
+export default function WeightCard({ samples, loading, error, showMa7, showMa30, showCurrent, showMin, onToggleFlag }) {
   const [periodDays, setPeriodDays] = useState(30);
 
   const daily = useMemo(() => dailyWeights(samples), [samples]);
@@ -98,6 +115,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
   const config = useMemo(() => {
     const inRange = (p) => p.t >= minT;
     const inPeriod = daily.filter(inRange);
+    const lowest = inPeriod.reduce((m, p) => (!m || p.value < m.value ? p : m), null);
     const todayNoon = daily.length ? Math.max(daily.at(-1).t, new Date(`${new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })}T12:00:00-03:00`).getTime()) : Date.now();
     const xMin = periodDays ? minT : daily[0]?.t;
     const stepDays = TICK_STEP_DAYS[periodDays];
@@ -115,8 +133,9 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
       options: {
         maintainAspectRatio: false,
         animation: false,
-        // Room for the last date label, which sits right on the edge.
-        layout: { padding: { right: 14 } },
+        // Room for the current-weight label right of the plot (and the
+        // last date label, which sits right on the edge).
+        layout: { padding: { right: showCurrent ? 36 : 14 } },
         interaction: { mode: 'nearest', axis: 'x', intersect: false },
         plugins: {
           legend: { display: false },
@@ -140,17 +159,27 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
             },
             ticks: { autoSkip: false, maxRotation: 0, callback: (v) => (stepDays ? dayMonth(v) : monthYear(v)) },
           },
-          y: { grid: { color: GRID_COLOR }, ticks: { callback: (v) => kg(v) } },
+          y: {
+            // Headroom under the lowest point for its label, and above
+            // the highest so the top point isn't clipped.
+            afterDataLimits: (scale) => {
+              const range = scale.max - scale.min || 1;
+              scale.min -= range * 0.18;
+              scale.max += range * 0.05;
+            },
+            grid: { color: GRID_COLOR },
+            ticks: { callback: (v) => kg(v) },
+          },
         },
       },
       plugins: [
         referenceLines([
-          ...(inPeriod.length ? [{ value: Math.min(...inPeriod.map((p) => p.value)), color: 'rgba(47, 111, 174, 0.8)' }] : []),
-          ...(daily.length ? [{ value: daily.at(-1).value, color: 'rgba(217, 83, 79, 0.85)' }] : []),
+          ...(showMin && lowest ? [{ value: lowest.value, color: 'rgba(47, 111, 174, 0.85)', point: lowest.t }] : []),
+          ...(showCurrent && daily.length ? [{ value: daily.at(-1).value, color: 'rgba(217, 83, 79, 0.9)', labelRight: true }] : []),
         ]),
       ],
     };
-  }, [daily, ma7, ma30, periodDays, minT, showMa7, showMa30]);
+  }, [daily, ma7, ma30, periodDays, minT, showMa7, showMa30, showCurrent, showMin]);
 
   const delta = firstInPeriod && latest ? daily.at(-1).value - firstInPeriod.value : null;
 
@@ -158,7 +187,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>Peso</span>
+          <span className={`${styles.title} ${styles.hideNarrow}`}>Peso</span>
           {latest && (
             <span className={styles.bigValue}>
               {kg(latest.value)}
@@ -184,13 +213,19 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
         </div>
         <div className={styles.headerRight}>
           <div className={styles.pills}>
-            <button type="button" className={styles.maToggle} data-on={showMa7} onClick={() => onToggleMa('weightShowMa7')} title="Média móvel de 7 dias">
+            <button type="button" className={styles.maToggle} data-on={showMa7} onClick={() => onToggleFlag('weightShowMa7')} title="Média móvel de 7 dias">
               <i style={{ borderColor: COLORS.ma7 }} />
               7d
             </button>
-            <button type="button" className={styles.maToggle} data-on={showMa30} onClick={() => onToggleMa('weightShowMa30')} title="Média móvel de 30 dias">
+            <button type="button" className={styles.maToggle} data-on={showMa30} onClick={() => onToggleFlag('weightShowMa30')} title="Média móvel de 30 dias">
               <i style={{ borderColor: COLORS.ma30 }} />
               30d
+            </button>
+            <button type="button" className={styles.lineToggle} data-on={showCurrent} onClick={() => onToggleFlag('weightShowCurrent')} title="Linha do peso atual" aria-label="Linha do peso atual">
+              <i style={{ background: '#d9534f' }} />
+            </button>
+            <button type="button" className={styles.lineToggle} data-on={showMin} onClick={() => onToggleFlag('weightShowMin')} title="Linha do menor peso do período" aria-label="Linha do menor peso do período">
+              <i style={{ background: '#2f6fae' }} />
             </button>
           </div>
           <div className={styles.pills}>

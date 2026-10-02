@@ -123,6 +123,8 @@ export function createSeedState() {
     // Weight chart moving-average toggles, kept across reloads/devices.
     weightShowMa7: true,
     weightShowMa30: true,
+    weightShowCurrent: true,
+    weightShowMin: true,
 
     downloadsCount: 61,
     backlogCount: 128,

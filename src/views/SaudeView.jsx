@@ -14,7 +14,9 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           error={weight.error}
           showMa7={state.weightShowMa7}
           showMa30={state.weightShowMa30}
-          onToggleMa={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
+          showCurrent={state.weightShowCurrent}
+          showMin={state.weightShowMin}
+          onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
         />
         <SleepCard nights={nights} loading={sleep.loading} error={sleep.error} />
       </div>
