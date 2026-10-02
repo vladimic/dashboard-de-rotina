@@ -1,0 +1,178 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.headerLeft,
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font: var(--fs-card-title);
+  color: #3f6b57;
+}
+
+.bigValue {
+  font: 700 22px Inter, sans-serif;
+  color: #3f6b57;
+}
+
+.unit {
+  font: 500 13px Inter, sans-serif;
+  color: #7fa693;
+}
+
+.muted {
+  font: 500 11px Inter, sans-serif;
+  color: #7fa693;
+}
+
+.trends {
+  display: flex;
+  gap: 4px;
+}
+
+.trend {
+  font: 500 11px Inter, sans-serif;
+  padding: 3px 7px;
+  border-radius: 8px;
+  background: #eef3f0;
+  color: #7fa693;
+  cursor: default;
+}
+
+.trend b {
+  font-size: 14px;
+  margin-left: 2px;
+}
+
+.trend[data-dir='up'] {
+  background: #fbe9e7;
+  color: #c0453a;
+}
+
+.trend[data-dir='down'] {
+  background: #e3f4ea;
+  color: #2f8a5c;
+}
+
+.pills {
+  display: flex;
+  gap: 4px;
+}
+
+.pill {
+  font: 600 11px Inter, sans-serif;
+  color: #7fa693;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #d5e8de;
+  cursor: pointer;
+}
+
+.pill[data-on='true'] {
+  background: #3f6b57;
+  border-color: #3f6b57;
+  color: #fff;
+}
+
+.refresh {
+  font: 600 19.5px Inter, sans-serif;
+  color: #9dbfae;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.input {
+  border: 1px solid #bfe0cf;
+  border-radius: 9px;
+  padding: 6px 9px;
+  font: 500 12px Inter, sans-serif;
+  color: #3f6b57;
+  background: #fff;
+  outline: none;
+}
+
+.saveBtn {
+  background: #3f6b57;
+  color: #fff;
+  border-radius: 9px;
+  padding: 7px 12px;
+  font: 600 12px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.band {
+  font: 600 11px Inter, sans-serif;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #e3f4ea;
+  color: #2f8a5c;
+}
+
+.band[data-band='leve'] {
+  background: #fdf1dc;
+  color: #a86b12;
+}
+
+.band[data-band='moderado'],
+.band[data-band='grave'] {
+  background: #fbe9e7;
+  color: #c0453a;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.footerRight {
+  margin-left: auto;
+  font: 500 11px Inter, sans-serif;
+  color: #7fa693;
+}
+
+.legend {
+  font: 500 11px Inter, sans-serif;
+  color: #7fa693;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+}
+
+.error {
+  font: 500 12px Inter, sans-serif;
+  color: #c0453a;
+  margin-bottom: 8px;
+}
+
+.empty {
+  font: 500 12px Inter, sans-serif;
+  color: #7fa693;
+  padding: 40px 0;
+  text-align: center;
+}

@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 127, date: '2026-10-02', summary: 'Nova aba Saúde: gráfico de peso vindo do app Saúde da Apple (atalho "Sincronizar Saúde" no iPhone) com filtros 7d/30d/90d/365d/Geral, médias móveis de 7 e 30 dias e setas de tendência; painel de IAH do CPAP com registro manual e gráfico de 30 dias. Hábitos, peso manual, sono da semana e metas da semana saíram da aba' },
   { version: 126, date: '2026-10-02', summary: 'Agenda sempre abre no dia de hoje ao abrir o dashboard, mesmo que tenha ficado em "amanhã" na sessão anterior' },
   { version: 125, date: '2026-10-01', summary: 'Notion: quando o erro é do lado deles (500/429), o card mostra uma mensagem clara ("o Notion está fora do ar no momento…") em vez do JSON cru da API' },
   { version: 124, date: '2026-10-01', summary: 'Notion: erros temporários do servidor deles (500, 429) agora são tentados de novo automaticamente até 3 vezes antes de mostrar "Não deu pra carregar"' },

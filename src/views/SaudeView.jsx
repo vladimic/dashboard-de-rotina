@@ -1,35 +1,17 @@
-import HabitosCard from '../components/HabitosCard';
-import PesoCard from '../components/PesoCard';
-import HistoricoCard from '../components/HistoricoCard';
-import SonoCard from '../components/SonoCard';
-import MetasCard from '../components/MetasCard';
+import WeightCard from '../components/saude/WeightCard';
+import IahCard from '../components/saude/IahCard';
+import { useHealthSamples } from '../hooks/useHealthSamples';
 import styles from './SaudeView.module.css';
 
-export default function SaudeView({ state, dispatch, habits, sleepWeek, sleepAvg, goals }) {
+// Sleep schedule, sleep quality, steps and exercise come next — they need
+// the Shortcut to start sending those Health types too.
+export default function SaudeView({ state, dispatch }) {
+  const weight = useHealthSamples('weight');
+
   return (
-    <div className={styles.columns}>
-      <div className={styles.fixedCol}>
-        <HabitosCard habits={habits} onToggleHabit={(id) => dispatch({ type: 'TOGGLE_HABIT', id })} />
-      </div>
-
-      <div className={styles.fixedCol}>
-        <PesoCard
-          weight={state.weight}
-          weightTarget={state.weightTarget}
-          newWeightText={state.newWeightText}
-          onWeightTextChange={(v) => dispatch({ type: 'SET_TEXT_FIELD', key: 'newWeightText', value: v })}
-          onLogWeight={() => dispatch({ type: 'LOG_WEIGHT' })}
-        />
-        <HistoricoCard weightLog={state.weightLog} />
-      </div>
-
-      <div className={styles.fixedCol}>
-        <SonoCard sleepWeek={sleepWeek} sleepAvg={sleepAvg} />
-      </div>
-
-      <div className={styles.flexCol}>
-        <MetasCard goals={goals} />
-      </div>
+    <div className={styles.stack}>
+      <WeightCard samples={weight.samples} loading={weight.loading} error={weight.error} onRefresh={weight.refresh} />
+      <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>
   );
 }

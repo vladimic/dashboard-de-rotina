@@ -46,6 +46,9 @@ export function dashboardReducer(state, action) {
     case 'TOGGLE_AGENDA_DAY':
       return { ...state, agendaDay: state.agendaDay === 'hoje' ? 'amanha' : 'hoje' };
 
+    case 'SET_IAH':
+      return { ...state, iahLog: { ...state.iahLog, [action.date]: action.value } };
+
     case 'TOGGLE_FLAG':
       return { ...state, [action.key]: !state[action.key] };
 

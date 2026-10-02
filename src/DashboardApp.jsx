@@ -9,7 +9,7 @@ import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
-import { computeAgenda, computeCounts, computeHabits, computeHabitGroup, computeSleepWeek, computeGoals } from './utils/derived';
+import { computeAgenda, computeCounts, computeHabits, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
@@ -228,8 +228,6 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
   const habits = computeHabits(state);
-  const { sleepWeek, sleepAvg } = computeSleepWeek(state);
-  const goals = computeGoals(state);
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel
@@ -333,7 +331,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         />
       )}
       {state.page === 'saude' && (
-        <SaudeView state={state} dispatch={dispatch} habits={habits} sleepWeek={sleepWeek} sleepAvg={sleepAvg} goals={goals} />
+        <SaudeView state={state} dispatch={dispatch} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
     </div>

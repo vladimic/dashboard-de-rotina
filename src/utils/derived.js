@@ -3,8 +3,6 @@ import { formatHourLabel, hourFloatInAgendaTZ, shiftDateKey } from './format';
 const DAY_START = 7;
 const DAY_END = 22;
 const HOUR_HEIGHT = 40;
-const MAX_SLEEP = 9;
-const SLEEP_GOOD_THRESHOLD = 7.5;
 
 // Assigns each event a column + total-column-count so overlapping events
 // split the available width evenly side by side, instead of stacking on
@@ -154,22 +152,5 @@ export function computeHabits(state) {
     pct: `${Math.round((100 * h.streak) / 7)}%`,
     color: h.done ? '#c3b3c9' : '#5b4a63',
     barColor: h.done ? '#c48fce' : '#e3cdea',
-  }));
-}
-
-export function computeSleepWeek(state) {
-  const sleepWeek = state.sleepWeek.map((s) => ({
-    ...s,
-    barHeight: `${Math.round((100 * s.hours) / MAX_SLEEP)}%`,
-    barColor: s.hours >= SLEEP_GOOD_THRESHOLD ? '#6fa3d1' : '#c9dcec',
-  }));
-  const sleepAvg = (state.sleepWeek.reduce((a, s) => a + s.hours, 0) / state.sleepWeek.length).toFixed(1);
-  return { sleepWeek, sleepAvg };
-}
-
-export function computeGoals(state) {
-  return state.goalsList.map((g) => ({
-    ...g,
-    pct: `${Math.round((100 * g.current) / g.target)}%`,
   }));
 }

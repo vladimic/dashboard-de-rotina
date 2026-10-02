@@ -118,6 +118,8 @@ export function createSeedState() {
     habitosLog: {},
 
     agendaDay: 'hoje',
+    // CPAP apnea-hypopnea index typed in daily: { 'YYYY-MM-DD': number }.
+    iahLog: {},
 
     downloadsCount: 61,
     backlogCount: 128,
