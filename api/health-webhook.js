@@ -25,11 +25,13 @@ function toKg(value, unit) {
   return value;
 }
 
-// Shortcuts sends numbers formatted with the device locale ("86,4").
+// Shortcuts sends numbers formatted with the device locale ("86,4"), and
+// when the whole Health sample ends up in the text instead of just its
+// value it comes through as "86,4 kg" — take the first number either way.
 function parseNumber(raw) {
   if (typeof raw === 'number') return raw;
-  const n = Number(String(raw ?? '').replace(/\s/g, '').replace(',', '.'));
-  return Number.isFinite(n) ? n : NaN;
+  const match = /-?\d+(?:[.,]\d+)?/.exec(String(raw ?? ''));
+  return match ? Number(match[0].replace(',', '.')) : NaN;
 }
 
 function parseDate(raw) {
