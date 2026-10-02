@@ -1,9 +1,10 @@
 import WeightCard from '../components/saude/WeightCard';
 import IahCard from '../components/saude/IahCard';
 import SleepCard from '../components/saude/SleepCard';
+import SleepScheduleCard from '../components/saude/SleepScheduleCard';
 import styles from './SaudeView.module.css';
 
-// Sleep schedule, sleep quality, steps and exercise come next.
+// Sleep quality, steps and exercise come next.
 export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
   return (
     <div className={styles.stack}>
@@ -20,6 +21,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
         />
         <SleepCard nights={nights} loading={sleep.loading} error={sleep.error} />
       </div>
+      <SleepScheduleCard nights={nights} />
       <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>
   );
