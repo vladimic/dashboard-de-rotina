@@ -19,9 +19,22 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showMin={state.weightShowMin}
           onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
         />
-        <SleepCard nights={nights} loading={sleep.loading} error={sleep.error} />
+        <SleepCard
+          nights={nights}
+          loading={sleep.loading}
+          error={sleep.error}
+          showAwake={state.sleepShowAwake}
+          onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
+        />
+        {/* Left half below the weight reserved for the next panel. */}
+        <div />
+        <SleepScheduleCard
+          nights={nights}
+          travels={state.travelTimezones}
+          onAddTravel={(t) => dispatch({ type: 'ADD_TRAVEL_TZ', ...t })}
+          onRemoveTravel={(id) => dispatch({ type: 'REMOVE_TRAVEL_TZ', id })}
+        />
       </div>
-      <SleepScheduleCard nights={nights} />
       <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>
   );

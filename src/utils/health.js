@@ -157,7 +157,44 @@ export function formatDuration(min) {
   return m === 60 ? `${h + 1}h00` : `${h}h${String(m).padStart(2, '0')}`;
 }
 
-// "23:41" in São Paulo time.
-export function formatClockSP(t) {
-  return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+export const HOME_TIMEZONE = 'America/Sao_Paulo';
+
+// Timezones offered for travel periods (the Shortcut sends absolute
+// instants, so nights abroad would otherwise show São Paulo clock times).
+export const TRAVEL_TIMEZONES = [
+  { tz: 'America/New_York', label: 'EUA — Leste (Nova York, Miami)' },
+  { tz: 'America/Chicago', label: 'EUA — Central (Chicago, Dallas)' },
+  { tz: 'America/Denver', label: 'EUA — Montanha (Denver)' },
+  { tz: 'America/Phoenix', label: 'EUA — Arizona' },
+  { tz: 'America/Los_Angeles', label: 'EUA — Pacífico (Los Angeles, SF)' },
+  { tz: 'Europe/Lisbon', label: 'Portugal (Lisboa)' },
+  { tz: 'Europe/London', label: 'Reino Unido (Londres)' },
+  { tz: 'Europe/Madrid', label: 'Europa Central (Madri, Paris, Roma)' },
+  { tz: 'America/Manaus', label: 'Brasil — Manaus' },
+  { tz: 'America/Noronha', label: 'Brasil — Noronha' },
+];
+
+// The timezone a night was slept in: a travel period covering its key
+// (the wake-up day, "YYYY-MM-DD"), else home.
+export function timezoneForNight(key, travels = []) {
+  const trip = travels.find((tr) => tr.from <= key && key <= tr.to);
+  return trip ? trip.tz : HOME_TIMEZONE;
+}
+
+// Hours since midnight (e.g. 23.5) in `tz`.
+export function hourFloatIn(t, tz = HOME_TIMEZONE) {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(t));
+  return Number(parts.find((p) => p.type === 'hour').value) + Number(parts.find((p) => p.type === 'minute').value) / 60;
+}
+
+// "23:41" in `tz`.
+export function formatClockIn(t, tz = HOME_TIMEZONE) {
+  return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: tz });
+}
+
+// Average sleep (minutes asleep) over the last `days` nights that have data.
+export function averageSleep(nights, days, now = new Date()) {
+  const keys = lastNDateKeys(days, now);
+  const recorded = keys.map((k) => nights.get(k)).filter(Boolean);
+  return recorded.length ? recorded.reduce((a, n) => a + n.asleepMin, 0) / recorded.length : null;
 }

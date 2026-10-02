@@ -1,5 +1,5 @@
 import styles from './SummaryStrip.module.css';
-import { formatClockSP, formatDuration, formatKg, TREND_UI } from '../utils/health';
+import { formatClockIn, formatDuration, formatKg, TREND_UI } from '../utils/health';
 
 function StatCard({ title, value, suffix, className, done }) {
   return (
@@ -82,8 +82,8 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
         <StatCard title="Sono" value={saude.lastNight ? formatDuration(saude.lastNight.asleepMin) : '–'} className={styles.saudeCard} />
         {/* Filled in once quality, steps and exercise are wired up. */}
         <StatCard title="Qualidade" value="–" className={styles.saudeCard} />
-        <StatCard title="Dormiu" value={saude.lastNight ? formatClockSP(saude.lastNight.bedtime) : '–'} className={styles.saudeCard} />
-        <StatCard title="Acordou" value={saude.lastNight ? formatClockSP(saude.lastNight.wake) : '–'} className={styles.saudeCard} />
+        <StatCard title="Dormiu" value={saude.lastNight ? formatClockIn(saude.lastNight.bedtime, saude.lastNightTz) : '–'} className={styles.saudeCard} />
+        <StatCard title="Acordou" value={saude.lastNight ? formatClockIn(saude.lastNight.wake, saude.lastNightTz) : '–'} className={styles.saudeCard} />
         <StatCard title="Passos" value="–" className={styles.saudeCard} />
         <StatCard title="Exercício" value="–" className={styles.saudeCard} />
       </div>
