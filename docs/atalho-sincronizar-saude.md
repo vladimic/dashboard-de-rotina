@@ -45,7 +45,9 @@ No app **Atalhos** → **+** → nome **Sincronizar Saúde**. Ações, em ordem:
 6. **Encontrar Amostras de Saúde**
    - Filtro: **Tipo** é **Peso**
    - **Adicionar Filtro:** **Data de Início** **está entre** **Datas** e
-     **Data Atual** (não existe "depois de")
+     **Data Ajustada** (não existe "depois de"). *Data Ajustada* vem de uma
+     ação **Ajustar Data** logo antes: **Adicionar 1 dia** a **Data Atual**
+     — com a Data Atual direto no filtro, as pesagens de hoje ficam de fora.
    - Unidade: **kg**
    - Ordenar por: **Data de Início**, **Mais Antigos Primeiro**
    - Limite: **desligado**
