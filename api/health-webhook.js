@@ -22,7 +22,7 @@ const FIRST_SYNC_SINCE = '2000-01-01T00:00:00Z';
 // Years of Apple Watch sleep stages are tens of thousands of segments — far
 // too many for a Shortcut loop — and the dashboard only charts recent
 // nights, so the first sleep sync starts this many days back.
-const SLEEP_FIRST_SYNC_DAYS = 60;
+const SLEEP_FIRST_SYNC_DAYS = 35;
 
 // Health's sleep stage names, in whatever language the iPhone uses.
 const SLEEP_STAGES = [

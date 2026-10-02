@@ -94,7 +94,7 @@ peso, com 5 diferenças: `type=sleep`, tipo **Análise do Sono**, o
 **Formatar Data** também para a **Data de Término**, o texto com
 `endDate`, e o JSON final com `"type":"sleep"`.
 
-Na 1ª vez o servidor manda só os **últimos 60 dias** (o histórico inteiro
+Na 1ª vez o servidor manda só os **últimos 35 dias** (o histórico inteiro
 do Watch tem dezenas de milhares de trechos); depois, só o que é novo.
 
 12. **Obter Conteúdo do URL** — GET
