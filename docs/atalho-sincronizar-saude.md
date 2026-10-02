@@ -23,8 +23,7 @@ as pesagens do Saúde e envia para `/api/health-webhook`, que grava na tabela
 
 ## Montando o atalho
 
-No app **Atalhos** → **+** → nome **Sincronizar Saúde**. Ações, em ordem
-:
+No app **Atalhos** → **+** → nome **Sincronizar Saúde**. Ações, em ordem:
 
 1. **Texto** → cole o valor de `HEALTH_WEBHOOK_SECRET`.
    Renomeie a variável para **Segredo** (toque no ícone da ação → Renomear).
