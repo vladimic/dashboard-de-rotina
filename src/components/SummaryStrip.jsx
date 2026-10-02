@@ -1,4 +1,5 @@
 import styles from './SummaryStrip.module.css';
+import { formatKg, TREND_UI } from '../utils/health';
 
 function StatCard({ title, value, suffix, className, done }) {
   return (
@@ -17,11 +18,9 @@ function StatCard({ title, value, suffix, className, done }) {
   );
 }
 
-export default function SummaryStrip({ page, counts, habits, water, waterTarget, sleepHours, weight, lists, dayProgressPercent }) {
+export default function SummaryStrip({ page, counts, saude, lists, dayProgressPercent }) {
   const isHoje = page === 'hoje';
   const isSaude = page === 'saude';
-
-  const habitsDone = habits.filter((h) => h.done).length;
 
   return (
     <div className={styles.strip}>
@@ -58,10 +57,35 @@ export default function SummaryStrip({ page, counts, habits, water, waterTarget,
       </div>
 
       <div className={styles.saudeGroup} data-dim={isHoje}>
-        <StatCard title="Hábitos" value={habitsDone} suffix={`/${habits.length}`} className={styles.saudeCard} />
-        <StatCard title="Água" value={water} suffix={`/${waterTarget}`} className={styles.saudeCard} />
-        <StatCard title="Sono (ontem)" value={sleepHours} suffix="h" className={styles.saudeCard} />
-        <StatCard title="Peso" value={weight} suffix="kg" className={styles.saudeCard} />
+        <div className={`${styles.card} ${styles.saudeCard}`}>
+          <div className={styles.cardTitle}>Peso</div>
+          <div className={styles.weightRow}>
+            <div className={styles.weightTrends}>
+              {(saude.weight?.trends || []).map(({ days, trend }) => (
+                <span
+                  key={days}
+                  className={styles.weightTrend}
+                  data-dir={trend?.direction || 'none'}
+                  title={trend ? `${days} dias: ${TREND_UI[trend.direction].label}` : `${days} dias: pesagens insuficientes`}
+                >
+                  {trend ? TREND_UI[trend.direction].symbol : '–'}
+                </span>
+              ))}
+            </div>
+            <div className={styles.cardValue}>
+              {saude.weight ? formatKg(saude.weight.value) : '–'}
+              <span className={styles.cardSuffix}>kg</span>
+            </div>
+          </div>
+        </div>
+        <StatCard title="IAH" value={saude.iah != null ? formatKg(saude.iah) : '–'} className={styles.saudeCard} />
+        {/* Filled in once the Shortcut also sends sleep, steps and exercise. */}
+        <StatCard title="Sono" value="–" className={styles.saudeCard} />
+        <StatCard title="Qualidade" value="–" className={styles.saudeCard} />
+        <StatCard title="Dormiu" value="–" className={styles.saudeCard} />
+        <StatCard title="Acordou" value="–" className={styles.saudeCard} />
+        <StatCard title="Passos" value="–" className={styles.saudeCard} />
+        <StatCard title="Exercício" value="–" className={styles.saudeCard} />
       </div>
     </div>
   );

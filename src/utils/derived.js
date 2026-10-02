@@ -145,12 +145,3 @@ export function computeHabitGroup(list, log, days) {
   const pend = list.filter((h) => !log[todayKey]?.[h.id]).length;
   return { rows, pend, total: list.length };
 }
-
-export function computeHabits(state) {
-  return state.habits.map((h) => ({
-    ...h,
-    pct: `${Math.round((100 * h.streak) / 7)}%`,
-    color: h.done ? '#c3b3c9' : '#5b4a63',
-    barColor: h.done ? '#c48fce' : '#e3cdea',
-  }));
-}

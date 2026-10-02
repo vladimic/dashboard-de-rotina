@@ -84,3 +84,19 @@ export function iahBand(value) {
   if (value < 30) return 'moderado';
   return 'grave';
 }
+
+// The three trend windows shown next to the weight, in the Saúde header
+// and on the weight chart.
+export const TREND_DAYS = [7, 30, 90];
+
+export const TREND_UI = {
+  up: { symbol: '↗', label: 'subindo' },
+  down: { symbol: '↘', label: 'descendo' },
+  stable: { symbol: '→', label: 'estável' },
+};
+
+export function weightTrends(points, now = Date.now()) {
+  return TREND_DAYS.map((days) => ({ days, trend: weightTrend(points, days, now) }));
+}
+
+export const formatKg = (v) => v.toFixed(1).replace('.', ',');

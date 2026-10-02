@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import ChartCanvas, { GRID_COLOR } from './ChartCanvas';
-import { dailyWeights, movingAverage, weightTrend } from '../../utils/health';
+import { dailyWeights, formatKg as kg, movingAverage, TREND_UI, weightTrends } from '../../utils/health';
 import styles from './Saude.module.css';
 
 const PERIODS = [
@@ -11,33 +11,31 @@ const PERIODS = [
   { days: 0, label: 'Geral' },
 ];
 
-const TREND_DAYS = [7, 30, 90];
-
-const TREND_UI = {
-  up: { symbol: '↗', label: 'subindo' },
-  down: { symbol: '↘', label: 'descendo' },
-  stable: { symbol: '→', label: 'estável' },
-};
+const COLORS = { weight: '#2f9e6f', ma7: '#e5a03a', ma30: '#6b5fc7' };
 
 const DAY_MS = 86400000;
 
-const kg = (v) => v.toFixed(1).replace('.', ',');
 const dayMonth = (t) => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' });
 const dayMonthYear = (t) =>
   new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'America/Sao_Paulo' });
 
 export default function WeightCard({ samples, loading, error, onRefresh }) {
   const [periodDays, setPeriodDays] = useState(30);
+  const [showMa7, setShowMa7] = useState(true);
+  const [showMa30, setShowMa30] = useState(true);
 
   const daily = useMemo(() => dailyWeights(samples), [samples]);
   const ma7 = useMemo(() => movingAverage(daily, 7), [daily]);
   const ma30 = useMemo(() => movingAverage(daily, 30), [daily]);
-  const trends = useMemo(() => TREND_DAYS.map((days) => ({ days, trend: weightTrend(daily, days) })), [daily]);
+  const trends = useMemo(() => weightTrends(daily), [daily]);
 
   const latest = samples.at(-1);
+  // Memoized so the chart config (and the chart itself) isn't rebuilt on
+  // every render just because Date.now() moved.
+  const minT = useMemo(() => (periodDays ? Date.now() - periodDays * DAY_MS : -Infinity), [periodDays]);
+  const firstInPeriod = daily.find((p) => p.t >= minT);
 
   const config = useMemo(() => {
-    const minT = periodDays ? Date.now() - periodDays * DAY_MS : -Infinity;
     const inRange = (p) => p.t >= minT;
     const xy = (points) => points.filter(inRange).map((p) => ({ x: p.t, y: Math.round(p.value * 100) / 100 }));
     const showYear = periodDays === 0 || periodDays === 365;
@@ -45,9 +43,9 @@ export default function WeightCard({ samples, loading, error, onRefresh }) {
       type: 'line',
       data: {
         datasets: [
-          { label: 'Peso', data: xy(daily), borderColor: '#2f9e6f', backgroundColor: 'rgba(47, 158, 111, 0.08)', fill: true, borderWidth: 1.5, pointRadius: periodDays && periodDays <= 30 ? 2.5 : 0, tension: 0.25 },
-          { label: 'Média 7d', data: xy(ma7), borderColor: '#e5a03a', borderWidth: 2, pointRadius: 0, tension: 0.3 },
-          { label: 'Média 30d', data: xy(ma30), borderColor: '#6b5fc7', borderWidth: 2, pointRadius: 0, tension: 0.3 },
+          { label: 'Peso', data: xy(daily), borderColor: COLORS.weight, backgroundColor: 'rgba(47, 158, 111, 0.08)', fill: true, borderWidth: 1.5, pointRadius: periodDays && periodDays <= 30 ? 2.5 : 0, tension: 0.25 },
+          { label: 'Média 7d', data: xy(ma7), borderColor: COLORS.ma7, borderWidth: 2, pointRadius: 0, tension: 0.3, hidden: !showMa7 },
+          { label: 'Média 30d', data: xy(ma30), borderColor: COLORS.ma30, borderWidth: 2, pointRadius: 0, tension: 0.3, hidden: !showMa30 },
         ],
       },
       options: {
@@ -69,15 +67,17 @@ export default function WeightCard({ samples, loading, error, onRefresh }) {
             // Explicit bounds — left to itself the linear scale rounds out
             // to "nice" numbers months past either end of the data.
             min: periodDays ? minT : daily[0]?.t,
-            max: Date.now(),
+            max: Math.max(Date.now(), daily.at(-1)?.t ?? 0),
             grid: { display: false },
-            ticks: { maxTicksLimit: 8, callback: (v) => (showYear ? dayMonthYear(v) : dayMonth(v)) },
+            ticks: { maxTicksLimit: 6, callback: (v) => (showYear ? dayMonthYear(v) : dayMonth(v)) },
           },
           y: { grid: { color: GRID_COLOR }, ticks: { callback: (v) => kg(v) } },
         },
       },
     };
-  }, [daily, ma7, ma30, periodDays]);
+  }, [daily, ma7, ma30, periodDays, minT, showMa7, showMa30]);
+
+  const delta = firstInPeriod && latest ? daily.at(-1).value - firstInPeriod.value : null;
 
   return (
     <div className={styles.card}>
@@ -107,6 +107,14 @@ export default function WeightCard({ samples, loading, error, onRefresh }) {
           </div>
         </div>
         <div className={styles.headerRight}>
+          <button type="button" className={styles.maToggle} data-on={showMa7} onClick={() => setShowMa7((v) => !v)}>
+            <i style={{ background: COLORS.ma7 }} />
+            Média 7d
+          </button>
+          <button type="button" className={styles.maToggle} data-on={showMa30} onClick={() => setShowMa30((v) => !v)}>
+            <i style={{ background: COLORS.ma30 }} />
+            Média 30d
+          </button>
           <div className={styles.pills}>
             {PERIODS.map((p) => (
               <button
@@ -134,18 +142,22 @@ export default function WeightCard({ samples, loading, error, onRefresh }) {
 
       {samples.length > 0 && (
         <div className={styles.footer}>
-          <span className={styles.legend}>
-            <i style={{ background: '#2f9e6f' }} />
-            Peso
-          </span>
-          <span className={styles.legend}>
-            <i style={{ background: '#e5a03a' }} />
-            Média 7d
-          </span>
-          <span className={styles.legend}>
-            <i style={{ background: '#6b5fc7' }} />
-            Média 30d
-          </span>
+          {firstInPeriod ? (
+            <span className={styles.muted}>
+              início {dayMonthYear(firstInPeriod.t)}: <b className={styles.strong}>{kg(firstInPeriod.value)} kg</b>
+              {delta != null && (
+                <>
+                  {' · '}variação{' '}
+                  <b className={styles.strong}>
+                    {delta > 0 ? '+' : ''}
+                    {kg(delta)} kg
+                  </b>
+                </>
+              )}
+            </span>
+          ) : (
+            <span className={styles.muted}>sem pesagens neste período</span>
+          )}
           <span className={styles.footerRight}>
             última pesagem {dayMonthYear(latest.t)} · {samples.length} registros
           </span>

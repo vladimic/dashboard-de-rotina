@@ -176,3 +176,36 @@
   padding: 40px 0;
   text-align: center;
 }
+
+.strong {
+  font-weight: 600;
+  color: #3f6b57;
+}
+
+.maToggle {
+  font: 600 11px Inter, sans-serif;
+  color: #3f6b57;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #d5e8de;
+  cursor: pointer;
+}
+
+.maToggle i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.maToggle[data-on='false'] {
+  color: #b5cbbf;
+  border-style: dashed;
+}
+
+.maToggle[data-on='false'] i {
+  opacity: 0.3;
+}

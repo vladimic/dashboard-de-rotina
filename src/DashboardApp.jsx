@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDashboardState } from './state/useDashboardState';
 import { useConfirm } from './components/ConfirmContext';
 import { useHubspotTasks } from './hooks/useHubspotTasks';
@@ -9,7 +9,9 @@ import { useNotionTasks } from './hooks/useNotionTasks';
 import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
-import { computeAgenda, computeCounts, computeHabits, computeHabitGroup } from './utils/derived';
+import { useHealthSamples } from './hooks/useHealthSamples';
+import { dailyWeights, weightTrends } from './utils/health';
+import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
@@ -33,6 +35,12 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const notion = useNotionTasks();
   const ticktick = useTickTickTasks();
   const usdQuote = useUsdQuote();
+  // Read here (not in SaudeView) since the Saúde header strip shows it too.
+  const weight = useHealthSamples('weight');
+  const weightSummary = useMemo(() => {
+    const latest = weight.samples.at(-1);
+    return latest ? { value: latest.value, trends: weightTrends(dailyWeights(weight.samples)) } : null;
+  }, [weight.samples]);
   const confirm = useConfirm();
 
   // Fires the Atalho, re-fetches the cache it just filled, and polls a few
@@ -227,7 +235,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const dayProgressPercent =
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
-  const habits = computeHabits(state);
+  const lastIahKey = Object.keys(state.iahLog || {}).sort().at(-1);
+  const saudeSummary = {
+    weight: weightSummary,
+    iah: lastIahKey ? state.iahLog[lastIahKey] : null,
+  };
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel
@@ -290,6 +302,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           notion.refresh();
           ticktick.refresh();
           usdQuote.refresh();
+          weight.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -301,11 +314,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
       <SummaryStrip
         page={state.page}
         counts={summaryCounts}
-        habits={habits}
-        water={state.water}
-        waterTarget={state.waterTarget}
-        sleepHours={state.sleepHours}
-        weight={state.weight}
+        saude={saudeSummary}
         lists={{
           lembretesTotal: reminders.total,
           ticktickTotal: ticktick.total,
@@ -331,7 +340,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         />
       )}
       {state.page === 'saude' && (
-        <SaudeView state={state} dispatch={dispatch} />
+        <SaudeView state={state} dispatch={dispatch} weight={weight} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
     </div>
