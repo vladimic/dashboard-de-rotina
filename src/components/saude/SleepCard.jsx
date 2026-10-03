@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { averageSleep, formatDuration, thirtyDayAxis } from '../../utils/health';
+import { formatDuration, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // Stacked bottom-up in this order; "Dormindo" is sleep logged without stage
@@ -18,8 +18,7 @@ const STAGES = [
 // hidden so each bar's height is just the time actually asleep.
 export default function SleepCard({ nights, loading, error, showAwake, onToggleAwake }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
-  const avg7 = averageSleep(nights, 7);
-  const avg30 = averageSleep(nights, 30);
+  const trends = [7, 30].map((days) => ({ days, trend: sleepTrend(nights, days) }));
   const hasUnstaged = axis.some((d) => nights.get(d.key)?.stages.asleep > 0);
   // Memoized so the chart config below isn't rebuilt on every render.
   const stages = useMemo(
@@ -77,21 +76,41 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>Sono · 30 dias</span>
+          <span className={styles.title}>Sono</span>
           {last && <span className={styles.bigValue}>{formatDuration(last.asleepMin)}</span>}
-          {avg30 != null && (
-            <span className={styles.muted}>
-              média 7d <b className={styles.strong}>{avg7 != null ? formatDuration(avg7) : '–'}</b> · 30d{' '}
-              <b className={styles.strong}>{formatDuration(avg30)}</b>
-            </span>
-          )}
+          <div className={styles.trends}>
+            {trends.map(({ days, trend }) => {
+              const ui = trend ? TREND_UI[trend.direction] : null;
+              // More sleep is the good direction here (the opposite of weight).
+              const tone = !trend || trend.direction === 'stable' ? 'flat' : trend.direction === 'up' ? 'good' : 'bad';
+              return (
+                <span
+                  key={days}
+                  className={styles.trend}
+                  data-tone={tone}
+                  title={trend ? `${days} dias: ${ui.label} · média ${formatDuration(trend.avg)}` : `${days} dias: noites insuficientes`}
+                >
+                  {days}
+                  <b>{ui ? ui.symbol : '–'}</b>
+                </span>
+              );
+            })}
+          </div>
         </div>
-        <div className={styles.headerRight}>
-          <button type="button" className={styles.maToggle} data-on={showAwake} onClick={onToggleAwake} title="Mostrar o tempo acordado em cima das barras">
-            <i style={{ borderTop: 'none', height: 8, width: 8, borderRadius: 2, background: '#f0a487' }} />
-            Acordado
-          </button>
-        </div>
+        {nights.size > 0 && (
+          <div className={styles.headerRight}>
+            {STAGES.filter((s) => s.key !== 'awake' && (s.key !== 'asleep' || hasUnstaged)).map((s) => (
+              <span key={s.key} className={styles.legend}>
+                <i style={{ background: s.color, height: 8, width: 8, borderRadius: 2 }} />
+                {s.label}
+              </span>
+            ))}
+            <button type="button" className={styles.maToggle} data-on={showAwake} onClick={onToggleAwake} title="Mostrar o tempo acordado em cima das barras">
+              <i style={{ borderTop: 'none', height: 8, width: 8, borderRadius: 2, background: '#f0a487' }} />
+              Acordado
+            </button>
+          </div>
+        )}
       </div>
 
       {error && <div className={styles.error}>Não deu pra carregar o sono: {error}</div>}
@@ -99,17 +118,6 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
       {nights.size > 0 && <ChartCanvas config={config} height={260} />}
-
-      {nights.size > 0 && (
-        <div className={styles.footer}>
-          {stages.map((s) => (
-            <span key={s.key} className={styles.legend}>
-              <i style={{ background: s.color, height: 8, width: 8, borderRadius: 2 }} />
-              {s.label}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

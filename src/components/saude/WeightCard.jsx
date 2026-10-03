@@ -189,10 +189,21 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
         <div className={styles.headerLeft}>
           <span className={`${styles.title} ${styles.hideNarrow}`}>Peso</span>
           {latest && (
-            <span className={styles.bigValue}>
-              {kg(latest.value)}
-              <span className={styles.unit}> kg</span>
-            </span>
+            <div className={styles.valueStack}>
+              <span className={styles.bigValue}>
+                {kg(latest.value)}
+                <span className={styles.unit}> kg</span>
+              </span>
+              {firstInPeriod && delta != null && (
+                <span className={styles.subValue} title={`Peso em ${dayMonthYear(firstInPeriod.t)}, início do período`}>
+                  início {kg(firstInPeriod.value)} ·{' '}
+                  <b className={styles.delta} data-dir={delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat'}>
+                    {delta > 0 ? '+' : ''}
+                    {kg(delta)}
+                  </b>
+                </span>
+              )}
+            </div>
           )}
           <div className={styles.trends}>
             {trends.map(({ days, trend }) => {
@@ -249,30 +260,6 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
         <div className={styles.empty}>Nenhuma pesagem ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
       {samples.length > 0 && <ChartCanvas config={config} height={260} />}
-
-      {samples.length > 0 && (
-        <div className={styles.footer}>
-          {firstInPeriod ? (
-            <span className={styles.muted}>
-              início {dayMonthYear(firstInPeriod.t)}: <b className={styles.strong}>{kg(firstInPeriod.value)} kg</b>
-              {delta != null && (
-                <>
-                  {' · '}variação{' '}
-                  <b className={styles.delta} data-dir={delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat'}>
-                    {delta > 0 ? '+' : ''}
-                    {kg(delta)} kg
-                  </b>
-                </>
-              )}
-            </span>
-          ) : (
-            <span className={styles.muted}>sem pesagens neste período</span>
-          )}
-          <span className={styles.footerRight}>
-            última pesagem {dayMonthYear(latest.t)}
-          </span>
-        </div>
-      )}
     </div>
   );
 }

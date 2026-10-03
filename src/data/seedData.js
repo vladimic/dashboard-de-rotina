@@ -127,9 +127,6 @@ export function createSeedState() {
     weightShowMin: true,
     // Sleep chart: show the "acordado" slice on top of the bars.
     sleepShowAwake: false,
-    // Trips abroad: { id, from, to ('YYYY-MM-DD', wake-up days), tz } — so
-    // those nights show local clock times instead of São Paulo's.
-    travelTimezones: [],
 
     downloadsCount: 61,
     backlogCount: 128,

@@ -46,12 +46,6 @@ export function dashboardReducer(state, action) {
     case 'TOGGLE_AGENDA_DAY':
       return { ...state, agendaDay: state.agendaDay === 'hoje' ? 'amanha' : 'hoje' };
 
-    case 'ADD_TRAVEL_TZ':
-      return { ...state, travelTimezones: [...(state.travelTimezones || []), { id: Date.now(), from: action.from, to: action.to, tz: action.tz }] };
-
-    case 'REMOVE_TRAVEL_TZ':
-      return { ...state, travelTimezones: (state.travelTimezones || []).filter((t) => t.id !== action.id) };
-
     case 'SET_IAH':
       return { ...state, iahLog: { ...state.iahLog, [action.date]: action.value } };
 

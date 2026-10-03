@@ -157,44 +157,39 @@ export function formatDuration(min) {
   return m === 60 ? `${h + 1}h00` : `${h}h${String(m).padStart(2, '0')}`;
 }
 
-export const HOME_TIMEZONE = 'America/Sao_Paulo';
+const HOME_TIMEZONE = 'America/Sao_Paulo';
 
-// Timezones offered for travel periods (the Shortcut sends absolute
-// instants, so nights abroad would otherwise show São Paulo clock times).
-export const TRAVEL_TIMEZONES = [
-  { tz: 'America/New_York', label: 'EUA — Leste (Nova York, Miami)' },
-  { tz: 'America/Chicago', label: 'EUA — Central (Chicago, Dallas)' },
-  { tz: 'America/Denver', label: 'EUA — Montanha (Denver)' },
-  { tz: 'America/Phoenix', label: 'EUA — Arizona' },
-  { tz: 'America/Los_Angeles', label: 'EUA — Pacífico (Los Angeles, SF)' },
-  { tz: 'Europe/Lisbon', label: 'Portugal (Lisboa)' },
-  { tz: 'Europe/London', label: 'Reino Unido (Londres)' },
-  { tz: 'Europe/Madrid', label: 'Europa Central (Madri, Paris, Roma)' },
-  { tz: 'America/Manaus', label: 'Brasil — Manaus' },
-  { tz: 'America/Noronha', label: 'Brasil — Noronha' },
-];
-
-// The timezone a night was slept in: a travel period covering its key
-// (the wake-up day, "YYYY-MM-DD"), else home.
-export function timezoneForNight(key, travels = []) {
-  const trip = travels.find((tr) => tr.from <= key && key <= tr.to);
-  return trip ? trip.tz : HOME_TIMEZONE;
-}
-
-// Hours since midnight (e.g. 23.5) in `tz`.
-export function hourFloatIn(t, tz = HOME_TIMEZONE) {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(t));
+// Hours since midnight (e.g. 23.5), São Paulo time.
+export function hourFloatSP(t) {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: HOME_TIMEZONE, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(t));
   return Number(parts.find((p) => p.type === 'hour').value) + Number(parts.find((p) => p.type === 'minute').value) / 60;
 }
 
-// "23:41" in `tz`.
-export function formatClockIn(t, tz = HOME_TIMEZONE) {
-  return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: tz });
+// "23:41", São Paulo time.
+export function formatClockSP(t) {
+  return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: HOME_TIMEZONE });
 }
 
-// Average sleep (minutes asleep) over the last `days` nights that have data.
-export function averageSleep(nights, days, now = new Date()) {
+// Below this many minutes/week (either way) sleep counts as "estável".
+export const SLEEP_STABLE_MIN_PER_WEEK = 10;
+
+// Least-squares slope of minutes asleep over the last `days` nights, in
+// minutes/week, plus that window's average. null with fewer than two nights.
+export function sleepTrend(nights, days, now = new Date()) {
   const keys = lastNDateKeys(days, now);
-  const recorded = keys.map((k) => nights.get(k)).filter(Boolean);
-  return recorded.length ? recorded.reduce((a, n) => a + n.asleepMin, 0) / recorded.length : null;
+  const pts = keys
+    .map((k, i) => ({ x: i, y: nights.get(k)?.asleepMin }))
+    .filter((p) => p.y != null);
+  if (pts.length < 2) return null;
+  const mx = pts.reduce((a, p) => a + p.x, 0) / pts.length;
+  const my = pts.reduce((a, p) => a + p.y, 0) / pts.length;
+  let num = 0;
+  let den = 0;
+  for (const p of pts) {
+    num += (p.x - mx) * (p.y - my);
+    den += (p.x - mx) ** 2;
+  }
+  const minPerWeek = den ? (num / den) * 7 : 0;
+  const direction = Math.abs(minPerWeek) < SLEEP_STABLE_MIN_PER_WEEK ? 'stable' : minPerWeek > 0 ? 'up' : 'down';
+  return { minPerWeek, direction, avg: my };
 }

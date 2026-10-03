@@ -326,35 +326,24 @@
   }
 }
 
-.avgTable {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+.trend[data-tone='good'] {
+  background: #e3f4ea;
+  color: #2f8a5c;
 }
 
-.travelBox {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  background: #f4f9f6;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.travelRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  font: 500 12px Inter, sans-serif;
-  color: #3f6b57;
-}
-
-.travelRemove {
-  font: 600 12px Inter, sans-serif;
+.trend[data-tone='bad'] {
+  background: #fbe9e7;
   color: #c0453a;
-  cursor: pointer;
-  padding: 2px 6px;
+}
+
+.valueStack {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.subValue {
+  font: 500 10px Inter, sans-serif;
+  color: #7fa693;
+  white-space: nowrap;
 }

@@ -10,7 +10,7 @@ import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { useHealthSamples } from './hooks/useHealthSamples';
-import { dailyWeights, sleepNights, timezoneForNight, weightTrends } from './utils/health';
+import { dailyWeights, sleepNights, weightTrends } from './utils/health';
 import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
@@ -244,7 +244,6 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     weight: weightSummary,
     iah: lastIahKey ? state.iahLog[lastIahKey] : null,
     lastNight,
-    lastNightTz: lastNight ? timezoneForNight(lastNight.key, state.travelTimezones) : undefined,
   };
 
   const todayLong = formatTodayLong();

@@ -28,12 +28,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
         />
         {/* Left half below the weight reserved for the next panel. */}
         <div />
-        <SleepScheduleCard
-          nights={nights}
-          travels={state.travelTimezones}
-          onAddTravel={(t) => dispatch({ type: 'ADD_TRAVEL_TZ', ...t })}
-          onRemoveTravel={(id) => dispatch({ type: 'REMOVE_TRAVEL_TZ', id })}
-        />
+        <SleepScheduleCard nights={nights} />
       </div>
       <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>
