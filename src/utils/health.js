@@ -111,37 +111,44 @@ function nightKey(t) {
 
 const ASLEEP_STAGES = ['deep', 'core', 'rem', 'asleep'];
 
+// When segments overlap (Watch + iPhone, or another sleep app, logging the
+// same stretch), each minute counts once, as the highest-priority stage
+// covering it: staged sleep first, then "acordado" (a Watch saying you were
+// awake beats an iPhone guessing you were asleep), then plain "dormindo".
+// "Na cama" never counts.
+const STAGE_PRIORITY = { deep: 4, rem: 4, core: 4, awake: 3, asleep: 2 };
+
 // Sleep segments → one summary per night: minutes per stage, total asleep,
-// and when you fell asleep / woke up. When several sources logged the same
-// night (Watch + iPhone, or another sleep app), only one is used — the one
-// with the most stage detail — so the night isn't counted twice.
+// and when you fell asleep / woke up. Built on a timeline rather than by
+// source (the Shortcut can't always tell sources apart), so overlapping
+// segments never make a night count twice.
 export function sleepNights(samples) {
   const byNight = new Map();
   for (const s of samples) {
-    if (!s.end) continue;
+    if (!s.end || !(s.unit in STAGE_PRIORITY)) continue;
     const key = nightKey(s.t);
-    if (!byNight.has(key)) byNight.set(key, new Map());
-    const bySource = byNight.get(key);
-    if (!bySource.has(s.source)) bySource.set(s.source, []);
-    bySource.get(s.source).push(s);
+    if (!byNight.has(key)) byNight.set(key, []);
+    byNight.get(key).push(s);
   }
 
   const nights = new Map();
-  for (const [key, bySource] of byNight) {
-    const score = (segs) => {
-      const staged = segs.filter((x) => ['deep', 'core', 'rem'].includes(x.unit)).reduce((a, x) => a + x.value, 0);
-      const asleep = segs.filter((x) => x.unit === 'asleep').reduce((a, x) => a + x.value, 0);
-      return staged * 10 + asleep;
-    };
-    const segs = [...bySource.values()].sort((a, b) => score(b) - score(a))[0];
+  for (const [key, segs] of byNight) {
+    const cuts = [...new Set(segs.flatMap((x) => [x.t, x.end]))].sort((a, b) => a - b);
     const stages = { deep: 0, core: 0, rem: 0, asleep: 0, awake: 0 };
     let bedtime = Infinity;
     let wake = -Infinity;
-    for (const x of segs) {
-      if (x.unit in stages) stages[x.unit] += x.value;
-      if (ASLEEP_STAGES.includes(x.unit)) {
-        bedtime = Math.min(bedtime, x.t);
-        wake = Math.max(wake, x.end);
+    for (let i = 0; i < cuts.length - 1; i++) {
+      const from = cuts[i];
+      const to = cuts[i + 1];
+      let best = null;
+      for (const x of segs) {
+        if (x.t <= from && x.end >= to && (!best || STAGE_PRIORITY[x.unit] > STAGE_PRIORITY[best])) best = x.unit;
+      }
+      if (!best) continue;
+      stages[best] += (to - from) / 60000;
+      if (ASLEEP_STAGES.includes(best)) {
+        bedtime = Math.min(bedtime, from);
+        wake = Math.max(wake, to);
       }
     }
     const asleepMin = ASLEEP_STAGES.reduce((a, k) => a + stages[k], 0);
