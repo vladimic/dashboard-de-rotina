@@ -2,9 +2,11 @@ import WeightCard from '../components/saude/WeightCard';
 import IahCard from '../components/saude/IahCard';
 import SleepCard from '../components/saude/SleepCard';
 import SleepScheduleCard from '../components/saude/SleepScheduleCard';
+import SleepQualityCard from '../components/saude/SleepQualityCard';
 import styles from './SaudeView.module.css';
 
-// Sleep quality, steps and exercise come next.
+// Two rows of three: weight, bedtime, sleep / IAH, sleep quality, and the
+// third slot reserved for exercise (steps + workouts) next.
 export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
   return (
     <div className={styles.stack}>
@@ -27,8 +29,10 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showAwake={state.sleepShowAwake}
           onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
         />
+        <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
+        <SleepQualityCard nights={nights} />
+        <div />
       </div>
-      <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>
   );
 }

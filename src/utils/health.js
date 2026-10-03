@@ -209,3 +209,30 @@ export function sleepTrend(nights, days, now = new Date()) {
 export function bedtimeTrend(nights, days, now = new Date()) {
   return nightTrend(nights, days, (n) => bedtimeHour(n.bedtime) * 60, now);
 }
+
+// Sleep quality 0–100, computed from the night's stages (the Health app's
+// own sleep score isn't something the Shortcut can read):
+//   • Duração (50 pts): asleep time vs. 8h — 8h or more gets all 50.
+//   • Profundo + REM (30 pts): their share of the time asleep vs. 40% —
+//     40% or more gets all 30. Nights logged without stages get half (15).
+//   • Pouco acordado (20 pts): awake share of (asleep + awake) — 0% gets
+//     all 20, 15% or more gets 0.
+export function sleepQuality(night) {
+  const { deep, rem, core, awake } = night.stages;
+  const asleep = night.asleepMin;
+  const duration = Math.min(asleep / 480, 1) * 50;
+  const staged = deep + rem + core;
+  const restorative = staged > 0 ? Math.min((deep + rem) / asleep / 0.4, 1) * 30 : 15;
+  const awakeShare = awake / (asleep + awake);
+  const efficiency = Math.max(0, 1 - awakeShare / 0.15) * 20;
+  return {
+    score: Math.round(duration + restorative + efficiency),
+    parts: { duration: Math.round(duration), restorative: Math.round(restorative), efficiency: Math.round(efficiency) },
+  };
+}
+
+// Same rolling-average comparison as sleepTrend, on the quality score.
+// "up" = better nights. avg in points.
+export function qualityTrend(nights, days, now = new Date()) {
+  return nightTrend(nights, days, (n) => sleepQuality(n).score, now);
+}

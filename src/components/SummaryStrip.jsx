@@ -1,5 +1,5 @@
 import styles from './SummaryStrip.module.css';
-import { formatClockSP, formatDuration, formatKg, TREND_UI } from '../utils/health';
+import { formatClockSP, formatDuration, formatKg, sleepQuality, TREND_UI } from '../utils/health';
 
 function StatCard({ title, value, suffix, className, done }) {
   return (
@@ -80,10 +80,10 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
         </div>
         <StatCard title="IAH" value={saude.iah != null ? formatKg(saude.iah) : '–'} className={styles.saudeCard} />
         <StatCard title="Sono" value={saude.lastNight ? formatDuration(saude.lastNight.asleepMin) : '–'} className={styles.saudeCard} />
-        {/* Filled in once quality, steps and exercise are wired up. */}
-        <StatCard title="Qualidade" value="–" className={styles.saudeCard} />
+        <StatCard title="Qualidade" value={saude.lastNight ? sleepQuality(saude.lastNight).score : '–'} className={styles.saudeCard} />
         <StatCard title="Dormiu" value={saude.lastNight ? formatClockSP(saude.lastNight.bedtime) : '–'} className={styles.saudeCard} />
         <StatCard title="Acordou" value={saude.lastNight ? formatClockSP(saude.lastNight.wake) : '–'} className={styles.saudeCard} />
+        {/* Filled in once the Shortcut also sends steps and exercise. */}
         <StatCard title="Passos" value="–" className={styles.saudeCard} />
         <StatCard title="Exercício" value="–" className={styles.saudeCard} />
       </div>

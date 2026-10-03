@@ -25,7 +25,8 @@ export default function IahCard({ log, onSave }) {
     () => ({
       type: 'line',
       data: {
-        labels: axis.map((d) => d.label),
+        // Third-width chart: weekday as its initial (S, T, Q...).
+        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
         datasets: [
           {
             label: 'IAH',
@@ -47,10 +48,10 @@ export default function IahCard({ log, onSave }) {
           legend: { display: false },
           tooltip: {
             filter: (item) => item.datasetIndex === 0,
-            callbacks: { title: (items) => items[0].label.slice(0, 2).join(' '), label: (item) => `IAH ${num(item.parsed.y)}` },
+            callbacks: { title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '), label: (item) => `IAH ${num(item.parsed.y)}` },
           },
         },
-        scales: { x: thirtyDayScale(axis), y: { min: 0, suggestedMax: 8, grid: { color: GRID_COLOR } } },
+        scales: { x: thirtyDayScale(axis, 9), y: { min: 0, suggestedMax: 8, grid: { color: GRID_COLOR } } },
       },
       plugins: [monthDividerPlugin(axis)],
     }),
@@ -72,7 +73,7 @@ export default function IahCard({ log, onSave }) {
     <div className={styles.card}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>IAH · CPAP · 30 dias</span>
+          <span className={styles.title}>IAH · CPAP</span>
           {last != null && (
             <>
               <span className={styles.bigValue}>{num(last)}</span>
@@ -114,7 +115,7 @@ export default function IahCard({ log, onSave }) {
         </form>
       </div>
       {inputError && <div className={styles.error}>{inputError}</div>}
-      <ChartCanvas config={config} height={220} />
+      <ChartCanvas config={config} height={240} />
       <div className={styles.footer}>
         <span className={styles.muted}>&lt;5 normal · 5–15 leve · 15–30 moderado · &gt;30 grave</span>
       </div>

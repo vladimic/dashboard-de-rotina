@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 143, date: '2026-10-04', summary: 'Saúde: segunda linha com IAH (agora em 1/3 da largura) e o novo gráfico de Qualidade do sono — nota de 0 a 100 por noite (duração 50 + profundo/REM 30 + pouco acordado 20), barras verde/amarelo/vermelho, setas de 7d/30d; o cabeçalho passa a mostrar a nota da última noite. Terceira coluna reservada para exercícios' },
   { version: 142, date: '2026-10-04', summary: 'Saúde: setas de tendência com o mesmo tamanho em Peso, Horário do sono e Sono, e alinhadas na mesma altura nos três quadros' },
   { version: 141, date: '2026-10-04', summary: 'Peso: nova seta de 365d (no gráfico e no cabeçalho). Setas de peso, sono e horário do sono ganham tooltip próprio, que aparece na hora ao passar o mouse (o tooltip nativo não aparecia no app instalado)' },
   { version: 140, date: '2026-10-04', summary: 'Peso: setas de 7/30/90d agora seguem a variação do período (peso atual − primeira pesagem da janela), a mesma do "início · variação" do gráfico; estável abaixo de 0,2 kg; tooltip mostra de quanto para quanto. Sono e Horário do sono: eixo Y de hora em hora' },
