@@ -380,3 +380,26 @@
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
+
+/* Trend chips: one fixed size in every card (weight, sleep, bedtime), and
+   the left side of each header gets the same height so the chips line up
+   across the cards whether or not there's a big value next to the title. */
+.oneLine .headerLeft {
+  min-height: 28px;
+  align-items: center;
+}
+
+.oneLine .trend,
+.oneLine .trend[data-tip] {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.oneLine .trend b {
+  font-size: 13px;
+  margin-left: 2px;
+}

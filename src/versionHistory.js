@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 142, date: '2026-10-04', summary: 'Saúde: setas de tendência com o mesmo tamanho em Peso, Horário do sono e Sono, e alinhadas na mesma altura nos três quadros' },
   { version: 141, date: '2026-10-04', summary: 'Peso: nova seta de 365d (no gráfico e no cabeçalho). Setas de peso, sono e horário do sono ganham tooltip próprio, que aparece na hora ao passar o mouse (o tooltip nativo não aparecia no app instalado)' },
   { version: 140, date: '2026-10-04', summary: 'Peso: setas de 7/30/90d agora seguem a variação do período (peso atual − primeira pesagem da janela), a mesma do "início · variação" do gráfico; estável abaixo de 0,2 kg; tooltip mostra de quanto para quanto. Sono e Horário do sono: eixo Y de hora em hora' },
   { version: 139, date: '2026-10-04', summary: 'Sono montado pela linha do tempo: quando Watch, iPhone ou outro app registram o mesmo trecho, cada minuto conta uma vez só (fases do Watch > acordado > dormindo genérico) — não depende mais de o atalho enviar a fonte' },
