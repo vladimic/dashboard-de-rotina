@@ -1,9 +1,11 @@
 .card {
   width: 100%;
   min-width: 1180px;
-  max-width: 1600px;
+  /* Wide enough to use a big monitor's full width (the Saúde tab's three
+     chart columns need it); only very wide screens get side margins. */
+  max-width: 2400px;
   margin: 0 auto;
-  padding: 18px 28px 26px;
+  padding: 14px 18px 22px;
 }
 
 @media (max-width: 680px) {

@@ -23,7 +23,7 @@ body {
 
 #root {
   overflow-x: auto;
-  padding: 32px 20px;
+  padding: 16px 12px;
 }
 
 @media (max-width: 680px) {
