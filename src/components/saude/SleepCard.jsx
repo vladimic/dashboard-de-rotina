@@ -88,7 +88,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
                   key={days}
                   className={styles.trend}
                   data-tone={tone}
-                  title={trend ? `Média de ${days} dias: ${formatDuration(trend.avg)} por noite (ontem ${formatDuration(trend.prevAvg)}) · ${ui.label}` : `${days} dias: noites insuficientes`}
+                  data-tip={trend ? `Média de ${days} dias: ${formatDuration(trend.avg)} por noite (ontem ${formatDuration(trend.prevAvg)}) · ${ui.label}` : `${days} dias: noites insuficientes`}
                 >
                   {days}
                   <b>{ui ? ui.symbol : '–'}</b>

@@ -80,7 +80,7 @@ export function iahBand(value) {
 
 // The three trend windows shown next to the weight, in the Saúde header
 // and on the weight chart.
-export const TREND_DAYS = [7, 30, 90];
+export const TREND_DAYS = [7, 30, 90, 365];
 
 export const TREND_UI = {
   up: { symbol: '↗', label: 'subindo' },

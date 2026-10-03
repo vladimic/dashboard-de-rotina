@@ -358,3 +358,25 @@
   font-weight: 600;
   margin-left: 4px;
 }
+
+/* Instant hover tooltip from data-tip (the native title tooltip is slow
+   and doesn't show at all in the installed app window). */
+.trend[data-tip] {
+  position: relative;
+}
+
+.trend[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #2f4f40;
+  color: #fff;
+  font: 500 11px Inter, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}

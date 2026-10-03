@@ -66,7 +66,7 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
                   key={days}
                   className={styles.weightTrend}
                   data-dir={trend?.direction || 'none'}
-                  title={trend ? `${days} dias: ${TREND_UI[trend.direction].label}` : `${days} dias: pesagens insuficientes`}
+                  data-tip={trend ? `${days} dias: ${TREND_UI[trend.direction].label} (${trend.diff > 0 ? '+' : ''}${formatKg(trend.diff)} kg)` : `${days} dias: pesagens insuficientes`}
                 >
                   {trend ? TREND_UI[trend.direction].symbol : '–'}
                 </span>
