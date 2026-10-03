@@ -2,8 +2,8 @@ import { dateKeySaoPaulo, lastNDateKeys } from './format';
 
 const DAY_MS = 86400000;
 
-// Below this many kg/week (either way) the weight counts as "estável".
-export const WEIGHT_STABLE_KG_PER_WEEK = 0.1;
+// A change smaller than this (either way) over a window counts as "estável".
+export const WEIGHT_STABLE_KG = 0.2;
 
 // One point per day (São Paulo calendar day) — the average of that day's
 // weigh-ins — plotted at noon, so a day with two scale readings doesn't
@@ -38,23 +38,16 @@ export function movingAverage(points, days) {
   });
 }
 
-// Least-squares slope of the last `days` days, in kg/week. null when there
-// aren't at least two weigh-ins in the window to draw a line through.
+// Change over the last `days` days: latest weigh-in minus the first one
+// inside the window — the same "início → atual" the chart shows for that
+// period. null when the window has fewer than two weigh-ins.
 export function weightTrend(points, days, now = Date.now()) {
   const win = points.filter((p) => p.t > now - days * DAY_MS);
   if (win.length < 2) return null;
-  const mx = win.reduce((a, p) => a + p.t, 0) / win.length;
-  const my = win.reduce((a, p) => a + p.value, 0) / win.length;
-  let num = 0;
-  let den = 0;
-  for (const p of win) {
-    num += (p.t - mx) * (p.value - my);
-    den += (p.t - mx) ** 2;
-  }
-  if (den === 0) return null;
-  const kgPerWeek = (num / den) * 7 * DAY_MS;
-  const direction = Math.abs(kgPerWeek) < WEIGHT_STABLE_KG_PER_WEEK ? 'stable' : kgPerWeek > 0 ? 'up' : 'down';
-  return { kgPerWeek, direction };
+  const start = win[0].value;
+  const diff = win.at(-1).value - start;
+  const direction = Math.abs(diff) < WEIGHT_STABLE_KG ? 'stable' : diff > 0 ? 'up' : 'down';
+  return { start, diff, direction };
 }
 
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];

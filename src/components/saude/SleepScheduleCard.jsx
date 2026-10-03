@@ -99,7 +99,7 @@ export default function SleepScheduleCard({ nights }) {
         },
         scales: {
           x: thirtyDayScale(axis, 9),
-          y: { min: Y_MIN, max: Y_MAX, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, callback: (v) => hourLabel(v) } },
+          y: { min: Y_MIN, max: Y_MAX, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => hourLabel(v) } },
         },
       },
       plugins: [scheduleOverlay(inWindow.map((n) => n?.asleepMin ?? null)), monthDividerPlugin(axis)],

@@ -64,7 +64,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         },
         scales: {
           x: { ...thirtyDayScale(axis, 9), stacked: true },
-          y: { stacked: true, beginAtZero: true, suggestedMax: 9, grid: { color: GRID_COLOR }, ticks: { stepSize: 2, callback: (v) => `${v}h` } },
+          y: { stacked: true, beginAtZero: true, suggestedMax: 9, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => `${v}h` } },
         },
       },
       plugins: [monthDividerPlugin(axis)],

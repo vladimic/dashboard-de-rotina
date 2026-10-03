@@ -226,7 +226,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
                   key={days}
                   className={styles.trend}
                   data-dir={trend?.direction || 'none'}
-                  title={ui ? `${days} dias: ${ui.label}` : `${days} dias: pesagens insuficientes`}
+                  title={ui ? `${days} dias: ${ui.label} · de ${kg(trend.start)} para ${kg(trend.start + trend.diff)} (${trend.diff > 0 ? '+' : ''}${kg(trend.diff)} kg)` : `${days} dias: pesagens insuficientes`}
                 >
                   {days}
                   <b>{ui ? ui.symbol : '–'}</b>
