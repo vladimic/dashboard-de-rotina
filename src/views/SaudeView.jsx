@@ -8,7 +8,7 @@ import styles from './SaudeView.module.css';
 export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
   return (
     <div className={styles.stack}>
-      <div className={styles.twoCols}>
+      <div className={styles.threeCols}>
         <WeightCard
           samples={weight.samples}
           loading={weight.loading}
@@ -26,8 +26,6 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showAwake={state.sleepShowAwake}
           onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
         />
-        {/* Left half below the weight reserved for the next panel. */}
-        <div />
         <SleepScheduleCard nights={nights} />
       </div>
       <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />

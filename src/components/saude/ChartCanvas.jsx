@@ -48,8 +48,9 @@ export function monthDividerPlugin(axis) {
   };
 }
 
-// x-axis options for thirtyDayAxis() labels: all 30 days shown, weekends
-// in bold.
+// x-axis options for thirtyDayAxis() labels, weekends in bold. When the
+// chart is too narrow for 30 labels (third-width columns), only every other
+// day is labelled — counted back from today, so today always is.
 export function thirtyDayScale(axis, fontSize = 10) {
   return {
     grid: { display: false },
@@ -57,6 +58,11 @@ export function thirtyDayScale(axis, fontSize = 10) {
       autoSkip: false,
       maxRotation: 0,
       font: (ctx) => ({ size: fontSize, weight: [0, 6].includes(axis[ctx.index]?.weekday) ? '600' : '400' }),
+      callback(value, index) {
+        const perDay = (this.chart.chartArea?.width || this.chart.width) / axis.length;
+        const step = perDay < 17 ? 2 : 1;
+        return (axis.length - 1 - index) % step === 0 ? this.getLabelForValue(value) : '';
+      },
     },
   };
 }

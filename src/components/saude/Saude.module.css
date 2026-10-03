@@ -347,3 +347,17 @@
   color: #7fa693;
   white-space: nowrap;
 }
+
+/* Third-width columns: there's no room for a one-line header, so it wraps
+   onto a second row instead of overflowing the card. */
+@container (max-width: 540px) {
+  .oneLine,
+  .oneLine .headerLeft,
+  .oneLine .headerRight {
+    flex-wrap: wrap;
+  }
+
+  .oneLine .title.hideNarrow {
+    display: inline;
+  }
+}

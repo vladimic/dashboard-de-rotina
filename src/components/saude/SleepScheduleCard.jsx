@@ -116,7 +116,7 @@ export default function SleepScheduleCard({ nights }) {
         <span className={styles.title}>Horário do sono</span>
       </div>
       {hasNights ? (
-        <ChartCanvas config={config} height={280} />
+        <ChartCanvas config={config} height={260} />
       ) : (
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
