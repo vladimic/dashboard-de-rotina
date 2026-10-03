@@ -170,9 +170,9 @@ export function formatClockSP(t) {
   return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: HOME_TIMEZONE });
 }
 
-// Below this many minutes/week (either way) a sleep trend counts as
-// "estável" — for both sleep duration and bedtime.
-export const SLEEP_STABLE_MIN_PER_WEEK = 10;
+// A rolling average that moved less than this many minutes since
+// yesterday counts as "estável" — for both sleep duration and bedtime.
+export const SLEEP_STABLE_MIN = 1;
 
 // Bedtime as hours past midnight, with evenings negative (22:30 → -1.5), so
 // a night is one continuous range and averages don't wrap around 0h.
@@ -181,25 +181,22 @@ export function bedtimeHour(t) {
   return h >= 12 ? h - 24 : h;
 }
 
-// Least-squares slope of `minutesOf(night)` over the last `days` nights, in
-// minutes/week, plus that window's average. null with fewer than two nights.
+// Rolling average of `minutesOf(night)` over the `days` nights ending today
+// (today + the days-1 before it), compared with the same-size window ending
+// yesterday: the arrow says whether today's average went up or down vs.
+// yesterday's. Nights with no data are left out of an average. null when
+// either window has no nights at all.
 function nightTrend(nights, days, minutesOf, now) {
-  const pts = lastNDateKeys(days, now)
-    .map((k, i) => ({ x: i, night: nights.get(k) }))
-    .filter((p) => p.night)
-    .map((p) => ({ x: p.x, y: minutesOf(p.night) }));
-  if (pts.length < 2) return null;
-  const mx = pts.reduce((a, p) => a + p.x, 0) / pts.length;
-  const my = pts.reduce((a, p) => a + p.y, 0) / pts.length;
-  let num = 0;
-  let den = 0;
-  for (const p of pts) {
-    num += (p.x - mx) * (p.y - my);
-    den += (p.x - mx) ** 2;
-  }
-  const minPerWeek = den ? (num / den) * 7 : 0;
-  const direction = Math.abs(minPerWeek) < SLEEP_STABLE_MIN_PER_WEEK ? 'stable' : minPerWeek > 0 ? 'up' : 'down';
-  return { minPerWeek, direction, avg: my };
+  const avgOf = (keys) => {
+    const vals = keys.map((k) => nights.get(k)).filter(Boolean).map(minutesOf);
+    return vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null;
+  };
+  const avg = avgOf(lastNDateKeys(days, now));
+  const prevAvg = avgOf(lastNDateKeys(days, new Date(now.getTime() - 86400000)));
+  if (avg == null || prevAvg == null) return null;
+  const diff = avg - prevAvg;
+  const direction = Math.abs(diff) < SLEEP_STABLE_MIN ? 'stable' : diff > 0 ? 'up' : 'down';
+  return { avg, prevAvg, diff, direction };
 }
 
 // Minutes asleep: "up" = sleeping more. avg in minutes.

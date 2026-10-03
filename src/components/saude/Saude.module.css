@@ -353,11 +353,6 @@
   }
 }
 
-.inlineInfo {
-  font: 500 10.5px Inter, sans-serif;
-  color: #7fa693;
-  white-space: nowrap;
-}
 
 .trend .trendValue {
   font-weight: 600;

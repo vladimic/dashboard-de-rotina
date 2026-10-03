@@ -122,7 +122,7 @@ export default function SleepScheduleCard({ nights }) {
                   key={days}
                   className={styles.trend}
                   data-tone={tone}
-                  title={trend ? `${days} dias: ${label} · média ${hourLabel(trend.avg / 60)}` : `${days} dias: noites insuficientes`}
+                  title={trend ? `Média de ${days} dias: ${hourLabel(trend.avg / 60)} (ontem ${hourLabel(trend.prevAvg / 60)}) · ${label}` : `${days} dias: noites insuficientes`}
                 >
                   {days}
                   <b>{ui ? ui.symbol : '–'}</b>

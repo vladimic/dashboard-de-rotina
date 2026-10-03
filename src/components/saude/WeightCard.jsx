@@ -61,6 +61,32 @@ function evenTicks(min, max, stepDays) {
 // Solid horizontal reference lines across the whole chart, each optionally
 // labelled: the current weight (red, value just right of the plot) and the
 // lowest weight in the period (blue, value just under the lowest point).
+// "início 104,3 · −1,1" in the bottom-left corner of the plot, over the
+// green fill: weight on the first day of the period and the change since.
+function periodStartLabel(start, delta) {
+  return {
+    id: 'periodStart',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea } = chart;
+      const x = chartArea.left + 6;
+      const y = chartArea.bottom - 6;
+      const first = `início ${kg(start)} · `;
+      const second = `${delta > 0 ? '+' : ''}${kg(delta)} kg`;
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.font = '500 10.5px Inter, sans-serif';
+      ctx.fillStyle = '#5f8b75';
+      ctx.fillText(first, x, y);
+      const w = ctx.measureText(first).width;
+      ctx.font = '700 10.5px Inter, sans-serif';
+      ctx.fillStyle = delta > 0 ? '#c0453a' : delta < 0 ? '#2f8a5c' : '#3f6b57';
+      ctx.fillText(second, x + w, y);
+      ctx.restore();
+    },
+  };
+}
+
 function referenceLines(lines) {
   return {
     id: 'referenceLines',
@@ -110,7 +136,6 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
   // Memoized so the chart config (and the chart itself) isn't rebuilt on
   // every render just because Date.now() moved.
   const minT = useMemo(() => (periodDays ? Date.now() - periodDays * DAY_MS : -Infinity), [periodDays]);
-  const firstInPeriod = daily.find((p) => p.t >= minT);
 
   const config = useMemo(() => {
     const inRange = (p) => p.t >= minT;
@@ -173,6 +198,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
         },
       },
       plugins: [
+        ...(inPeriod.length ? [periodStartLabel(inPeriod[0].value, daily.at(-1).value - inPeriod[0].value)] : []),
         referenceLines([
           ...(showMin && lowest ? [{ value: lowest.value, color: 'rgba(47, 111, 174, 0.85)', point: lowest.t }] : []),
           ...(showCurrent && daily.length ? [{ value: daily.at(-1).value, color: 'rgba(217, 83, 79, 0.9)', labelRight: true }] : []),
@@ -180,8 +206,6 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
       ],
     };
   }, [daily, ma7, ma30, periodDays, minT, showMa7, showMa30, showCurrent, showMin]);
-
-  const delta = firstInPeriod && latest ? daily.at(-1).value - firstInPeriod.value : null;
 
   return (
     <div className={styles.card}>
@@ -210,15 +234,6 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
               );
             })}
           </div>
-          {firstInPeriod && delta != null && (
-            <span className={styles.inlineInfo} title={`Peso em ${dayMonthYear(firstInPeriod.t)}, início do período`}>
-              início {kg(firstInPeriod.value)} ·{' '}
-              <b className={styles.delta} data-dir={delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat'}>
-                {delta > 0 ? '+' : ''}
-                {kg(delta)}
-              </b>
-            </span>
-          )}
         </div>
         <div className={styles.headerRight}>
           <div className={styles.pills}>
