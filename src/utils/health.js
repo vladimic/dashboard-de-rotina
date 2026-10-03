@@ -170,16 +170,24 @@ export function formatClockSP(t) {
   return new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: HOME_TIMEZONE });
 }
 
-// Below this many minutes/week (either way) sleep counts as "estável".
+// Below this many minutes/week (either way) a sleep trend counts as
+// "estável" — for both sleep duration and bedtime.
 export const SLEEP_STABLE_MIN_PER_WEEK = 10;
 
-// Least-squares slope of minutes asleep over the last `days` nights, in
+// Bedtime as hours past midnight, with evenings negative (22:30 → -1.5), so
+// a night is one continuous range and averages don't wrap around 0h.
+export function bedtimeHour(t) {
+  const h = hourFloatSP(t);
+  return h >= 12 ? h - 24 : h;
+}
+
+// Least-squares slope of `minutesOf(night)` over the last `days` nights, in
 // minutes/week, plus that window's average. null with fewer than two nights.
-export function sleepTrend(nights, days, now = new Date()) {
-  const keys = lastNDateKeys(days, now);
-  const pts = keys
-    .map((k, i) => ({ x: i, y: nights.get(k)?.asleepMin }))
-    .filter((p) => p.y != null);
+function nightTrend(nights, days, minutesOf, now) {
+  const pts = lastNDateKeys(days, now)
+    .map((k, i) => ({ x: i, night: nights.get(k) }))
+    .filter((p) => p.night)
+    .map((p) => ({ x: p.x, y: minutesOf(p.night) }));
   if (pts.length < 2) return null;
   const mx = pts.reduce((a, p) => a + p.x, 0) / pts.length;
   const my = pts.reduce((a, p) => a + p.y, 0) / pts.length;
@@ -192,4 +200,15 @@ export function sleepTrend(nights, days, now = new Date()) {
   const minPerWeek = den ? (num / den) * 7 : 0;
   const direction = Math.abs(minPerWeek) < SLEEP_STABLE_MIN_PER_WEEK ? 'stable' : minPerWeek > 0 ? 'up' : 'down';
   return { minPerWeek, direction, avg: my };
+}
+
+// Minutes asleep: "up" = sleeping more. avg in minutes.
+export function sleepTrend(nights, days, now = new Date()) {
+  return nightTrend(nights, days, (n) => n.asleepMin, now);
+}
+
+// Bedtime: "up" = going to bed later. avg in minutes past midnight
+// (negative = before midnight).
+export function bedtimeTrend(nights, days, now = new Date()) {
+  return nightTrend(nights, days, (n) => bedtimeHour(n.bedtime) * 60, now);
 }

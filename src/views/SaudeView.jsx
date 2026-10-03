@@ -19,6 +19,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showMin={state.weightShowMin}
           onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
         />
+        <SleepScheduleCard nights={nights} />
         <SleepCard
           nights={nights}
           loading={sleep.loading}
@@ -26,7 +27,6 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showAwake={state.sleepShowAwake}
           onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
         />
-        <SleepScheduleCard nights={nights} />
       </div>
       <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
     </div>

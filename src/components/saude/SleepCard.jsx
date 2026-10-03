@@ -88,10 +88,11 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
                   key={days}
                   className={styles.trend}
                   data-tone={tone}
-                  title={trend ? `${days} dias: ${ui.label} · média ${formatDuration(trend.avg)}` : `${days} dias: noites insuficientes`}
+                  title={trend ? `${days} dias: ${ui.label} · média ${formatDuration(trend.avg)} por noite` : `${days} dias: noites insuficientes`}
                 >
                   {days}
                   <b>{ui ? ui.symbol : '–'}</b>
+                  {trend && <span className={styles.trendValue}>{formatDuration(trend.avg)}</span>}
                 </span>
               );
             })}
@@ -117,7 +118,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
       {!error && !loading && nights.size === 0 && (
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
-      {nights.size > 0 && <ChartCanvas config={config} height={260} />}
+      {nights.size > 0 && <ChartCanvas config={config} height={240} />}
     </div>
   );
 }

@@ -9,7 +9,9 @@ export const GRID_COLOR = 'rgba(63, 107, 87, 0.1)';
 
 // Thin wrapper: (re)builds the Chart.js chart whenever `config` changes.
 // Callers memoize `config`, so this only happens when the data or the
-// selected period actually changes.
+// selected period actually changes. `height` is a minimum: the chart grows
+// to fill whatever height its card has left (so cards side by side in a
+// row line up even when their headers differ).
 export default function ChartCanvas({ config, height }) {
   const canvasRef = useRef(null);
 
@@ -19,7 +21,7 @@ export default function ChartCanvas({ config, height }) {
   }, [config]);
 
   return (
-    <div style={{ position: 'relative', height }}>
+    <div style={{ position: 'relative', flex: '1 1 auto', minHeight: height }}>
       <canvas ref={canvasRef} />
     </div>
   );

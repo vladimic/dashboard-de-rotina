@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { formatDuration, hourFloatSP, thirtyDayAxis } from '../../utils/health';
+import { bedtimeHour as nightHour, bedtimeTrend, formatDuration, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // y axis runs bottom-up from 21:00 to 09:00. Evening hours are stored as
@@ -10,11 +10,6 @@ const Y_MAX = 9;
 
 const IDEAL_BEDTIME = -2; // 22:00
 const LATE_BEDTIME = -1; // 23:00
-
-function nightHour(t) {
-  const h = hourFloatSP(t);
-  return h >= 12 ? h - 24 : h;
-}
 
 function hourLabel(v) {
   const h = ((Math.floor(v) % 24) + 24) % 24;
@@ -67,6 +62,7 @@ function scheduleOverlay(durations) {
 export default function SleepScheduleCard({ nights }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const hasNights = axis.some((d) => nights.has(d.key));
+  const trends = [7, 30].map((days) => ({ days, trend: bedtimeTrend(nights, days) }));
 
   const config = useMemo(() => {
     const inWindow = axis.map((d) => nights.get(d.key) || null);
@@ -112,11 +108,33 @@ export default function SleepScheduleCard({ nights }) {
 
   return (
     <div className={styles.card}>
-      <div className={styles.header}>
-        <span className={styles.title}>Horário do sono</span>
+      <div className={`${styles.header} ${styles.oneLine}`}>
+        <div className={styles.headerLeft}>
+          <span className={styles.title}>Horário do sono</span>
+          <div className={styles.trends}>
+            {trends.map(({ days, trend }) => {
+              const ui = trend ? TREND_UI[trend.direction] : null;
+              // "up" = going to bed later, which is the bad direction.
+              const tone = !trend || trend.direction === 'stable' ? 'flat' : trend.direction === 'up' ? 'bad' : 'good';
+              const label = trend && { up: 'dormindo mais tarde', down: 'dormindo mais cedo', stable: 'estável' }[trend.direction];
+              return (
+                <span
+                  key={days}
+                  className={styles.trend}
+                  data-tone={tone}
+                  title={trend ? `${days} dias: ${label} · média ${hourLabel(trend.avg / 60)}` : `${days} dias: noites insuficientes`}
+                >
+                  {days}
+                  <b>{ui ? ui.symbol : '–'}</b>
+                  {trend && <span className={styles.trendValue}>{hourLabel(trend.avg / 60)}</span>}
+                </span>
+              );
+            })}
+          </div>
+        </div>
       </div>
       {hasNights ? (
-        <ChartCanvas config={config} height={260} />
+        <ChartCanvas config={config} height={240} />
       ) : (
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
