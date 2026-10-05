@@ -178,28 +178,39 @@ export default async function handler(req, res) {
     // "on or before today", which is exactly the stale-looking bug reported.
     const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
 
-    const response = await notionFetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Notion-Version': NOTION_VERSION,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        filter: { property: DUE_PROPERTY, date: { on_or_before: todayStr } },
-        sorts: [{ property: DUE_PROPERTY, direction: 'ascending' }],
-        page_size: 100,
-      }),
-    });
+    // A filtered query can return fewer rows than page_size while still
+    // reporting has_more: Notion scans the database in chunks and hands back
+    // only the matches from each chunk. Reading just the first response
+    // silently dropped most tasks (9 of 38), so follow next_cursor to the end.
+    const results = [];
+    let cursor;
+    do {
+      const response = await notionFetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Notion-Version': NOTION_VERSION,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filter: { property: DUE_PROPERTY, date: { on_or_before: todayStr } },
+          sorts: [{ property: DUE_PROPERTY, direction: 'ascending' }],
+          page_size: 100,
+          start_cursor: cursor,
+        }),
+      });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw notionError('Notion query failed', response.status, text);
-    }
+      if (!response.ok) {
+        const text = await response.text();
+        throw notionError('Notion query failed', response.status, text);
+      }
 
-    const data = await response.json();
+      const data = await response.json();
+      results.push(...(data.results || []));
+      cursor = data.has_more ? data.next_cursor : null;
+    } while (cursor);
 
-    const openPages = (data.results || []).filter((page) => !isExcludedStatus(statusName(page)));
+    const openPages = results.filter((page) => !isExcludedStatus(statusName(page)));
 
     // ?debug=1 — dumps the project -> task-count map built from the
     // Projetos database's reverse relation, for troubleshooting.
