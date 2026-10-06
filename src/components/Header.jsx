@@ -183,6 +183,7 @@ export default function Header({
   onRefreshAll,
   onSignOut,
   onExportData,
+  onImportData,
   onResetDay,
   badgeCount,
   usd,
@@ -306,6 +307,15 @@ export default function Header({
                   }}
                 >
                   Exportar dados
+                </div>
+                <div
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onImportData();
+                  }}
+                >
+                  Importar backup
                 </div>
                 <div
                   className={styles.dropdownItem}

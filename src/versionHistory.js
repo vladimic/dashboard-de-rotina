@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 145, date: '2026-10-06', summary: 'Proteção contra perda de dados: falha de leitura não sobrescreve mais o estado salvo; importar backup; snapshot diário' },
   { version: 144, date: '2026-10-05', summary: 'Notion: o card mostrava só 9 das 38 tarefas vencidas/de hoje — o Notion devolve a consulta filtrada em partes (menos de 100 por vez, com "tem mais") e o dashboard lia só a primeira parte; agora lê todas' },
   { version: 143, date: '2026-10-04', summary: 'Saúde: segunda linha com IAH (agora em 1/3 da largura) e o novo gráfico de Qualidade do sono — nota de 0 a 100 por noite (duração 50 + profundo/REM 30 + pouco acordado 20), barras verde/amarelo/vermelho, setas de 7d/30d; o cabeçalho passa a mostrar a nota da última noite. Terceira coluna reservada para exercícios' },
   { version: 142, date: '2026-10-04', summary: 'Saúde: setas de tendência com o mesmo tamanho em Peso, Horário do sono e Sono, e alinhadas na mesma altura nos três quadros' },

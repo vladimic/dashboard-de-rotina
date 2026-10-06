@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDashboardState } from './state/useDashboardState';
+import { useDashboardState, saveHistorySnapshot } from './state/useDashboardState';
+import { createSeedState } from './data/seedData';
 import { useConfirm } from './components/ConfirmContext';
 import { useHubspotTasks } from './hooks/useHubspotTasks';
 import { useHubspotDealsWithoutTasks } from './hooks/useHubspotDealsWithoutTasks';
@@ -27,7 +28,7 @@ const CARD_BG = {
 };
 
 export default function DashboardApp({ userId, userEmail, onSignOut }) {
-  const [state, dispatch, status] = useDashboardState(userId);
+  const [state, dispatch, status, , retryLoad] = useDashboardState(userId);
   const hubspot = useHubspotTasks();
   const dealsWithoutTasks = useHubspotDealsWithoutTasks();
   const calendar = useCalendarEvents();
@@ -268,6 +269,43 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     URL.revokeObjectURL(url);
   }, [state, userEmail]);
 
+  // Restores a JSON exported by "Exportar dados". The current state is
+  // snapshotted to the history table first (best-effort), and the file is
+  // checked to look like a dashboard export before anything is replaced.
+  const handleImportData = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      let imported;
+      try {
+        imported = JSON.parse(await file.text());
+      } catch {
+        await confirm('Esse arquivo não é um JSON válido. Nada foi alterado.', 'OK', 'Fechar');
+        return;
+      }
+      const looksValid =
+        imported && typeof imported === 'object' && ['manha', 'noite', 'semana'].every((k) => Array.isArray(imported[k]));
+      if (!looksValid) {
+        await confirm('Esse arquivo não parece um backup do dashboard. Nada foi alterado.', 'OK', 'Fechar');
+        return;
+      }
+      const ok = await confirm(
+        `Substituir TODOS os dados atuais pelo backup "${file.name}"?\n` +
+          `Backup: ${imported.manha.length} itens no Starting Day, ${imported.noite.length} no Ending Day, ${imported.semana.length} no Ending Week.\n` +
+          `Atual: ${state.manha.length}, ${state.noite.length} e ${state.semana.length}. Uma cópia do estado atual é guardada antes.`,
+        'Substituir',
+        'Cancelar'
+      );
+      if (!ok) return;
+      await saveHistorySnapshot(userId, state, 'before-import');
+      dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...imported, agendaDay: 'hoje' } });
+    };
+    input.click();
+  }, [state, userId, confirm, dispatch]);
+
   // Manual equivalent of today's first-load flow (see the daily-reset effect
   // above): asks to reset Starting Day/Ending Day, then re-freezes the
   // day-progress baseline against the current total. Dispatched directly
@@ -279,6 +317,21 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     dispatch({ type: 'APPLY_DAILY_RESET', reset });
     dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: new Date().toDateString(), baseline: counts.geralTotal });
   }, [confirm, dispatch, counts.geralTotal]);
+
+  if (status === 'error') {
+    return (
+      <div className={styles.card} style={{ background: CARD_BG.hoje }}>
+        <div className={styles.loading}>
+          Não consegui carregar seus dados salvos. Nada foi alterado nem sobrescrito.
+          <div style={{ marginTop: 12 }}>
+            <button type="button" onClick={retryLoad}>
+              Tentar de novo
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (status === 'loading') {
     return (
@@ -312,6 +365,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
+        onImportData={handleImportData}
         onResetDay={handleResetDay}
         badgeCount={counts.geralTotal}
         usd={usdQuote}
