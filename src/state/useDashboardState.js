@@ -27,16 +27,81 @@ function loadCache(userId) {
   }
 }
 
+const LOAD_ATTEMPTS = 3;
+const LOAD_RETRY_MS = 1500;
+const HISTORY_KEEP_DAYS = 90;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Reads the saved row, retrying transient failures. Returns
+// { ok: true, data } — data is null only when the read worked and the user
+// really has no row yet — or { ok: false, error } when every attempt failed.
+// A failed read must never be mistaken for "no row": that was how a flaky
+// connection used to replace the saved state with the sample seed.
+async function fetchSavedState(userId) {
+  let lastError = null;
+  for (let attempt = 0; attempt < LOAD_ATTEMPTS; attempt++) {
+    if (attempt > 0) await sleep(LOAD_RETRY_MS * attempt);
+    const { data, error } = await supabase
+      .from('dashboard_state')
+      .select('data')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!error) return { ok: true, data: data?.data ?? null };
+    lastError = error;
+  }
+  return { ok: false, error: lastError };
+}
+
+// Best-effort daily copy of the state in `dashboard_state_history`
+// (supabase/dashboard_state_history.sql), so one bad save is never the only
+// copy. Never blocks or breaks the dashboard if the table isn't there.
+export async function saveHistorySnapshot(userId, data, source = 'daily') {
+  try {
+    const { error } = await supabase
+      .from('dashboard_state_history')
+      .insert({ user_id: userId, data, source });
+    if (error) console.warn('Could not save state snapshot:', error.message);
+  } catch (e) {
+    console.warn('Could not save state snapshot:', e);
+  }
+}
+
+async function snapshotOncePerDay(userId, data) {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const { data: rows, error } = await supabase
+      .from('dashboard_state_history')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('source', 'daily')
+      .gte('created_at', startOfDay.toISOString())
+      .limit(1);
+    if (error || rows?.length) return;
+    await saveHistorySnapshot(userId, data, 'daily');
+    const cutoff = new Date(Date.now() - HISTORY_KEEP_DAYS * 86400000).toISOString();
+    await supabase.from('dashboard_state_history').delete().eq('user_id', userId).lt('created_at', cutoff);
+  } catch (e) {
+    console.warn('Daily snapshot skipped:', e);
+  }
+}
+
 // Loads/saves dashboard state from Supabase (source of truth, shared across
-// devices), with a per-user localStorage cache for instant paint and offline
-// resilience.
+// devices), with a per-user localStorage cache for instant paint. The
+// dashboard only becomes editable once the saved state was read
+// successfully (or confirmed not to exist); on a failed read it stays in the
+// 'error' status and writes nothing — neither to Supabase nor to the cache.
 export function useDashboardState(userId) {
   const [state, dispatch] = useReducer(
     dashboardReducer,
     undefined,
     () => loadCache(userId) || createSeedState()
   );
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ready'
+  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const saveTimer = useRef(null);
   const skipNextSave = useRef(true);
 
@@ -46,27 +111,31 @@ export function useDashboardState(userId) {
     skipNextSave.current = true;
 
     (async () => {
-      const { data, error } = await supabase
-        .from('dashboard_state')
-        .select('data')
-        .eq('user_id', userId)
-        .maybeSingle();
-
+      const result = await fetchSavedState(userId);
       if (cancelled) return;
 
-      if (error) {
-        console.error('Failed to load dashboard state:', error);
+      if (!result.ok) {
+        console.error('Failed to load dashboard state:', result.error);
+        setStatus('error');
+        return;
       }
 
-      if (data?.data) {
-        dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...data.data, ...OPEN_RESET } });
+      if (result.data) {
+        dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...result.data, ...OPEN_RESET } });
+        snapshotOncePerDay(userId, result.data);
       } else {
+        // Confirmed first use: create the row, but never overwrite one that
+        // another device created in the meantime.
         const seed = createSeedState();
         dispatch({ type: 'HYDRATE', state: seed });
-        const { error: upsertError } = await supabase
+        const { error: insertError } = await supabase
           .from('dashboard_state')
-          .upsert({ user_id: userId, data: seed }, { onConflict: 'user_id' });
-        if (upsertError) console.error('Failed to create dashboard state row:', upsertError);
+          .upsert({ user_id: userId, data: seed }, { onConflict: 'user_id', ignoreDuplicates: true });
+        if (insertError) {
+          console.error('Failed to create dashboard state row:', insertError);
+          if (!cancelled) setStatus('error');
+          return;
+        }
       }
       if (!cancelled) setStatus('ready');
     })();
@@ -74,7 +143,7 @@ export function useDashboardState(userId) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, loadAttempt]);
 
   useEffect(() => {
     if (status !== 'ready') return;
@@ -102,20 +171,18 @@ export function useDashboardState(userId) {
   }, [state, status, userId]);
 
   const refresh = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('dashboard_state')
-      .select('data')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (error) {
-      console.error('Failed to refresh dashboard state:', error);
+    const result = await fetchSavedState(userId);
+    if (!result.ok) {
+      console.error('Failed to refresh dashboard state:', result.error);
       return;
     }
-    if (data?.data) {
+    if (result.data) {
       skipNextSave.current = true;
-      dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...data.data } });
+      dispatch({ type: 'HYDRATE', state: { ...createSeedState(), ...result.data } });
     }
   }, [userId]);
 
-  return [state, dispatch, status, refresh];
+  const retryLoad = useCallback(() => setLoadAttempt((n) => n + 1), []);
+
+  return [state, dispatch, status, refresh, retryLoad];
 }

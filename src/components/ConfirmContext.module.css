@@ -18,6 +18,7 @@
 }
 
 .message {
+  white-space: pre-line;
   font: 500 14px Inter, sans-serif;
   color: #5b4a63;
   margin-bottom: 18px;
