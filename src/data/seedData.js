@@ -142,6 +142,13 @@ export function createSeedState() {
     iahShowMa30: true,
     qualityShowMa7: true,
     qualityShowMa30: true,
+    // Same toggles on the Energia / Atividade / Passos cards.
+    energyShowMa7: true,
+    energyShowMa30: true,
+    exerciseShowMa7: true,
+    exerciseShowMa30: true,
+    stepsShowMa7: true,
+    stepsShowMa30: true,
 
     downloadsCount: 61,
     backlogCount: 128,

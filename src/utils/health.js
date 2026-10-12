@@ -181,14 +181,14 @@ export function bedtimeHour(t) {
   return h >= 12 ? h - 24 : h;
 }
 
-// Rolling average of `minutesOf(night)` over the `days` nights ending today
+// Rolling average of `valueOf(dateKey)` over the `days` days ending today
 // (today + the days-1 before it), compared with the same-size window ending
 // yesterday: the arrow says whether today's average went up or down vs.
-// yesterday's. Nights with no data are left out of an average. null when
-// either window has no nights at all.
-function nightTrend(nights, days, minutesOf, now, stableBelow = SLEEP_STABLE_MIN) {
+// yesterday's. Days with no value (null) are left out of an average. null
+// when either window has no values at all.
+export function dailyTrend(valueOf, days, stableBelow, now = new Date()) {
   const avgOf = (keys) => {
-    const vals = keys.map((k) => nights.get(k)).filter(Boolean).map(minutesOf);
+    const vals = keys.map(valueOf).filter((v) => v != null);
     return vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null;
   };
   const avg = avgOf(lastNDateKeys(days, now));
@@ -197,6 +197,11 @@ function nightTrend(nights, days, minutesOf, now, stableBelow = SLEEP_STABLE_MIN
   const diff = avg - prevAvg;
   const direction = Math.abs(diff) < stableBelow ? 'stable' : diff > 0 ? 'up' : 'down';
   return { avg, prevAvg, diff, direction };
+}
+
+// dailyTrend over sleepNights()-style maps (night key → night).
+function nightTrend(nights, days, minutesOf, now, stableBelow = SLEEP_STABLE_MIN) {
+  return dailyTrend((key) => (nights.has(key) ? minutesOf(nights.get(key)) : null), days, stableBelow, now);
 }
 
 // Minutes asleep: "up" = sleeping more. avg in minutes.

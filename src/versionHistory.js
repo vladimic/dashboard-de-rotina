@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 163, date: '2026-10-12', summary: 'Saúde em 3×3: Peso | IAH | Hábitos (o mesmo painel da aba Hoje) / Energia | Atividade | Passos (cada um com seu gráfico de 30 dias e médias de 7/30) / Horário do sono | Sono | Qualidade. Cabeçalho da Saúde com os 9 indicadores na mesma ordem, cada um com o valor de hoje, uma minilinha dos últimos 30 dias (os 7 mais recentes em destaque) e setas de 7 e 30 dias (verde = melhorando)' },
   { version: 162, date: '2026-10-12', summary: 'Atividade: gráfico refeito — barras verdes são os minutos de exercício do dia (valor em cima de cada uma, eixo à esquerda) e a linha laranja a energia ativa em kcal (eixo à direita, sem corte em 900); passos ficam no pop-up e no rodapé' },
   { version: 161, date: '2026-10-12', summary: 'Atividade: minutos de exercício do dia (anel verde do Apple Watch) passam a vir do app Saúde pelo atalho — o iOS não lista treinos no Atalhos; barras ficam verdes nos dias com exercício' },
   { version: 160, date: '2026-10-12', summary: 'Servidor de saúde: energia ativa entende decimais (736.364 = 736,364 kcal) em vez de tratar o ponto como milhar' },

@@ -121,6 +121,7 @@ function HabitRows({ rows, days, badColor, onCycleMark }) {
 
 export default function HabitTrackerCard({
   open,
+  collapsible = true,
   edit,
   onToggleOpen,
   onToggleEdit,
@@ -165,9 +166,11 @@ export default function HabitTrackerCard({
       <div className={styles.header}>
         <div className={styles.title}>Hábitos</div>
         <div className={styles.headerRight}>
-          <div className={styles.toggleIcon} onClick={onToggleOpen} title={open ? 'Recolher' : 'Expandir'}>
-            {open ? '⊟' : '⊞'}
-          </div>
+          {collapsible && (
+            <div className={styles.toggleIcon} onClick={onToggleOpen} title={open ? 'Recolher' : 'Expandir'}>
+              {open ? '⊟' : '⊞'}
+            </div>
+          )}
           <div className={styles.pend}>
             {pend}/{total}
           </div>

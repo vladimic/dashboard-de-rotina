@@ -43,6 +43,118 @@
   filter: brightness(0.93) saturate(0.85);
 }
 
+/* On Saúde the nine health tiles get a single row and most of the width
+   (sparkline + arrows need room); Hoje's group stays as a compact 5×2. On
+   Hoje they shrink back to title + value in 5 columns. */
+.strip[data-page='saude'] .saudeGroup {
+  flex: 1.9;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+.saudeGroup[data-dim='true'] {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* ...which leaves Hoje's Geral tile narrower there: smaller ring and total. */
+.strip[data-page='saude'] .geralRing {
+  width: 34px;
+  height: 34px;
+}
+
+.strip[data-page='saude'] .geralRingInner {
+  inset: 3px;
+  font-size: 9px;
+}
+
+.strip[data-page='saude'] .geralValue {
+  font-size: 30px;
+}
+
+.saudeGroup[data-dim='true'] .spark,
+.saudeGroup[data-dim='true'] .sparkEmpty,
+.saudeGroup[data-dim='true'] .metricTrends {
+  display: none;
+}
+
+.metric {
+  justify-content: flex-start;
+  gap: 4px;
+}
+
+.metric .cardValue {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 24px;
+  overflow: visible;
+}
+
+.spark path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparkMonth {
+  stroke: #a9cbb9;
+  stroke-width: 1.5;
+}
+
+.sparkWeek {
+  stroke: #2f6b52;
+  stroke-width: 2.25;
+}
+
+.sparkDot {
+  stroke: #2f6b52;
+  stroke-width: 5;
+}
+
+.sparkEmpty {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  font: 500 10px Inter, sans-serif;
+  color: #9dbfae;
+}
+
+.metricTrends {
+  display: flex;
+  gap: 3px;
+}
+
+.metricTrend {
+  font: 600 10px Inter, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: #eef3f0;
+  color: #7fa693;
+  cursor: default;
+}
+
+.metricTrend b {
+  font-size: 12px;
+}
+
+.metricTrend[data-tone='good'] {
+  background: #e3f4ea;
+  color: #2f8a5c;
+}
+
+.metricTrend[data-tone='bad'] {
+  background: #fbe9e7;
+  color: #c0453a;
+}
+
 .card {
   position: relative;
   min-width: 0;
@@ -106,40 +218,6 @@
 .saudeCard .cardTitle {
   font: var(--fs-card-title);
   color: #3f6b57;
-}
-
-.weightRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-
-.weightTrends {
-  display: flex;
-  gap: 2px;
-}
-
-.weightTrend {
-  font: 700 12px Inter, sans-serif;
-  width: 17px;
-  height: 17px;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #eef3f0;
-  color: #7fa693;
-}
-
-.weightTrend[data-dir='up'] {
-  background: #fbe9e7;
-  color: #c0453a;
-}
-
-.weightTrend[data-dir='down'] {
-  background: #e3f4ea;
-  color: #2f8a5c;
 }
 
 .cardValue {
@@ -278,31 +356,14 @@
     scroll-snap-align: start;
   }
 
-  .saudeGroup {
-    grid-template-columns: repeat(2, 1fr);
+  .saudeGroup,
+  .strip[data-page='saude'] .saudeGroup {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-}
 
-/* Instant hover tooltip from data-tip (the native title tooltip is slow
-   and doesn't show at all in the installed app window). */
-.weightTrend[data-tip] {
-  position: relative;
-}
-
-.weightTrend[data-tip]:hover::after {
-  content: attr(data-tip);
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  z-index: 30;
-  padding: 6px 9px;
-  border-radius: 7px;
-  background: #2f4f40;
-  color: #fff;
-  font: 500 11px Inter, sans-serif;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  .saudeGroup .card {
+    width: auto;
+  }
 }
 
 /* Instant explanatory hover tooltip for the health indicators (data-tip on
@@ -313,13 +374,14 @@
   position: relative;
 }
 
-.saudeCard [data-tip]:not(.weightTrend) {
+.saudeCard [data-tip]:not(.metricTrend) {
   overflow: visible;
 }
 
 .saudeCard[data-tip]:hover::after,
 .saudeCard .cardTitle[data-tip]:hover::after,
-.saudeCard .cardValue[data-tip]:hover::after {
+.saudeCard .cardValue[data-tip]:hover::after,
+.saudeCard .metricTrend[data-tip]:hover::after {
   content: attr(data-tip);
   position: absolute;
   top: calc(100% + 6px);
