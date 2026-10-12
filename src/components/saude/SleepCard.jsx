@@ -16,19 +16,19 @@ const STAGES = [
 // Last 30 nights: total sleep and how it splits across stages. `nights` is
 // sleepNights() output, keyed by the day you woke up. "Acordado" can be
 // hidden so each bar's height is just the time actually asleep.
-// Writes each night's time asleep above its bar — above the "acordado"
-// slice too when that's showing. Roomy bars get "7h07", tighter ones "7,1",
-// and very narrow ones a vertical "7h07".
+// Writes each night's time asleep above its bar as h:mm ("7:07") — above the
+// "acordado" slice too when that's showing. Narrow bars get it vertical.
+const hourMinute = (min) => `${Math.floor(Math.round(min) / 60)}:${String(Math.round(min) % 60).padStart(2, '0')}`;
+
 function sleepLabelsPlugin(axis, nights) {
   return {
     id: 'sleepLabels',
     afterDatasetsDraw(chart) {
       const { ctx, scales, chartArea } = chart;
-      const perDay = chartArea.width / axis.length;
+      const horizontal = chartArea.width / axis.length >= 22;
       ctx.save();
       ctx.fillStyle = '#3f6b57';
-      ctx.font = `600 ${perDay >= 26 ? 10 : 9}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
+      ctx.font = '600 9px Inter, sans-serif';
       axis.forEach((day, i) => {
         const night = nights.get(day.key);
         if (!night) return;
@@ -38,20 +38,19 @@ function sleepLabelsPlugin(axis, nights) {
         });
         const x = scales.x.getPixelForValue(i);
         const y = scales.y.getPixelForValue(total) - 3;
-        if (perDay >= 26) {
+        const text = hourMinute(night.asleepMin);
+        if (horizontal) {
+          ctx.textAlign = 'center';
           ctx.textBaseline = 'alphabetic';
-          ctx.fillText(formatDuration(night.asleepMin), x, y);
-        } else if (perDay >= 15) {
-          ctx.textBaseline = 'alphabetic';
-          ctx.fillText((night.asleepMin / 60).toFixed(1).replace('.', ','), x, y);
+          ctx.fillText(text, x, y);
         } else {
+          ctx.save();
           ctx.translate(x, y);
           ctx.rotate(-Math.PI / 2);
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          ctx.fillText(formatDuration(night.asleepMin), 0, 0);
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-          ctx.textAlign = 'center';
+          ctx.fillText(text, 0, 0);
+          ctx.restore();
         }
       });
       ctx.restore();
