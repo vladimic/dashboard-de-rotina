@@ -125,63 +125,32 @@ Ao inserir variáveis com nomes repetidos do bloco do peso ("Texto",
 "Resultados da Repetição"...), confira que a etiqueta aponta para a ação
 deste bloco.
 
-## Bloco 3: passos e energia ativa (card Atividade)
+## Blocos 3, 4 e 5: passos, energia ativa e minutos de exercício
 
-Antes: no Supabase → SQL Editor, rode a última linha de
-`supabase/health_samples.sql` (`alter table ... add column if not exists
-energy_kcal`). Já foi aplicada no seu projeto. Depois repita o desenho do
-sono **duas vezes** (uma para passos, outra para energia ativa), no mesmo
-atalho, depois do bloco do sono. Como no sono, o filtro define o período e
-reenviar o mesmo dia só o sobrescreve.
+Mesmo desenho três vezes, depois do bloco do sono. Cada bloco **agrupa por
+dia** (um total por dia, não centenas de amostras):
 
-18. **Encontrar Amostras de Saúde**
-    - **Tipo** é **Passos** (na 2ª vez: **Energia Ativa**)
-    - **Data de Início** **está nos(as) últimos(as)** **2 dias** (use
-      **35 dias** só na 1ª vez, para carregar o mês)
-    - **Agrupar por: Dia** (se a opção existir na sua versão do iOS)
-    - Limite: **desligado**
-19. **Repetir com Cada** item. Dentro:
-    1. **Formatar Data** → *Item de Repetição* → **Data de Início** (ISO
-       8601, com horário).
-    2. **Texto**:
-       ```
-       {"date":"[Data Formatada]","value":"[Valor]","source":"[Fonte]"}
-       ```
-       Com **Agrupar por Dia**, o *Valor* é o total do dia; se vier lista
-       de amostras, use **Calcular Estatísticas → Soma** sobre o item. Sem
-       agrupar (centenas de itens por dia) também funciona — o dashboard
-       soma por dia sozinho — só fica mais lento.
-20. **Combinar Texto** (`,`), depois **Texto**:
-    `{"type":"steps","samples":[[Texto Combinado]]}` (na 2ª vez:
-    `"type":"energy"`)
-21. **Obter Conteúdo do URL** — POST no mesmo endereço, mesmos cabeçalhos,
-    corpo **Arquivo** = esse *Texto*.
+- **Localizar Amostras de Saúde**: **Tipo** = **Passos** / **Energia Ativa**
+  (unidade **kcal**) / **Minutos de Exercício** (unidade **min**);
+  **Data de Início** nos últimos **2 dias** (use **35** só na 1ª vez);
+  **Fonte = Apple Watch** (sem isso iPhone e Watch somam em dobro);
+  **Agrupar por: Dia**.
+- **Repetir com Cada** item: **Formatar Data** (*Data de Início*, ISO 8601 com
+  horário) e **Texto** `{"date":"<Data Formatada>","value":"<Item de Repetição>"}`.
+- **Combinar Texto** (`,`) → **Definir Variável** (nome único por bloco, ex.
+  `StepsComb`) → **Texto** `{"type":"steps","samples":[<variável>]}`
+  (`energy` / `exercise` nos outros) → **Definir Variável** (`StepsJSON`) →
+  **Obter Conteúdo do URL** (POST, mesmos cabeçalhos, corpo **Arquivo** =
+  essa variável).
 
-iPhone e Watch registram passos ao mesmo tempo: o dashboard soma cada fonte
-separado e usa a maior do dia, para não contar a mesma caminhada duas vezes.
+Atenção ao duplicar blocos: as etiquetas "Texto Combinado" / "Texto" ficam
+apontando para o bloco original (dá o mesmo número nos dois). Nomes de
+variável únicos evitam isso.
 
-## Bloco 4: treinos
-
-22. **Encontrar Amostras de Saúde** → **Tipo** é **Treinos**, **Data de
-    Início** nos últimos **2 dias** (35 na 1ª vez), limite desligado.
-23. **Repetir com Cada** treino. Dentro:
-    1. **Formatar Data** → **Data de Início** (ISO 8601, com horário).
-    2. **Formatar Data** → **Data de Término** (ISO 8601, com horário).
-    3. **Texto**:
-       ```
-       {"date":"[Data Formatada 1]","endDate":"[Data Formatada 2]","unit":"[Tipo]","energy":"[Energia Ativa]","source":"[Fonte]"}
-       ```
-       `Tipo` é o tipo do treino ("Corrida", "Caminhada", "Treinamento de
-       Força"...) e `Energia Ativa` as calorias ativas do treino; confira
-       os nomes das propriedades no seletor — se não achar "Energia Ativa",
-       use a energia total do treino. O dashboard classifica o tipo em
-       caminhada / corrida / musculação / outros.
-24. **Combinar Texto** (`,`), **Texto**
-    `{"type":"workout","samples":[[Texto Combinado]]}`, e **Obter
-    Conteúdo do URL** (POST, como acima).
-
-Dica: dá para ver o resultado na aba Saúde → card **Atividade** logo depois
-de rodar o atalho; "Atualizar tudo" no dashboard recarrega.
+O servidor grava um total por dia (início do dia em São Paulo) e **nunca
+troca um total por um menor** — o dia de hoje só cresce. Os treinos
+individuais (tipo, duração) o iOS não lista no Atalhos; o card Atividade usa
+os minutos de exercício do dia.
 
 ## Rodando sozinho todo dia
 
