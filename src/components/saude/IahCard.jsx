@@ -10,7 +10,7 @@ const num = (v) => v.toFixed(1).replace('.', ',');
 // "YYYY-MM-DD" (the night's date — the day the user went to bed) → value.
 export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
   const [editing, setEditing] = useState(false);
-  const keys = useMemo(() => entryKeys('iah'), []);
+  const keys = useMemo(() => entryKeys(), []);
   const pendingCount = pendingEntryKeys(keys, log, skipped).length;
 
   const axis = useMemo(() => thirtyDayAxis(), []);
@@ -68,7 +68,7 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor; abaixo de 5 é considerado normal (5–15 leve, 15–30 moderado, acima de 30 grave). Lançamento manual, uma nota por noite.">IAH · CPAP</span>
+          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor; abaixo de 5 é considerado normal (5–15 leve, 15–30 moderado, acima de 30 grave). Lançamento manual, pelo dia em que você acordou.">IAH · CPAP</span>
           {last != null && (
             <>
               <span className={styles.bigValue}>{num(last)}</span>
@@ -88,11 +88,11 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
       <ChartCanvas config={config} height={240} />
       {editing && (
         <EntryEditor
-          title="IAH · noite de"
+          title="IAH · acordou em"
           keys={keys}
           log={log}
           skipped={skipped}
-          placeholder="2,1"
+          placeholder=""
           format={(v) => String(v).replace('.', ',')}
           parse={parse}
           onSet={onSave}

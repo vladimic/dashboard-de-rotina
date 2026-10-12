@@ -1,4 +1,5 @@
 import { NOTE_COLORS } from '../data/seedData';
+import { shiftDateKey } from '../utils/format';
 
 // Sets (value given), skips (skip = true) or clears one day of a hand-typed
 // log; a day is never both valued and skipped.
@@ -12,10 +13,20 @@ function setEntry(state, logKey, skipKey, date, value, skip = false) {
   return { ...state, [logKey]: log, [skipKey]: skipped };
 }
 
+// IAH used to be keyed by the day you went to bed; it's now keyed by the day
+// you woke up, like sleep and quality. Saved logs from before are moved one
+// day forward, once (the flag marks them as already converted).
+function migrateIahKeys(state) {
+  if (state.iahWakeKeys) return state;
+  const shift = (map) =>
+    Object.fromEntries(Object.entries(map || {}).map(([key, v]) => [shiftDateKey(key, 1), v]));
+  return { ...state, iahLog: shift(state.iahLog), iahSkip: shift(state.iahSkip), iahWakeKeys: true };
+}
+
 export function dashboardReducer(state, action) {
   switch (action.type) {
     case 'HYDRATE':
-      return action.state;
+      return migrateIahKeys(action.state);
 
     case 'GO_PAGE':
       return { ...state, page: action.page };

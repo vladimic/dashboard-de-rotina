@@ -16,6 +16,49 @@ const STAGES = [
 // Last 30 nights: total sleep and how it splits across stages. `nights` is
 // sleepNights() output, keyed by the day you woke up. "Acordado" can be
 // hidden so each bar's height is just the time actually asleep.
+// Writes each night's time asleep above its bar — above the "acordado"
+// slice too when that's showing. Roomy bars get "7h07", tighter ones "7,1",
+// and very narrow ones a vertical "7h07".
+function sleepLabelsPlugin(axis, nights) {
+  return {
+    id: 'sleepLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, scales, chartArea } = chart;
+      const perDay = chartArea.width / axis.length;
+      ctx.save();
+      ctx.fillStyle = '#3f6b57';
+      ctx.font = `600 ${perDay >= 26 ? 10 : 9}px Inter, sans-serif`;
+      ctx.textAlign = 'center';
+      axis.forEach((day, i) => {
+        const night = nights.get(day.key);
+        if (!night) return;
+        let total = 0;
+        chart.data.datasets.forEach((ds, di) => {
+          if (chart.isDatasetVisible(di)) total += ds.data[i] || 0;
+        });
+        const x = scales.x.getPixelForValue(i);
+        const y = scales.y.getPixelForValue(total) - 3;
+        if (perDay >= 26) {
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText(formatDuration(night.asleepMin), x, y);
+        } else if (perDay >= 15) {
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText((night.asleepMin / 60).toFixed(1).replace('.', ','), x, y);
+        } else {
+          ctx.translate(x, y);
+          ctx.rotate(-Math.PI / 2);
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(formatDuration(night.asleepMin), 0, 0);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.textAlign = 'center';
+        }
+      });
+      ctx.restore();
+    },
+  };
+}
+
 export default function SleepCard({ nights, loading, error, showAwake, onToggleAwake }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const trends = [7, 30].map((days) => ({ days, trend: sleepTrend(nights, days) }));
@@ -64,10 +107,10 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         },
         scales: {
           x: { ...thirtyDayScale(axis, 9), stacked: true },
-          y: { stacked: true, beginAtZero: true, suggestedMax: 9, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => `${v}h` } },
+          y: { stacked: true, beginAtZero: true, suggestedMax: 10, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => `${v}h` } },
         },
       },
-      plugins: [monthDividerPlugin(axis)],
+      plugins: [monthDividerPlugin(axis), sleepLabelsPlugin(axis, nights)],
     }),
     [axis, nights, stages]
   );

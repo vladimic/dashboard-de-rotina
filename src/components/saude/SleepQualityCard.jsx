@@ -13,7 +13,7 @@ const bandColor = (score) => (score >= 81 ? '#3f9b6b' : score >= 61 ? '#e5a03a' 
 export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const [editing, setEditing] = useState(false);
-  const keys = useMemo(() => entryKeys('quality'), []);
+  const keys = useMemo(() => entryKeys(), []);
   const pendingCount = pendingEntryKeys(keys, log, skipped).length;
 
   const hasScores = axis.some((d) => log[d.key] != null);
@@ -111,7 +111,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           keys={keys}
           log={log}
           skipped={skipped}
-          placeholder="75"
+          placeholder=""
           format={String}
           parse={parse}
           onSet={onSave}

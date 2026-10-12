@@ -249,8 +249,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     quality: lastQualityKey ? state.qualityLog[lastQualityKey] : null,
   };
   const entryPending =
-    pendingEntryKeys(entryKeys('quality'), state.qualityLog, state.qualitySkip).length +
-    pendingEntryKeys(entryKeys('iah'), state.iahLog, state.iahSkip).length;
+    pendingEntryKeys(entryKeys(), state.qualityLog, state.qualitySkip).length +
+    pendingEntryKeys(entryKeys(), state.iahLog, state.iahSkip).length;
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './Saude.module.css';
 
 const dayLabel = (key) =>
@@ -7,6 +7,12 @@ const dayLabel = (key) =>
 function Row({ dayKey, value, skipped, placeholder, format, parse, onSet, onSkip, onClear }) {
   const [text, setText] = useState(value != null ? format(value) : '');
   const [error, setError] = useState('');
+
+  // Follows the stored value (saved, removed or restored elsewhere).
+  useEffect(() => {
+    setText(value != null ? format(value) : '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   function save() {
     const result = parse(text);
@@ -74,20 +80,14 @@ function Row({ dayKey, value, skipped, placeholder, format, parse, onSet, onSkip
 // removed. "Concluir" closes it.
 export default function EntryEditor({ title, keys, log, skipped, placeholder, format, parse, onSet, onSkip, onClear, onClose }) {
   const [showAll, setShowAll] = useState(false);
-  const boxRef = useRef(null);
   const pending = keys.filter((k) => log[k] == null && !skipped[k]);
-  const visible = showAll ? keys : pending;
-
-  // After each action the list shifts up; put the cursor back on the first
-  // field so the blank days can be typed through one after another.
-  const refocus = () => requestAnimationFrame(() => boxRef.current?.querySelector('input')?.focus());
-  const wrap = (fn) => (...args) => {
-    fn(...args);
-    refocus();
-  };
+  // Days blank when the panel opened stay listed after being filled, so the
+  // list doesn't shift under the cursor; a day you remove or skip shows up too.
+  const [openedBlank] = useState(() => new Set(pending));
+  const visible = showAll ? keys : keys.filter((k) => openedBlank.has(k) || pending.includes(k));
 
   return (
-    <div className={styles.entryPanel} ref={boxRef}>
+    <div className={styles.entryPanel}>
       <div className={styles.entryHead}>
         <span className={styles.title}>{title}</span>
         <span className={styles.muted}>
@@ -104,16 +104,16 @@ export default function EntryEditor({ title, keys, log, skipped, placeholder, fo
         {visible.length === 0 && <div className={styles.empty}>Nenhum dia em branco nos últimos {keys.length} dias.</div>}
         {visible.map((key) => (
           <Row
-            key={`${key}:${log[key] ?? ''}:${skipped[key] ? 's' : ''}`}
+            key={key}
             dayKey={key}
             value={log[key] ?? null}
             skipped={Boolean(skipped[key])}
             placeholder={placeholder}
             format={format}
             parse={parse}
-            onSet={wrap(onSet)}
-            onSkip={wrap(onSkip)}
-            onClear={wrap(onClear)}
+            onSet={onSet}
+            onSkip={onSkip}
+            onClear={onClear}
           />
         ))}
       </div>

@@ -230,12 +230,10 @@ export function qualityTrend(log, days, now = new Date()) {
 // many recent days.
 export const ENTRY_WINDOW_DAYS = 35;
 
-// Date keys of the editable window, newest first. Quality is keyed by the day
-// you woke up (today counts); IAH by the day you went to bed, so tonight's
-// isn't there yet and the window starts yesterday.
-export function entryKeys(kind, now = new Date()) {
-  const keys = lastNDateKeys(ENTRY_WINDOW_DAYS + (kind === 'iah' ? 1 : 0), now).reverse();
-  return kind === 'iah' ? keys.slice(1) : keys;
+// Date keys of the editable window, newest first. Every hand-typed log (IAH,
+// sleep quality) is keyed by the day you woke up, like the sleep chart.
+export function entryKeys(now = new Date()) {
+  return lastNDateKeys(ENTRY_WINDOW_DAYS, now).reverse();
 }
 
 // Days in the window with neither a value nor a "sem informação" mark.
