@@ -14,6 +14,15 @@ const STAGES = [
   { key: 'awake', label: 'Acordado', color: '#f0a487' },
 ];
 
+// Header key for the stacked stages (full name, or the short one when the
+// card is narrow). "Acordado" is its own on/off button next to these.
+const LEGEND = [
+  { key: 'deep', full: 'Profundo', short: 'Prof.', color: '#4b3fa8' },
+  { key: 'core', full: 'Essencial', short: 'Ess.', color: '#8f86e0' },
+  { key: 'rem', full: 'REM', short: 'REM', color: '#c4bef5' },
+  { key: 'asleep', full: 'Dormindo', short: 'Dorm.', color: '#a9a3c9' },
+];
+
 // Last 30 nights: total sleep and how it splits across stages. `nights` is
 // sleepNights() output, keyed by the day you woke up. "Acordado" can be
 // hidden so each bar's height is just the time actually asleep.
@@ -102,19 +111,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         animation: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            align: 'start',
-            labels: {
-              boxWidth: 8,
-              boxHeight: 8,
-              padding: 8,
-              font: { size: 10 },
-              // Stage swatches only — not the moving-average lines.
-              filter: (item) => item.datasetIndex < stages.length && item.text !== 'Acordado',
-            },
-          },
+          legend: { display: false },
           tooltip: {
             ...tip,
             callbacks: {
@@ -165,11 +162,25 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         </div>
         {nights.size > 0 && (
           <div className={styles.headerRight}>
-            <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('sleepShowMa7')} onToggle30={() => onToggleFlag('sleepShowMa30')} />
-            <button type="button" className={styles.maToggle} data-on={showAwake} onClick={onToggleAwake} title="Mostrar o tempo acordado em cima das barras">
-              <i style={{ borderTop: 'none', height: 8, width: 8, borderRadius: 2, background: '#f0a487' }} />
-              Acordado
+            {LEGEND.filter((l) => l.key !== 'asleep' || hasUnstaged).map((l) => (
+              <span key={l.key} className={styles.stageKey} title={l.full}>
+                <i style={{ background: l.color }} />
+                <span className={styles.keyFull}>{l.full}</span>
+                <span className={styles.keyShort}>{l.short}</span>
+              </span>
+            ))}
+            <button
+              type="button"
+              className={`${styles.stageKey} ${styles.stageKeyBtn}`}
+              data-on={showAwake}
+              onClick={onToggleAwake}
+              title="Mostrar o tempo acordado em cima das barras"
+            >
+              <i style={{ background: '#f0a487' }} />
+              <span className={styles.keyFull}>Acordado</span>
+              <span className={styles.keyShort}>Acord.</span>
             </button>
+            <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('sleepShowMa7')} onToggle30={() => onToggleFlag('sleepShowMa30')} />
           </div>
         )}
       </div>

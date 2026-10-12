@@ -648,3 +648,58 @@
   color: #3f6b57;
   font-weight: 600;
 }
+
+/* Sleep stage key in the card header (names shrink to short forms, then to
+   bare swatches, as the card gets narrower). */
+.stageKey {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font: 500 10.5px Inter, sans-serif;
+  color: #7fa693;
+  white-space: nowrap;
+}
+
+.stageKey i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.stageKeyBtn {
+  padding: 3px 5px;
+  border: 1px solid #d5e8de;
+  border-radius: 8px;
+  color: #3f6b57;
+  cursor: pointer;
+}
+
+.stageKeyBtn[data-on='false'] {
+  color: #b5cbbf;
+  border-style: dashed;
+}
+
+.stageKeyBtn[data-on='false'] i {
+  opacity: 0.35;
+}
+
+.keyShort {
+  display: none;
+}
+
+@container (max-width: 560px) {
+  .keyFull {
+    display: none;
+  }
+
+  .keyShort {
+    display: inline;
+  }
+}
+
+@container (max-width: 450px) {
+  .headerRight .keyShort {
+    display: none;
+  }
+}
