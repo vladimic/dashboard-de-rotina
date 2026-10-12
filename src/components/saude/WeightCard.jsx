@@ -272,7 +272,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
       {!error && !loading && samples.length === 0 && (
         <div className={styles.empty}>Nenhuma pesagem ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
-      {samples.length > 0 && <ChartCanvas config={config} height={240} />}
+      {samples.length > 0 && <ChartCanvas config={config} height={200} />}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale } from './ChartCanvas';
 import { thirtyDayAxis, TREND_UI } from '../../utils/health';
 import { sampleActivity, WORKOUT_TYPES } from '../../utils/activitySample';
 import styles from './Saude.module.css';
@@ -51,7 +51,7 @@ export default function ActivityCard() {
     () => ({
       type: 'bar',
       data: {
-        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
+        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
         datasets: [
           {
             label: 'Energia ativa',
@@ -142,7 +142,7 @@ export default function ActivityCard() {
           </span>
         </div>
       </div>
-      <ChartCanvas config={config} height={170} />
+      <ChartCanvas config={config} height={150} />
       <div className={styles.actList}>
         {recent.map((w, i) => (
           <div key={i} className={styles.actRow}>

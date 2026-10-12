@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import EntryEditor, { EditButton } from './EntryEditor';
 import MaToggles, { maDataset, maTooltip } from './MaToggles';
-import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale, valueLabelsPlugin } from './ChartCanvas';
 import { entryKeys, pendingEntryKeys, qualityLabel, qualityTrend, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
@@ -30,7 +30,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
       type: 'bar',
       data: {
         // Third-width chart: weekday as its initial (S, T, Q...).
-        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
+        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
         datasets: [
           {
             data: scores,
@@ -53,7 +53,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
             ...tip,
             callbacks: {
               ...tip.callbacks,
-              title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
+              title: (items) => dayTitle(axis, items[0].dataIndex),
               label: (item) => `Nota ${item.parsed.y}/100 · ${qualityLabel(item.parsed.y)}`,
             },
           },
@@ -63,7 +63,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           y: { min: 0, max: 100, grid: { color: GRID_COLOR }, ticks: { stepSize: 20 } },
         },
       },
-      plugins: [],
+      plugins: [valueLabelsPlugin(axis, scores, String, { minHorizontal: 13 })],
     };
   }, [axis, log, showMa7, showMa30]);
 
@@ -110,7 +110,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
         </div>
       </div>
       {hasScores ? (
-        <ChartCanvas config={config} height={240} />
+        <ChartCanvas config={config} height={200} />
       ) : (
         <div className={styles.empty}>Nenhuma nota ainda — digite a nota do app Saúde acima.</div>
       )}

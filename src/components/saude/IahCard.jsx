@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale, valueLabelsPlugin } from './ChartCanvas';
 import EntryEditor, { EditButton } from './EntryEditor';
 import MaToggles, { maDataset, maTooltip } from './MaToggles';
 import { entryKeys, iahBand, iahTrend, pendingEntryKeys, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
@@ -29,7 +29,7 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
       type: 'line',
       data: {
         // Third-width chart: weekday as its initial (S, T, Q...).
-        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
+        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
         datasets: [
           {
             label: 'IAH',
@@ -56,14 +56,14 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
             ...tip,
             callbacks: {
               ...tip.callbacks,
-              title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
+              title: (items) => dayTitle(axis, items[0].dataIndex),
               label: (item) => `IAH: ${num(item.parsed.y)}`,
             },
           },
         },
         scales: { x: thirtyDayScale(axis, 9), y: { min: 0, suggestedMax: 8, grid: { color: GRID_COLOR } } },
       },
-      plugins: [],
+      plugins: [valueLabelsPlugin(axis, axis.map((d) => log[d.key] ?? null), num, { minHorizontal: 17 })],
     };
   }, [axis, log, showMa7, showMa30]);
 
@@ -109,7 +109,7 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
           <EditButton pendingCount={pendingCount} onClick={() => setEditing(true)} />
         </div>
       </div>
-      <ChartCanvas config={config} height={240} />
+      <ChartCanvas config={config} height={200} />
       {editing && (
         <EntryEditor
           title="IAH · acordou em"

@@ -68,3 +68,43 @@ export function thirtyDayScale(axis, fontSize = 10) {
     },
   };
 }
+
+// "sáb 03/10" for a tooltip title, from a thirtyDayAxis() entry.
+export function dayTitle(axis, i) {
+  const { key, label } = axis[i];
+  return `${label[1]} ${key.slice(8, 10)}/${key.slice(5, 7)}`;
+}
+
+// Writes each value above its bar/point ("73", "4,7"). Horizontal when the
+// columns are roomy enough for `minHorizontal` px each, otherwise sideways.
+export function valueLabelsPlugin(axis, values, fmt, { minHorizontal = 15 } = {}) {
+  return {
+    id: 'valueLabels',
+    afterDatasetsDraw(chart) {
+      const { ctx, scales, chartArea } = chart;
+      const horizontal = chartArea.width / axis.length >= minHorizontal;
+      ctx.save();
+      ctx.fillStyle = '#3f6b57';
+      ctx.font = '600 9px Inter, sans-serif';
+      values.forEach((v, i) => {
+        if (v == null) return;
+        const x = scales.x.getPixelForValue(i);
+        const y = scales.y.getPixelForValue(v) - 6;
+        if (horizontal) {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText(fmt(v), x, y);
+        } else {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(-Math.PI / 2);
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(fmt(v), 0, 0);
+          ctx.restore();
+        }
+      });
+      ctx.restore();
+    },
+  };
+}

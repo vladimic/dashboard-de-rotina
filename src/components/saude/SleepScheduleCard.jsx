@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale } from './ChartCanvas';
 import MaToggles, { maDataset, maTooltip } from './MaToggles';
 import { bedtimeHour as nightHour, bedtimeTrend, formatDuration, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
@@ -75,7 +75,7 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
       type: 'bar',
       data: {
         // Half-width chart: weekday as its initial (S, T, Q...).
-        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
+        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
         datasets: [
           {
             data: inWindow.map((n) => (n ? [clamp(nightHour(n.bedtime)), clamp(nightHour(n.wake))] : null)),
@@ -100,7 +100,7 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
             ...tip,
             callbacks: {
               ...tip.callbacks,
-              title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
+              title: (items) => dayTitle(axis, items[0].dataIndex),
               label: (item) => {
                 const n = inWindow[item.dataIndex];
                 return `dormiu ${hourLabel(nightHour(n.bedtime))} · acordou ${hourLabel(nightHour(n.wake))} · ${formatDuration(n.asleepMin)}`;
@@ -148,7 +148,7 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
         </div>
       </div>
       {hasNights ? (
-        <ChartCanvas config={config} height={240} />
+        <ChartCanvas config={config} height={200} />
       ) : (
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}

@@ -1,7 +1,7 @@
 .card {
   background: #fff;
   border-radius: 16px;
-  padding: 16px 18px;
+  padding: 10px 14px 8px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -12,8 +12,8 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .headerLeft,
@@ -433,7 +433,7 @@
    the left side of each header gets the same height so the chips line up
    across the cards whether or not there's a big value next to the title. */
 .oneLine .headerLeft {
-  min-height: 28px;
+  min-height: 24px;
   align-items: center;
 }
 
@@ -610,8 +610,8 @@
 
 .actList {
   display: grid;
-  gap: 4px;
-  margin-top: 10px;
+  gap: 3px;
+  margin-top: 4px;
   font: 500 11px Inter, sans-serif;
   color: #3f6b57;
 }
@@ -637,8 +637,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px solid rgba(63, 107, 87, 0.12);
   font: 500 11px Inter, sans-serif;
   color: #7fa693;

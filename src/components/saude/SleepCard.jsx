@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale } from './ChartCanvas';
 import MaToggles, { maDataset, maTooltip } from './MaToggles';
 import { formatDuration, rollingByKey, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
@@ -11,7 +11,7 @@ const STAGES = [
   { key: 'core', label: 'Essencial', color: '#8f86e0' },
   { key: 'rem', label: 'REM', color: '#c4bef5' },
   { key: 'asleep', label: 'Dormindo', color: '#a9a3c9' },
-  { key: 'awake', label: 'Acordado', color: '#f0a487' },
+  { key: 'awake', label: 'Acordado', color: '#2fa39a' },
 ];
 
 // Header key for the stacked stages (full name, or the short one when the
@@ -88,7 +88,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
       data: {
         // Half-width chart: weekday as its initial (S, T, Q...) so the 30
         // columns don't run into each other.
-        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
+        labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
         datasets: [
           ...stages.map((s) => ({
           label: s.label,
@@ -118,7 +118,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
               ...tip.callbacks,
               title: (items) => {
                 const night = nights.get(axis[items[0].dataIndex].key);
-                const day = axis[items[0].dataIndex].label.slice(0, 2).join(' ');
+                const day = dayTitle(axis, items[0].dataIndex);
                 return night ? `${day} · dormiu ${formatDuration(night.asleepMin)}` : day;
               },
               label: (item) => `${item.dataset.label}: ${formatDuration(item.parsed.y * 60)}`,
@@ -176,7 +176,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
               onClick={onToggleAwake}
               title="Mostrar o tempo acordado em cima das barras"
             >
-              <i style={{ background: '#f0a487' }} />
+              <i style={{ background: '#2fa39a' }} />
               <span className={styles.keyFull}>Acordado</span>
               <span className={styles.keyShort}>Acord.</span>
             </button>
@@ -189,7 +189,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
       {!error && !loading && nights.size === 0 && (
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
-      {nights.size > 0 && <ChartCanvas config={config} height={240} />}
+      {nights.size > 0 && <ChartCanvas config={config} height={200} />}
     </div>
   );
 }

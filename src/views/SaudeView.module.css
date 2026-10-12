@@ -1,13 +1,13 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .threeCols {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
   /* Same height for the three cards; each chart stretches to fill. */
   align-items: stretch;
   /* Both rows the same height, so the IAH/quality charts match the sleep chart. */
