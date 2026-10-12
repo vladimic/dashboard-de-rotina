@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 146, date: '2026-10-12', summary: 'TickTick: o card mostrava 0 pendentes mesmo com tarefas abertas — falha na leitura de uma lista era engolida em silêncio (agora aparece como erro), tarefas de hoje depois de ~21h eram cortadas pelo fuso do servidor e listas com o mesmo nome se sobrescreviam' },
   { version: 145, date: '2026-10-06', summary: 'Proteção contra perda de dados: falha de leitura não sobrescreve mais o estado salvo; importar backup; snapshot diário' },
   { version: 144, date: '2026-10-05', summary: 'Notion: o card mostrava só 9 das 38 tarefas vencidas/de hoje — o Notion devolve a consulta filtrada em partes (menos de 100 por vez, com "tem mais") e o dashboard lia só a primeira parte; agora lê todas' },
   { version: 143, date: '2026-10-04', summary: 'Saúde: segunda linha com IAH (agora em 1/3 da largura) e o novo gráfico de Qualidade do sono — nota de 0 a 100 por noite (duração 50 + profundo/REM 30 + pouco acordado 20), barras verde/amarelo/vermelho, setas de 7d/30d; o cabeçalho passa a mostrar a nota da última noite. Terceira coluna reservada para exercícios' },
