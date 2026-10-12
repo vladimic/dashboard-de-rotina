@@ -1,5 +1,5 @@
 import styles from './SummaryStrip.module.css';
-import { formatClockSP, formatDuration, formatKg, TREND_UI } from '../utils/health';
+import { TREND_UI } from '../utils/health';
 
 function StatCard({ title, value, suffix, className, done, tip, tipAlign }) {
   return (
@@ -18,20 +18,71 @@ function StatCard({ title, value, suffix, className, done, tip, tipAlign }) {
   );
 }
 
-const WEIGHT_TIP = 'Peso: última pesagem registrada no app Saúde (kg). As setas comparam com a pesagem mais antiga de cada janela — 7, 30 e 90 dias: ▼ perdeu, ▲ ganhou, ▬ variação menor que 0,2 kg.';
-const QUALITY_TIP =
-  'Qualidade: a nota (0–100) do app Saúde da noite mais recente que você digitou no card Qualidade do sono. 81+ alta, 61–80 regular, abaixo baixa.';
-const IAH_TIP = 'IAH (índice de apneia-hipopneia): quantos eventos de apneia/hipopneia por hora de sono o CPAP registrou na última noite lançada. Menos é melhor; abaixo de 5 é considerado normal.';
-const SONO_TIP = 'Sono: tempo total dormindo na última noite (profundo + essencial + REM). Não conta o tempo acordado nem “na cama”.';
-const DORMIU_TIP = 'Dormiu: horário em que você pegou no sono na última noite (primeiro trecho de sono, não de “na cama”), no fuso de São Paulo.';
-const ACORDOU_TIP = 'Acordou: horário do fim do último trecho de sono da noite, no fuso de São Paulo.';
+// Last 30 days as a line: the first 23 light, the last 7 dark and thicker
+// ("evolução mensal" + "7 dias" in one), with a dot on the latest value.
+// Gaps (days without data) are bridged.
+function Sparkline({ values }) {
+  const pts = values.map((v, i) => (v == null ? null : [i, v])).filter(Boolean);
+  if (pts.length < 2) return <div className={styles.sparkEmpty}>sem dados</div>;
+  const vs = pts.map((p) => p[1]);
+  const min = Math.min(...vs);
+  const max = Math.max(...vs);
+  const span = max - min || 1;
+  const x = (i) => (i / (values.length - 1)) * 100;
+  const y = (v) => 22 - ((v - min) / span) * 20;
+  const path = (list) => list.map(([i, v], n) => `${n ? 'L' : 'M'}${x(i).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
+  const cut = values.length - 7;
+  const month = pts.filter(([i]) => i <= cut);
+  // The 7-day part starts at the last point before the cut, so it joins the
+  // month line instead of floating.
+  const week = [...month.slice(-1), ...pts.filter(([i]) => i > cut)];
+  const last = pts.at(-1);
+  return (
+    <svg className={styles.spark} viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
+      {month.length > 1 && <path d={path(month)} className={styles.sparkMonth} />}
+      {week.length > 1 && <path d={path(week)} className={styles.sparkWeek} />}
+      <path d={`M${x(last[0])},${y(last[1])} l0,0`} className={styles.sparkDot} />
+    </svg>
+  );
+}
+
+// One Saúde header tile: title, today's value, the 30-day sparkline and the
+// 7 / 30 arrows (green when moving the good way for that metric).
+function MetricTile({ metric }) {
+  return (
+    <div className={`${styles.card} ${styles.saudeCard} ${styles.metric}`}>
+      <div className={styles.cardTitle} data-tip={metric.tip} data-tip-align={metric.tipAlign}>
+        {metric.title}
+      </div>
+      <div className={styles.cardValue}>
+        {metric.value ?? '–'}
+        {metric.value != null && metric.unit && <span className={styles.cardSuffix}>{metric.unit}</span>}
+      </div>
+      <Sparkline values={metric.series} />
+      <div className={styles.metricTrends}>
+        {metric.trends.map((t) => (
+          <span
+            key={t.days}
+            className={styles.metricTrend}
+            data-tone={!t.direction || t.direction === 'stable' ? 'flat' : t.direction === metric.good ? 'good' : 'bad'}
+            data-tip={t.tip}
+            data-tip-align={metric.tipAlign}
+          >
+            {t.days}
+            <b>{t.direction ? TREND_UI[t.direction].symbol : '–'}</b>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function SummaryStrip({ page, counts, saude, lists, dayProgressPercent }) {
   const isHoje = page === 'hoje';
   const isSaude = page === 'saude';
 
   return (
-    <div className={styles.strip}>
+    <div className={styles.strip} data-page={page}>
       <div className={styles.hojeGroup} data-dim={isSaude}>
         <div className={styles.kpiScroll}>
           <StatCard title="Meu Dia" value={counts.meuDiaCount} className={styles.hojeCard} done={counts.meuDiaCount === 0} />
@@ -65,35 +116,9 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
       </div>
 
       <div className={styles.saudeGroup} data-dim={isHoje}>
-        <div className={`${styles.card} ${styles.saudeCard}`}>
-          <div className={styles.cardTitle} data-tip={WEIGHT_TIP}>Peso</div>
-          <div className={styles.weightRow}>
-            <div className={styles.weightTrends}>
-              {(saude.weight?.trends || []).map(({ days, trend }) => (
-                <span
-                  key={days}
-                  className={styles.weightTrend}
-                  data-dir={trend?.direction || 'none'}
-                  data-tip={trend ? `${days} dias: ${TREND_UI[trend.direction].label} (${trend.diff > 0 ? '+' : ''}${formatKg(trend.diff)} kg)` : `${days} dias: pesagens insuficientes`}
-                >
-                  {trend ? TREND_UI[trend.direction].symbol : '–'}
-                </span>
-              ))}
-            </div>
-            <div className={styles.cardValue} data-tip={WEIGHT_TIP} data-tip-align="right">
-              {saude.weight ? formatKg(saude.weight.value) : '–'}
-              <span className={styles.cardSuffix}>kg</span>
-            </div>
-          </div>
-        </div>
-        <StatCard title="IAH" value={saude.iah != null ? formatKg(saude.iah) : '–'} className={styles.saudeCard} tip={IAH_TIP} />
-        <StatCard title="Sono" value={saude.lastNight ? formatDuration(saude.lastNight.asleepMin) : '–'} className={styles.saudeCard} tip={SONO_TIP} />
-        <StatCard title="Qualidade" value={saude.quality != null ? saude.quality : '–'} className={styles.saudeCard} tip={QUALITY_TIP} />
-        <StatCard title="Dormiu" value={saude.lastNight ? formatClockSP(saude.lastNight.bedtime) : '–'} className={styles.saudeCard} tip={DORMIU_TIP} />
-        <StatCard title="Acordou" value={saude.lastNight ? formatClockSP(saude.lastNight.wake) : '–'} className={styles.saudeCard} tip={ACORDOU_TIP} tipAlign="right" />
-        {/* Filled in once the Shortcut also sends steps and exercise. */}
-        <StatCard title="Passos" value="–" className={styles.saudeCard} tip="Passos: total do dia no app Saúde. Ainda não sincronizado — o atalho “Sincronizar Saúde” só envia peso e sono por enquanto." />
-        <StatCard title="Exercício" value="–" className={styles.saudeCard} tip="Exercício: minutos de treino do dia no app Saúde. Ainda não sincronizado — o atalho só envia peso e sono por enquanto." tipAlign="right" />
+        {saude.map((m) => (
+          <MetricTile key={m.id} metric={m} />
+        ))}
       </div>
     </div>
   );

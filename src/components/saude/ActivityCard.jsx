@@ -1,37 +1,38 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale, valueLabelsPlugin } from './ChartCanvas';
-import { thirtyDayAxis, TREND_UI } from '../../utils/health';
+import ChartCanvas, { GRID_COLOR, thirtyDayScale, valueLabelsPlugin } from './ChartCanvas';
+import MaToggles, { maDataset, maTooltip } from './MaToggles';
+import { dailyTrend, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import { WORKOUT_TYPES } from '../../utils/activity';
 import styles from './Saude.module.css';
-
-const KCAL_COLOR = '#d9892b';
 
 const dayMonth = (key) => `${key.slice(8, 10)}/${key.slice(5, 7)}`;
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const weekday = (key) => WEEKDAYS[new Date(`${key}T12:00:00Z`).getUTCDay()];
 
 // Atividade: minutes of exercise per day (bars, value on top; colored by the
-// main workout when workouts are known) and active energy in kcal (amber
-// line, right axis). Steps are in the tooltip and the footer.
+// main workout when workouts are known), with 7d / 30d moving averages and
+// the latest workouts below. Energy and steps have their own cards.
 // `activity.days` is activityDays() output: the last 31 days, oldest first.
-export default function ActivityCard({ activity }) {
+export default function ActivityCard({ activity, showMa7, showMa30, onToggleFlag }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const all = activity.days;
   const days = useMemo(() => all.slice(-30), [all]);
   const today = all.at(-1);
 
-  const avg = (n, offset = 0) => {
-    const win = all.slice(all.length - n - offset, all.length - offset);
-    return Math.round(win.reduce((a, d) => a + d.exMin, 0) / win.length);
-  };
-  const trends = [7, 30].map((n) => {
-    const a = avg(n);
-    const b = avg(n, 1);
-    return { days: n, avg: a, prev: b, direction: Math.abs(a - b) < 1 ? 'stable' : a > b ? 'up' : 'down' };
-  });
+  // A day with neither steps nor energy never synced: a gap, not 0 minutes.
+  const valueOf = useMemo(() => {
+    const byKey = new Map(all.map((d) => [d.key, d]));
+    return (key) => {
+      const d = byKey.get(key);
+      return d && (d.kcal > 0 || d.steps > 0) ? d.exMin : null;
+    };
+  }, [all]);
+  const trends = [7, 30].map((n) => ({ days: n, trend: dailyTrend(valueOf, n, 1) }));
 
-  const config = useMemo(
-    () => ({
+  const config = useMemo(() => {
+    const ma = { 7: rollingByKey(axis, valueOf, 7), 30: rollingByKey(axis, valueOf, 30) };
+    const tip = maTooltip(ma[7], ma[30], (v) => `${Math.round(v)} min`);
+    return {
       type: 'bar',
       data: {
         labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
@@ -42,19 +43,8 @@ export default function ActivityCard({ activity }) {
             backgroundColor: days.map((d) => (d.main ? WORKOUT_TYPES[d.main].color : '#2f8a5c')),
             borderRadius: 3,
             barPercentage: 0.75,
-            yAxisID: 'y',
           },
-          {
-            type: 'line',
-            label: 'Energia ativa',
-            data: days.map((d) => (d.kcal > 0 ? d.kcal : null)),
-            borderColor: KCAL_COLOR,
-            borderWidth: 1.5,
-            pointRadius: 0,
-            tension: 0.3,
-            spanGaps: true,
-            yAxisID: 'y1',
-          },
+          ...[7, 30].filter((n) => (n === 7 ? showMa7 : showMa30)).map((n) => maDataset(n, ma[n])),
         ],
       },
       options: {
@@ -63,14 +53,15 @@ export default function ActivityCard({ activity }) {
         plugins: {
           legend: { display: false },
           tooltip: {
+            ...tip,
             callbacks: {
+              ...tip.callbacks,
               title: (items) => {
                 const d = days[items[0].dataIndex];
                 return `${weekday(d.key)} ${dayMonth(d.key)}`;
               },
               label: (item) => {
                 const d = days[item.dataIndex];
-                if (item.datasetIndex === 1) return `${d.kcal} kcal ativas · ${d.steps.toLocaleString('pt-BR')} passos`;
                 return [`${d.exMin} min de exercício`, ...d.workouts.map((w) => `${WORKOUT_TYPES[w.type].label} ${w.min} min`)];
               },
             },
@@ -79,15 +70,12 @@ export default function ActivityCard({ activity }) {
         interaction: { mode: 'index', intersect: false },
         scales: {
           x: thirtyDayScale(axis, 9),
-          // Left: minutes (green). Right: kcal (amber), its own scale.
           y: { min: 0, suggestedMax: 90, grid: { color: GRID_COLOR }, ticks: { stepSize: 30, callback: (v) => `${v}m` } },
-          y1: { position: 'right', min: 0, suggestedMax: 1200, grid: { display: false }, ticks: { stepSize: 400, color: KCAL_COLOR } },
         },
       },
       plugins: [valueLabelsPlugin(axis, days.map((d) => (d.exMin > 0 ? d.exMin : null)), String, { minHorizontal: 13 })],
-    }),
-    [axis, days]
-  );
+    };
+  }, [axis, days, valueOf, showMa7, showMa30]);
 
   const recent = [...all]
     .reverse()
@@ -95,40 +83,34 @@ export default function ActivityCard({ activity }) {
     .slice(0, 3)
     .flatMap((d) => d.workouts.map((w) => ({ ...w, key: d.key, isToday: d === today })));
   const week = all.slice(-7).reduce((a, d) => a + d.exMin, 0);
+  const month = days.reduce((a, d) => a + d.exMin, 0);
 
   return (
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="Atividade: as barras verdes são os minutos de exercício de cada dia (anel verde do Apple Watch, escala à esquerda); a linha laranja é a energia ativa em kcal (escala à direita). Passos ficam no pop-up e no rodapé. O número grande são os minutos de hoje; 7 e 30 comparam a média móvel de hoje com a de ontem.">Atividade</span>
+          <span className={styles.title} data-tip="Atividade: minutos de exercício de cada dia (anel verde do Apple Watch; barra na cor do treino principal quando o treino é conhecido). Tracejadas: médias móveis de 7 e 30 dias. O número grande são os minutos de hoje; 7 e 30 comparam a média móvel de hoje com a de ontem. Embaixo, os últimos treinos.">Atividade</span>
           <span className={styles.bigValue}>
             {today.exMin}
             <span className={styles.unit}> min</span>
           </span>
           <div className={styles.trends}>
-            {trends.map((t) => (
+            {trends.map(({ days: n, trend: t }) => (
               <span
-                key={t.days}
+                key={n}
                 className={styles.trend}
-                data-tone={t.direction === 'up' ? 'good' : 'flat'}
-                data-tip={`Média dos últimos ${t.days} dias: ${t.avg} min de exercício. Média de ontem: ${t.prev} min · ${TREND_UI[t.direction].label}`}
+                data-tone={!t || t.direction === 'stable' ? 'flat' : t.direction === 'up' ? 'good' : 'bad'}
+                data-tip={t ? `Média dos últimos ${n} dias: ${Math.round(t.avg)} min de exercício. Média de ontem: ${Math.round(t.prevAvg)} min · ${TREND_UI[t.direction].label}` : `${n} dias: dados insuficientes`}
               >
-                {t.days}
-                <b>{TREND_UI[t.direction].symbol}</b>
-                <span className={styles.trendValue}>{t.avg}m</span>
+                {n}
+                <b>{t ? TREND_UI[t.direction].symbol : '–'}</b>
+                {t && <span className={styles.trendValue}>{Math.round(t.avg)}m</span>}
               </span>
             ))}
           </div>
         </div>
         <div className={styles.headerRight}>
-          <span className={styles.stageKey}>
-            <i style={{ background: '#2f8a5c' }} />
-            min
-          </span>
-          <span className={styles.stageKey}>
-            <i style={{ background: KCAL_COLOR, height: 2, borderRadius: 0 }} />
-            kcal
-          </span>
+          <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('exerciseShowMa7')} onToggle30={() => onToggleFlag('exerciseShowMa30')} />
         </div>
       </div>
       {activity.error && <div className={styles.error}>Não deu pra carregar a atividade: {activity.error}</div>}
@@ -151,13 +133,10 @@ export default function ActivityCard({ activity }) {
       )}
       <div className={styles.actStrip}>
         <span>
-          <b>{today.steps.toLocaleString('pt-BR')}</b> passos
-        </span>
-        <span>
-          <b>{today.kcal}</b> kcal ativas
-        </span>
-        <span>
           7 dias: <b>{week}</b> min
+        </span>
+        <span>
+          30 dias: <b>{month}</b> min
         </span>
       </div>
     </div>

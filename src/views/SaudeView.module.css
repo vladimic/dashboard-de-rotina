@@ -19,3 +19,24 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Grid cell whose content (the Hábitos list) must not set the row height:
+   `contain: size` makes it count as empty when the 1fr rows are sized, so
+   the charts decide the height and the list scrolls inside it. */
+.fitCell {
+  contain: size;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: 16px;
+}
+
+.fitCell > * {
+  min-height: 100%;
+}
+
+@media (max-width: 680px) {
+  .fitCell {
+    contain: none;
+    overflow: visible;
+  }
+}

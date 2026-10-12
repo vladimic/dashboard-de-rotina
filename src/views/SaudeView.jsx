@@ -4,11 +4,19 @@ import SleepCard from '../components/saude/SleepCard';
 import SleepScheduleCard from '../components/saude/SleepScheduleCard';
 import SleepQualityCard from '../components/saude/SleepQualityCard';
 import ActivityCard from '../components/saude/ActivityCard';
+import DailyBarCard from '../components/saude/DailyBarCard';
+import HabitsPanel from '../components/HabitsPanel';
 import styles from './SaudeView.module.css';
 
-// Two rows of three: weight, bedtime, sleep / IAH, sleep quality, and the
-// activity card (steps, active energy and workouts from Health).
-export default function SaudeView({ state, dispatch, weight, sleep, nights, activity }) {
+const int = (v) => Math.round(v).toLocaleString('pt-BR');
+// Axis / bar labels for steps: "8,2k".
+const thousands = (v) => (v >= 1000 ? `${(v / 1000).toFixed(1).replace('.', ',').replace(',0', '')}k` : String(Math.round(v)));
+
+// Three rows of three, in the same order as the nine tiles in the header:
+// body (weight, IAH, habits) / activity (energy, exercise, steps) / sleep
+// (bedtime, duration, quality).
+export default function SaudeView({ state, dispatch, weight, sleep, nights, activity, habitTracker }) {
+  const toggle = (key) => dispatch({ type: 'TOGGLE_FLAG', key });
   return (
     <div className={styles.stack}>
       <div className={styles.threeCols}>
@@ -20,23 +28,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           showMa30={state.weightShowMa30}
           showCurrent={state.weightShowCurrent}
           showMin={state.weightShowMin}
-          onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
-        />
-        <SleepScheduleCard
-          nights={nights}
-          showMa7={state.scheduleShowMa7}
-          showMa30={state.scheduleShowMa30}
-          onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
-        />
-        <SleepCard
-          nights={nights}
-          loading={sleep.loading}
-          error={sleep.error}
-          showAwake={state.sleepShowAwake}
-          onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
-          showMa7={state.sleepShowMa7}
-          showMa30={state.sleepShowMa30}
-          onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
+          onToggleFlag={toggle}
         />
         <IahCard
           log={state.iahLog}
@@ -46,7 +38,56 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           onClear={(date) => dispatch({ type: 'CLEAR_ENTRY', logKey: 'iahLog', skipKey: 'iahSkip', date })}
           showMa7={state.iahShowMa7}
           showMa30={state.iahShowMa30}
-          onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
+          onToggleFlag={toggle}
+        />
+        {/* Its height comes from the charts in the row; long lists scroll. */}
+        <div className={styles.fitCell}>
+          <HabitsPanel state={state} dispatch={dispatch} habitTracker={habitTracker} alwaysOpen />
+        </div>
+
+        <DailyBarCard
+          title="Energia"
+          tip="Energia ativa: kcal gastas em movimento a cada dia (anel vermelho do Apple Watch), sem o metabolismo basal. Tracejadas: médias móveis de 7 e 30 dias. 7 e 30 comparam a média de hoje com a de ontem; hoje ainda é parcial."
+          activity={activity}
+          field="kcal"
+          unit="kcal"
+          color="#e08a3c"
+          fmt={int}
+          stableBelow={5}
+          yStep={300}
+          showMa7={state.energyShowMa7}
+          showMa30={state.energyShowMa30}
+          onToggle7={() => toggle('energyShowMa7')}
+          onToggle30={() => toggle('energyShowMa30')}
+        />
+        <ActivityCard activity={activity} showMa7={state.exerciseShowMa7} showMa30={state.exerciseShowMa30} onToggleFlag={toggle} />
+        <DailyBarCard
+          title="Passos"
+          tip="Passos de cada dia (app Saúde; quando iPhone e Watch contam a mesma caminhada vale a maior fonte, sem somar). Tracejadas: médias móveis de 7 e 30 dias. 7 e 30 comparam a média de hoje com a de ontem; hoje ainda é parcial."
+          activity={activity}
+          field="steps"
+          unit="passos"
+          color="#5a9bd5"
+          fmt={int}
+          labelFmt={thousands}
+          stableBelow={100}
+          yStep={4000}
+          showMa7={state.stepsShowMa7}
+          showMa30={state.stepsShowMa30}
+          onToggle7={() => toggle('stepsShowMa7')}
+          onToggle30={() => toggle('stepsShowMa30')}
+        />
+
+        <SleepScheduleCard nights={nights} showMa7={state.scheduleShowMa7} showMa30={state.scheduleShowMa30} onToggleFlag={toggle} />
+        <SleepCard
+          nights={nights}
+          loading={sleep.loading}
+          error={sleep.error}
+          showAwake={state.sleepShowAwake}
+          onToggleAwake={() => toggle('sleepShowAwake')}
+          showMa7={state.sleepShowMa7}
+          showMa30={state.sleepShowMa30}
+          onToggleFlag={toggle}
         />
         <SleepQualityCard
           log={state.qualityLog || {}}
@@ -56,9 +97,8 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           onClear={(date) => dispatch({ type: 'CLEAR_ENTRY', logKey: 'qualityLog', skipKey: 'qualitySkip', date })}
           showMa7={state.qualityShowMa7}
           showMa30={state.qualityShowMa30}
-          onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
+          onToggleFlag={toggle}
         />
-        <ActivityCard activity={activity} />
       </div>
     </div>
   );

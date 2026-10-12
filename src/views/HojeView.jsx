@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useConfirm } from '../components/ConfirmContext';
 import AgendaCard from '../components/AgendaCard';
 import MeuDiaCard from '../components/MeuDiaCard';
-import HabitTrackerCard from '../components/HabitTrackerCard';
+import HabitsPanel from '../components/HabitsPanel';
 import ChecklistCard from '../components/ChecklistCard';
 import HubSpotCard from '../components/HubSpotCard';
 import HubSpotDealsWithoutTasksCard from '../components/HubSpotDealsWithoutTasksCard';
@@ -41,28 +41,6 @@ function useChecklistHandlers(dispatch, listKey, editKey, openKey, newTextKey, n
   };
 }
 
-function useHabitListHandlers(dispatch, listKey, newTextKey, newLinkKey, confirm) {
-  return {
-    onUpdateText: useCallback((id, value) => dispatch({ type: 'UPDATE_ITEM_TEXT', listKey, id, value }), [dispatch, listKey]),
-    onUpdateLink: useCallback((id, value) => dispatch({ type: 'UPDATE_ITEM_LINK', listKey, id, value }), [dispatch, listKey]),
-    onRemoveItem: useCallback(
-      async (id) => {
-        if (!(await confirm('Remover este hábito?'))) return;
-        dispatch({ type: 'REMOVE_ITEM', listKey, id });
-      },
-      [dispatch, listKey, confirm]
-    ),
-    onDragStart: useCallback((id) => dispatch({ type: 'DRAG_START', listKey, id }), [dispatch, listKey]),
-    onDrop: useCallback((targetId) => dispatch({ type: 'DROP_ON', listKey, targetId }), [dispatch, listKey]),
-    onNewTextChange: useCallback((value) => dispatch({ type: 'SET_TEXT_FIELD', key: newTextKey, value }), [dispatch, newTextKey]),
-    onNewLinkChange: useCallback((value) => dispatch({ type: 'SET_TEXT_FIELD', key: newLinkKey, value }), [dispatch, newLinkKey]),
-    onAddItem: useCallback(
-      () => dispatch({ type: 'ADD_HABITO', listKey, textKey: newTextKey, linkKey: newLinkKey }),
-      [dispatch, listKey, newTextKey, newLinkKey]
-    ),
-  };
-}
-
 export default function HojeView({
   state,
   dispatch,
@@ -83,12 +61,6 @@ export default function HojeView({
   const semanaHandlers = useChecklistHandlers(dispatch, 'semana', 'semanaEdit', 'semanaOpen', 'newSemanaText', 'newSemanaLink', confirm);
   const semanaPend = state.semana.filter((s) => !s.done).length;
 
-  const habitosBonsHandlers = useHabitListHandlers(dispatch, 'habitosBons', 'newHabitoBomText', 'newHabitoBomLink', confirm);
-  const habitosRuinsHandlers = useHabitListHandlers(dispatch, 'habitosRuins', 'newHabitoRuimText', 'newHabitoRuimLink', confirm);
-  const onCycleHabitoMark = useCallback(
-    (habitId, dateKey) => dispatch({ type: 'CYCLE_HABITO_MARK', habitId, dateKey }),
-    [dispatch]
-  );
 
   return (
     <div className={styles.columns}>
@@ -126,36 +98,7 @@ export default function HojeView({
           open={state.meuDiaOpen}
           onToggleOpen={() => dispatch({ type: 'TOGGLE_FLAG', key: 'meuDiaOpen' })}
         />
-        <HabitTrackerCard
-          open={state.habitosOpen}
-          edit={state.habitosEdit}
-          onToggleOpen={() => dispatch({ type: 'TOGGLE_FLAG', key: 'habitosOpen' })}
-          onToggleEdit={() => dispatch({ type: 'TOGGLE_FLAG', key: 'habitosEdit' })}
-          days={habitTracker.days}
-          bons={habitTracker.bons}
-          ruins={habitTracker.ruins}
-          onCycleMark={onCycleHabitoMark}
-          newBomText={state.newHabitoBomText}
-          onNewBomTextChange={habitosBonsHandlers.onNewTextChange}
-          newBomLink={state.newHabitoBomLink}
-          onNewBomLinkChange={habitosBonsHandlers.onNewLinkChange}
-          onAddBom={habitosBonsHandlers.onAddItem}
-          onUpdateBomText={habitosBonsHandlers.onUpdateText}
-          onUpdateBomLink={habitosBonsHandlers.onUpdateLink}
-          onRemoveBom={habitosBonsHandlers.onRemoveItem}
-          onDragStartBom={habitosBonsHandlers.onDragStart}
-          onDropBom={habitosBonsHandlers.onDrop}
-          newRuimText={state.newHabitoRuimText}
-          onNewRuimTextChange={habitosRuinsHandlers.onNewTextChange}
-          newRuimLink={state.newHabitoRuimLink}
-          onNewRuimLinkChange={habitosRuinsHandlers.onNewLinkChange}
-          onAddRuim={habitosRuinsHandlers.onAddItem}
-          onUpdateRuimText={habitosRuinsHandlers.onUpdateText}
-          onUpdateRuimLink={habitosRuinsHandlers.onUpdateLink}
-          onRemoveRuim={habitosRuinsHandlers.onRemoveItem}
-          onDragStartRuim={habitosRuinsHandlers.onDragStart}
-          onDropRuim={habitosRuinsHandlers.onDrop}
-        />
+        <HabitsPanel state={state} dispatch={dispatch} habitTracker={habitTracker} />
         <ChecklistCard
           title="Starting Day"
           items={state.manha}

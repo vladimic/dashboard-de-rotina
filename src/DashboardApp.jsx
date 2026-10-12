@@ -12,7 +12,8 @@ import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { useHealthSamples } from './hooks/useHealthSamples';
 import { activityDays } from './utils/activity';
-import { dailyWeights, entryKeys, pendingEntryKeys, sleepNights, weightTrends } from './utils/health';
+import { dailyWeights, entryKeys, pendingEntryKeys, sleepNights } from './utils/health';
+import { buildSaudeSummary } from './utils/saudeSummary';
 import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
@@ -56,10 +57,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     }),
     [steps.samples, energy.samples, exercise.samples, workouts.samples, steps.loading, energy.loading, exercise.loading, workouts.loading, steps.error, energy.error, exercise.error, workouts.error]
   );
-  const weightSummary = useMemo(() => {
-    const latest = weight.samples.at(-1);
-    return latest ? { value: latest.value, trends: weightTrends(dailyWeights(weight.samples)) } : null;
-  }, [weight.samples]);
+  const weightDaily = useMemo(() => dailyWeights(weight.samples), [weight.samples]);
   const confirm = useConfirm();
 
   // Fires the Atalho, re-fetches the cache it just filled, and polls a few
@@ -254,15 +252,16 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const dayProgressPercent =
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
-  const lastIahKey = Object.keys(state.iahLog || {}).sort().at(-1);
-  const lastQualityKey = Object.keys(state.qualityLog || {}).sort().at(-1);
-  const lastNight = [...nights.values()].sort((a, b) => a.key.localeCompare(b.key)).at(-1) || null;
-  const saudeSummary = {
-    weight: weightSummary,
-    iah: lastIahKey ? state.iahLog[lastIahKey] : null,
-    lastNight,
-    quality: lastQualityKey ? state.qualityLog[lastQualityKey] : null,
-  };
+  const saudeSummary = buildSaudeSummary({
+    weightDaily,
+    weightLatest: weight.samples.at(-1)?.value ?? null,
+    iahLog: state.iahLog,
+    qualityLog: state.qualityLog,
+    nights,
+    activityDays: activity.days,
+    habitosLog: state.habitosLog,
+    habitIds: [...state.habitosBons, ...state.habitosRuins].map((h) => h.id),
+  });
   const entryPending =
     pendingEntryKeys(entryKeys(), state.qualityLog, state.qualitySkip).length +
     pendingEntryKeys(entryKeys(), state.iahLog, state.iahSkip).length;
@@ -425,7 +424,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         />
       )}
       {state.page === 'saude' && (
-        <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} />
+        <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
     </div>
