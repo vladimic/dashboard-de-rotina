@@ -10,13 +10,18 @@
 //   POST { type, samples: [{ date, endDate?, value, unit?, source? }] }
 //                      → upserts every sample (duplicates are overwritten).
 //
+// Activity: 'steps' (count) and 'energy' (active kcal) are sent as daily
+// totals or raw samples — either way the dashboard sums them per day — and
+// 'workout' is one row per workout (value = minutes, unit = walk / run / str
+// / other, energy_kcal = active energy).
+//
 // Sleep samples ("Análise do Sono") are one row per stage segment: the
 // Shortcut sends the stage name as `value` ("Profundo", "REM", ...) plus
 // start/end; they're stored as value = minutes, unit = normalized stage.
 
 import { createClient } from '@supabase/supabase-js';
 
-const TYPES = new Set(['weight', 'sleep']);
+const TYPES = new Set(['weight', 'sleep', 'steps', 'energy', 'workout']);
 const FIRST_SYNC_SINCE = '2000-01-01T00:00:00Z';
 
 // Years of Apple Watch sleep stages are tens of thousands of segments — far
@@ -33,6 +38,25 @@ const SLEEP_STAGES = [
   ['core', ['essencial', 'core', 'principal', 'leve']],
   ['asleep', ['dormindo', 'adormecido', 'asleep', 'sono', 'sleep']],
 ];
+
+// Workout names (Portuguese or English Health app) → the four kinds the
+// Atividade card colors.
+const WORKOUT_KINDS = [
+  ['run', ['corrida', 'run', 'jog']],
+  ['walk', ['caminhada', 'walk', 'hiking', 'trilha']],
+  ['str', ['forca', 'forca', 'musculacao', 'strength', 'weight', 'funcional', 'functional', 'core']],
+];
+
+function workoutKind(raw) {
+  const text = String(raw || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  for (const [kind, words] of WORKOUT_KINDS) {
+    if (words.some((w) => text.includes(w))) return kind;
+  }
+  return 'other';
+}
 
 function sleepStage(raw) {
   const text = String(raw || '')
@@ -107,7 +131,7 @@ export default async function handler(req, res) {
       return;
     }
     const firstSince =
-      type === 'sleep' ? new Date(Date.now() - SLEEP_FIRST_SYNC_DAYS * 86400000).toISOString() : FIRST_SYNC_SINCE;
+      type === 'weight' ? FIRST_SYNC_SINCE : new Date(Date.now() - SLEEP_FIRST_SYNC_DAYS * 86400000).toISOString();
     // ?full=1 ignores what's already stored and returns the first-sync date
     // again — for re-pulling the whole window after a partial/test run.
     const full = req.query.full === '1';
@@ -123,7 +147,7 @@ export default async function handler(req, res) {
   const type = String(req.body?.type || '');
   const samples = Array.isArray(req.body?.samples) ? req.body.samples : null;
   if (!TYPES.has(type) || !samples) {
-    res.status(400).json({ error: 'Expected a JSON body shaped like { "type": "weight" | "sleep", "samples": [...] }.' });
+    res.status(400).json({ error: 'Expected a JSON body shaped like { "type": "weight" | "sleep" | "steps" | "energy" | "workout", "samples": [...] }.' });
     return;
   }
 
@@ -142,19 +166,39 @@ export default async function handler(req, res) {
       rows.push({ user_id: userId, type, start_at: startAt, end_at: endAt, value: Math.round(minutes * 10) / 10, unit: stage, source: String(s.source || '') });
       continue;
     }
+    if (type === 'workout') {
+      const minutes = startAt && endAt ? (new Date(endAt) - new Date(startAt)) / 60000 : parseNumber(s?.duration);
+      if (!startAt || !(minutes > 0)) {
+        skipped++;
+        continue;
+      }
+      const energy = parseNumber(s?.energy);
+      rows.push({
+        user_id: userId,
+        type,
+        start_at: startAt,
+        end_at: endAt,
+        value: Math.round(minutes * 10) / 10,
+        unit: workoutKind(s?.unit ?? s?.value),
+        energy_kcal: Number.isFinite(energy) ? Math.round(energy * 10) / 10 : null,
+        source: String(s.source || ''),
+      });
+      continue;
+    }
     let value = parseNumber(s?.value);
     if (!startAt || !Number.isFinite(value)) {
       skipped++;
       continue;
     }
     if (type === 'weight') value = toKg(value, s.unit);
+    if (type === 'energy' && /kj|joule/i.test(String(s.unit || ''))) value /= 4.184;
     rows.push({
       user_id: userId,
       type,
       start_at: startAt,
       end_at: endAt,
       value: Math.round(value * 1000) / 1000,
-      unit: type === 'weight' ? 'kg' : s.unit || null,
+      unit: type === 'weight' ? 'kg' : type === 'energy' ? 'kcal' : type === 'steps' ? 'steps' : s.unit || null,
       source: String(s.source || ''),
     });
   }

@@ -1,7 +1,7 @@
 # Atalho "Sincronizar Saúde" (iPhone)
 
 O app Saúde não tem API na web — os dados só saem do iPhone. Este atalho lê
-as pesagens do Saúde e envia para `/api/health-webhook`, que grava na tabela
+as pesagens, o sono e a atividade (passos, energia ativa e treinos) do Saúde e envia para `/api/health-webhook`, que grava na tabela
 `health_samples` do Supabase. A aba **Saúde** do dashboard lê de lá.
 
 - **1ª execução:** o servidor responde "desde 2000-01-01", então o atalho
@@ -124,6 +124,64 @@ a sobrescreve).
 Ao inserir variáveis com nomes repetidos do bloco do peso ("Texto",
 "Resultados da Repetição"...), confira que a etiqueta aponta para a ação
 deste bloco.
+
+## Bloco 3: passos e energia ativa (card Atividade)
+
+Antes: no Supabase → SQL Editor, rode a última linha de
+`supabase/health_samples.sql` (`alter table ... add column if not exists
+energy_kcal`). Já foi aplicada no seu projeto. Depois repita o desenho do
+sono **duas vezes** (uma para passos, outra para energia ativa), no mesmo
+atalho, depois do bloco do sono. Como no sono, o filtro define o período e
+reenviar o mesmo dia só o sobrescreve.
+
+18. **Encontrar Amostras de Saúde**
+    - **Tipo** é **Passos** (na 2ª vez: **Energia Ativa**)
+    - **Data de Início** **está nos(as) últimos(as)** **2 dias** (use
+      **35 dias** só na 1ª vez, para carregar o mês)
+    - **Agrupar por: Dia** (se a opção existir na sua versão do iOS)
+    - Limite: **desligado**
+19. **Repetir com Cada** item. Dentro:
+    1. **Formatar Data** → *Item de Repetição* → **Data de Início** (ISO
+       8601, com horário).
+    2. **Texto**:
+       ```
+       {"date":"[Data Formatada]","value":"[Valor]","source":"[Fonte]"}
+       ```
+       Com **Agrupar por Dia**, o *Valor* é o total do dia; se vier lista
+       de amostras, use **Calcular Estatísticas → Soma** sobre o item. Sem
+       agrupar (centenas de itens por dia) também funciona — o dashboard
+       soma por dia sozinho — só fica mais lento.
+20. **Combinar Texto** (`,`), depois **Texto**:
+    `{"type":"steps","samples":[[Texto Combinado]]}` (na 2ª vez:
+    `"type":"energy"`)
+21. **Obter Conteúdo do URL** — POST no mesmo endereço, mesmos cabeçalhos,
+    corpo **Arquivo** = esse *Texto*.
+
+iPhone e Watch registram passos ao mesmo tempo: o dashboard soma cada fonte
+separado e usa a maior do dia, para não contar a mesma caminhada duas vezes.
+
+## Bloco 4: treinos
+
+22. **Encontrar Amostras de Saúde** → **Tipo** é **Treinos**, **Data de
+    Início** nos últimos **2 dias** (35 na 1ª vez), limite desligado.
+23. **Repetir com Cada** treino. Dentro:
+    1. **Formatar Data** → **Data de Início** (ISO 8601, com horário).
+    2. **Formatar Data** → **Data de Término** (ISO 8601, com horário).
+    3. **Texto**:
+       ```
+       {"date":"[Data Formatada 1]","endDate":"[Data Formatada 2]","unit":"[Tipo]","energy":"[Energia Ativa]","source":"[Fonte]"}
+       ```
+       `Tipo` é o tipo do treino ("Corrida", "Caminhada", "Treinamento de
+       Força"...) e `Energia Ativa` as calorias ativas do treino; confira
+       os nomes das propriedades no seletor — se não achar "Energia Ativa",
+       use a energia total do treino. O dashboard classifica o tipo em
+       caminhada / corrida / musculação / outros.
+24. **Combinar Texto** (`,`), **Texto**
+    `{"type":"workout","samples":[[Texto Combinado]]}`, e **Obter
+    Conteúdo do URL** (POST, como acima).
+
+Dica: dá para ver o resultado na aba Saúde → card **Atividade** logo depois
+de rodar o atalho; "Atualizar tudo" no dashboard recarrega.
 
 ## Rodando sozinho todo dia
 

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale } from './ChartCanvas';
 import { thirtyDayAxis, TREND_UI } from '../../utils/health';
-import { sampleActivity, WORKOUT_TYPES } from '../../utils/activitySample';
+import { WORKOUT_TYPES } from '../../utils/activity';
 import styles from './Saude.module.css';
 
 const dayMonth = (key) => `${key.slice(8, 10)}/${key.slice(5, 7)}`;
@@ -30,11 +30,11 @@ function workoutDots(days) {
 
 // Atividade: daily active energy (bars, colored by the main workout), steps
 // (dashed line), a dot per workout, recent workouts and today's totals.
-// SAMPLE DATA for now — the Shortcut doesn't send steps/workouts yet.
-export default function ActivityCard() {
+// `activity.days` is activityDays() output: the last 31 days, oldest first.
+export default function ActivityCard({ activity }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
-  const all = useMemo(() => sampleActivity(31), []);
-  const days = all.slice(-30);
+  const all = activity.days;
+  const days = useMemo(() => all.slice(-30), [all]);
   const today = all.at(-1);
 
   const avg = (n, offset = 0) => {
@@ -116,7 +116,7 @@ export default function ActivityCard() {
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="Atividade: cada barra é a energia ativa do dia (kcal), na cor do treino principal; a linha tracejada são os passos e cada ponto sob o dia é um treino. O número grande são os minutos de exercício de hoje; 7 e 30 comparam a média móvel de hoje com a de ontem. Por enquanto são dados de exemplo.">Atividade</span>
+          <span className={styles.title} data-tip="Atividade: cada barra é a energia ativa do dia (kcal), na cor do treino principal; a linha tracejada são os passos e cada ponto sob o dia é um treino. O número grande são os minutos de exercício de hoje; 7 e 30 comparam a média móvel de hoje com a de ontem.">Atividade</span>
           <span className={styles.bigValue}>
             {today.exMin}
             <span className={styles.unit}> min</span>
@@ -136,13 +136,13 @@ export default function ActivityCard() {
             ))}
           </div>
         </div>
-        <div className={styles.headerRight}>
-          <span className={styles.sampleTag} title="Ainda não vem do app Saúde">
-            dados de exemplo
-          </span>
-        </div>
       </div>
-      <ChartCanvas config={config} height={150} />
+      {activity.error && <div className={styles.error}>Não deu pra carregar a atividade: {activity.error}</div>}
+      {!activity.error && !activity.loading && !activity.hasData ? (
+        <div className={styles.empty}>Nenhuma atividade ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
+      ) : (
+        <ChartCanvas config={config} height={150} />
+      )}
       <div className={styles.actList}>
         {recent.map((w, i) => (
           <div key={i} className={styles.actRow}>

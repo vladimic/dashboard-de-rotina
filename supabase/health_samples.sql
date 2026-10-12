@@ -29,3 +29,6 @@ drop policy if exists "health_samples_select_own" on public.health_samples;
 create policy "health_samples_select_own"
   on public.health_samples for select
   using (auth.uid() = user_id);
+
+-- Workouts carry their active energy (kcal) too; other types leave it null.
+alter table public.health_samples add column if not exists energy_kcal double precision;

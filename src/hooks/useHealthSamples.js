@@ -20,7 +20,9 @@ export function useHealthSamples(type, days = 0) {
     try {
       const all = [];
       for (let from = 0; ; from += PAGE_SIZE) {
-        let query = supabase.from('health_samples').select('start_at, end_at, value, unit, source').eq('type', type);
+        // Only workouts carry the extra energy column.
+        const columns = type === 'workout' ? 'start_at, end_at, value, unit, source, energy_kcal' : 'start_at, end_at, value, unit, source';
+        let query = supabase.from('health_samples').select(columns).eq('type', type);
         if (days) query = query.gte('start_at', new Date(Date.now() - days * 86400000).toISOString());
         const { data, error: err } = await query.order('start_at', { ascending: true }).range(from, from + PAGE_SIZE - 1);
         if (err) throw new Error(err.message);
@@ -34,6 +36,7 @@ export function useHealthSamples(type, days = 0) {
           value: r.value,
           unit: r.unit,
           source: r.source,
+          energyKcal: r.energy_kcal ?? null,
         }))
       );
     } catch (err) {

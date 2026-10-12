@@ -7,8 +7,8 @@ import ActivityCard from '../components/saude/ActivityCard';
 import styles from './SaudeView.module.css';
 
 // Two rows of three: weight, bedtime, sleep / IAH, sleep quality, and the
-// activity card (sample data until the Shortcut sends steps and workouts).
-export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
+// activity card (steps, active energy and workouts from Health).
+export default function SaudeView({ state, dispatch, weight, sleep, nights, activity }) {
   return (
     <div className={styles.stack}>
       <div className={styles.threeCols}>
@@ -58,7 +58,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showMa30={state.qualityShowMa30}
           onToggleFlag={(key) => dispatch({ type: 'TOGGLE_FLAG', key })}
         />
-        <ActivityCard />
+        <ActivityCard activity={activity} />
       </div>
     </div>
   );

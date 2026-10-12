@@ -11,6 +11,7 @@ import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { useHealthSamples } from './hooks/useHealthSamples';
+import { activityDays } from './utils/activity';
 import { dailyWeights, entryKeys, pendingEntryKeys, sleepNights, weightTrends } from './utils/health';
 import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
@@ -41,6 +42,19 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // 35 days so the oldest of the 30 charted nights is complete.
   const sleep = useHealthSamples('sleep', 35);
   const nights = useMemo(() => sleepNights(sleep.samples), [sleep.samples]);
+  // Atividade card: steps and active energy per day, plus workouts.
+  const steps = useHealthSamples('steps', 35);
+  const energy = useHealthSamples('energy', 35);
+  const workouts = useHealthSamples('workout', 35);
+  const activity = useMemo(
+    () => ({
+      days: activityDays(steps.samples, energy.samples, workouts.samples),
+      loading: steps.loading || energy.loading || workouts.loading,
+      error: steps.error || energy.error || workouts.error,
+      hasData: steps.samples.length + energy.samples.length + workouts.samples.length > 0,
+    }),
+    [steps.samples, energy.samples, workouts.samples, steps.loading, energy.loading, workouts.loading, steps.error, energy.error, workouts.error]
+  );
   const weightSummary = useMemo(() => {
     const latest = weight.samples.at(-1);
     return latest ? { value: latest.value, trends: weightTrends(dailyWeights(weight.samples)) } : null;
@@ -368,6 +382,9 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           usdQuote.refresh();
           weight.refresh();
           sleep.refresh();
+          steps.refresh();
+          energy.refresh();
+          workouts.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -406,7 +423,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         />
       )}
       {state.page === 'saude' && (
-        <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} />
+        <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} />
       )}
       {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
     </div>
