@@ -98,6 +98,16 @@ function parseCount(raw) {
   return parseNumber(raw);
 }
 
+// Energy has decimals ("736.364" = 736.364 kcal, "1.234,5" = 1234.5): a lone
+// dot is a decimal point, and only a comma makes the dots thousands marks.
+function parseDecimal(raw) {
+  const text = String(raw ?? '');
+  const match = /-?[\d.]+(?:,\d+)?/.exec(text);
+  if (!match) return NaN;
+  const num = match[0];
+  return Number(num.includes(',') ? num.replace(/\./g, '').replace(',', '.') : num);
+}
+
 // São Paulo is UTC-3 year-round (no DST since 2019): midnight of that day.
 function saoPauloDayStart(iso) {
   const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date(iso));
@@ -202,7 +212,7 @@ export default async function handler(req, res) {
       continue;
     }
     const isDaily = type === 'steps' || type === 'energy';
-    let value = isDaily ? parseCount(s?.value) : parseNumber(s?.value);
+    let value = type === 'steps' ? parseCount(s?.value) : type === 'energy' ? parseDecimal(s?.value) : parseNumber(s?.value);
     if (!startAt || !Number.isFinite(value)) {
       skipped++;
       continue;
