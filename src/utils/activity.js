@@ -28,10 +28,12 @@ function dailyTotals(samples) {
 
 // One entry per day for the last `n` days, oldest first:
 // { key, workouts: [{ type, min, kcal }], exMin, kcal, steps, main }
+// (workouts are optional — Shortcuts can't list them on every iOS version.)
 // `kcal` is the day's active energy (falls back to the workouts' own energy).
-export function activityDays(stepSamples, energySamples, workoutSamples, n = 31) {
+export function activityDays(stepSamples, energySamples, exerciseSamples, workoutSamples, n = 31) {
   const steps = dailyTotals(stepSamples);
   const energy = dailyTotals(energySamples);
+  const exercise = dailyTotals(exerciseSamples);
 
   const workoutsByDay = new Map();
   const seen = new Set();
@@ -47,7 +49,9 @@ export function activityDays(stepSamples, energySamples, workoutSamples, n = 31)
 
   return lastNDateKeys(n).map((key) => {
     const workouts = workoutsByDay.get(key) || [];
-    const exMin = workouts.reduce((a, w) => a + w.min, 0);
+    // Minutes of exercise: Apple's own daily total when sent, else the sum
+    // of the individual workouts.
+    const exMin = Math.round(exercise.get(key) ?? workouts.reduce((a, w) => a + w.min, 0));
     const workoutKcal = workouts.reduce((a, w) => a + w.kcal, 0);
     const main = [...workouts].sort((a, b) => b.min - a.min)[0]?.type || null;
     return {

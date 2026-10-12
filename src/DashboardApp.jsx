@@ -45,15 +45,16 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // Atividade card: steps and active energy per day, plus workouts.
   const steps = useHealthSamples('steps', 35);
   const energy = useHealthSamples('energy', 35);
+  const exercise = useHealthSamples('exercise', 35);
   const workouts = useHealthSamples('workout', 35);
   const activity = useMemo(
     () => ({
-      days: activityDays(steps.samples, energy.samples, workouts.samples),
-      loading: steps.loading || energy.loading || workouts.loading,
-      error: steps.error || energy.error || workouts.error,
-      hasData: steps.samples.length + energy.samples.length + workouts.samples.length > 0,
+      days: activityDays(steps.samples, energy.samples, exercise.samples, workouts.samples),
+      loading: steps.loading || energy.loading || exercise.loading || workouts.loading,
+      error: steps.error || energy.error || exercise.error || workouts.error,
+      hasData: steps.samples.length + energy.samples.length + exercise.samples.length + workouts.samples.length > 0,
     }),
-    [steps.samples, energy.samples, workouts.samples, steps.loading, energy.loading, workouts.loading, steps.error, energy.error, workouts.error]
+    [steps.samples, energy.samples, exercise.samples, workouts.samples, steps.loading, energy.loading, exercise.loading, workouts.loading, steps.error, energy.error, exercise.error, workouts.error]
   );
   const weightSummary = useMemo(() => {
     const latest = weight.samples.at(-1);
@@ -384,6 +385,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           sleep.refresh();
           steps.refresh();
           energy.refresh();
+          exercise.refresh();
           workouts.refresh();
         }}
         onSignOut={onSignOut}

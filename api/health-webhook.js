@@ -10,7 +10,8 @@
 //   POST { type, samples: [{ date, endDate?, value, unit?, source? }] }
 //                      → upserts every sample (duplicates are overwritten).
 //
-// Activity: 'steps' (count) and 'energy' (active kcal) are sent as daily
+// Activity: 'steps' (count), 'energy' (active kcal) and 'exercise' (Apple's
+// exercise minutes, the green ring) are sent as daily
 // totals or raw samples — either way the dashboard sums them per day — and
 // 'workout' is one row per workout (value = minutes, unit = walk / run / str
 // / other, energy_kcal = active energy).
@@ -21,7 +22,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const TYPES = new Set(['weight', 'sleep', 'steps', 'energy', 'workout']);
+const TYPES = new Set(['weight', 'sleep', 'steps', 'energy', 'exercise', 'workout']);
 const FIRST_SYNC_SINCE = '2000-01-01T00:00:00Z';
 
 // Years of Apple Watch sleep stages are tens of thousands of segments — far
@@ -173,7 +174,7 @@ export default async function handler(req, res) {
   const type = String(req.body?.type || '');
   const samples = Array.isArray(req.body?.samples) ? req.body.samples : null;
   if (!TYPES.has(type) || !samples) {
-    res.status(400).json({ error: 'Expected a JSON body shaped like { "type": "weight" | "sleep" | "steps" | "energy" | "workout", "samples": [...] }.' });
+    res.status(400).json({ error: 'Expected a JSON body shaped like { "type": "weight" | "sleep" | "steps" | "energy" | "exercise" | "workout", "samples": [...] }.' });
     return;
   }
 
@@ -211,8 +212,8 @@ export default async function handler(req, res) {
       });
       continue;
     }
-    const isDaily = type === 'steps' || type === 'energy';
-    let value = type === 'steps' ? parseCount(s?.value) : type === 'energy' ? parseDecimal(s?.value) : parseNumber(s?.value);
+    const isDaily = type === 'steps' || type === 'energy' || type === 'exercise';
+    let value = type === 'steps' ? parseCount(s?.value) : type === 'energy' || type === 'exercise' ? parseDecimal(s?.value) : parseNumber(s?.value);
     if (!startAt || !Number.isFinite(value)) {
       skipped++;
       continue;
@@ -229,7 +230,7 @@ export default async function handler(req, res) {
       start_at: isDaily ? saoPauloDayStart(startAt) : startAt,
       end_at: isDaily ? null : endAt,
       value: Math.round(value * 1000) / 1000,
-      unit: type === 'weight' ? 'kg' : type === 'energy' ? 'kcal' : type === 'steps' ? 'steps' : s.unit || null,
+      unit: type === 'weight' ? 'kg' : type === 'energy' ? 'kcal' : type === 'steps' ? 'steps' : type === 'exercise' ? 'min' : s.unit || null,
       source: isDaily ? '' : String(s.source || ''),
     });
   }
@@ -241,7 +242,7 @@ export default async function handler(req, res) {
   // A day's steps/energy only ever grow, but the Shortcut's rolling window
   // sees only part of its oldest day. Never let a smaller (partial) total
   // overwrite a bigger one already stored.
-  if ((type === 'steps' || type === 'energy') && unique.length) {
+  if ((type === 'steps' || type === 'energy' || type === 'exercise') && unique.length) {
     const { data: existing, error: existingError } = await supabase
       .from('health_samples')
       .select('start_at, value')

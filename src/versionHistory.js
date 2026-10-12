@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 161, date: '2026-10-12', summary: 'Atividade: minutos de exercício do dia (anel verde do Apple Watch) passam a vir do app Saúde pelo atalho — o iOS não lista treinos no Atalhos; barras ficam verdes nos dias com exercício' },
   { version: 160, date: '2026-10-12', summary: 'Servidor de saúde: energia ativa entende decimais (736.364 = 736,364 kcal) em vez de tratar o ponto como milhar' },
   { version: 159, date: '2026-10-12', summary: 'Servidor de saúde: totais diários de passos e energia ficam presos ao início do dia (sem duplicar), nunca são sobrescritos por um total parcial menor e entendem "3.287"' },
   { version: 158, date: '2026-10-12', summary: 'Atividade com dados reais do app Saúde: o servidor aceita passos, energia ativa e treinos pelo atalho; o card soma por dia (maior fonte, para não contar iPhone + Watch duas vezes), mostra treinos e totais do dia; sem dados mostra um aviso em vez dos exemplos' },

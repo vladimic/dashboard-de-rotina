@@ -56,7 +56,9 @@ export default function ActivityCard({ activity }) {
           {
             label: 'Energia ativa',
             data: days.map((d) => d.kcal),
-            backgroundColor: days.map((d) => (d.main ? WORKOUT_TYPES[d.main].color : 'rgba(143, 134, 224, 0.28)')),
+            // Colored by the day's main workout when workouts are known; otherwise
+            // green for a day with exercise, pale for one without.
+            backgroundColor: days.map((d) => (d.main ? WORKOUT_TYPES[d.main].color : d.exMin > 0 ? '#2f8a5c' : 'rgba(143, 134, 224, 0.28)')),
             borderRadius: 3,
             barPercentage: 0.75,
             yAxisID: 'y',
@@ -143,6 +145,7 @@ export default function ActivityCard({ activity }) {
       ) : (
         <ChartCanvas config={config} height={150} />
       )}
+      {recent.length > 0 && (
       <div className={styles.actList}>
         {recent.map((w, i) => (
           <div key={i} className={styles.actRow}>
@@ -153,6 +156,7 @@ export default function ActivityCard({ activity }) {
           </div>
         ))}
       </div>
+      )}
       <div className={styles.actStrip}>
         <span>
           <b>{today.steps.toLocaleString('pt-BR')}</b> passos
