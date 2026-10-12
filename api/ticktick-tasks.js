@@ -26,14 +26,20 @@ async function getAccessToken(supabase) {
 // Mirrors the Notion date-only fix: all-day tasks store just a calendar
 // date, so they're compared as plain dates rather than instants (avoiding
 // the same UTC-vs-local-timezone day-boundary bug fixed for Notion).
-function isDueTodayOrEarlier(task, todayStr, endOfDayMs) {
+const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE });
+
+function isDueTodayOrEarlier(task, todayStr) {
   if (!task.dueDate) return false;
   if (task.isAllDay) {
     const dateStr = task.dueDate.slice(0, 10);
     return dateStr <= todayStr;
   }
-  const dueMs = new Date(task.dueDate).getTime();
-  return !Number.isNaN(dueMs) && dueMs <= endOfDayMs;
+  const due = new Date(task.dueDate);
+  if (Number.isNaN(due.getTime())) return false;
+  // Compare calendar days in the dashboard timezone. (The previous
+  // end-of-day instant was built in the server's timezone — UTC on Vercel —
+  // so tasks due after ~21h local today were wrongly excluded.)
+  return dateFormatter.format(due) <= todayStr;
 }
 
 export default async function handler(req, res) {
@@ -54,13 +60,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
-    const now = new Date();
-    const endOfDayLocal = new Date(
-      new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now) +
-        'T23:59:59'
-    );
-    const endOfDayMs = endOfDayLocal.getTime();
+    const todayStr = dateFormatter.format(new Date());
 
     const projectsRes = await fetch(`${API_BASE}/project`, {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -81,7 +81,7 @@ export default async function handler(req, res) {
     if (req.query?.debug) {
       const projectFilter = (req.query.project || '').toLowerCase();
       const taskFilter = (req.query.task || '').toLowerCase();
-      const debug = { todayStr, endOfDayMs, projects: projectList.map((p) => ({ id: p.id, name: p.name })) };
+      const debug = { todayStr, projects: projectList.map((p) => ({ id: p.id, name: p.name })) };
       if (projectFilter) {
         const match = projectList.find((p) => (p.name || '').toLowerCase().includes(projectFilter));
         if (!match) {
@@ -98,9 +98,9 @@ export default async function handler(req, res) {
             const allTasks = projectData.tasks || [];
             debug.totalTasksInProject = allTasks.length;
             debug.tasksPassingStatusFilter = allTasks.filter((t) => t.status === 0).length;
-            debug.tasksPassingDueFilter = allTasks.filter((t) => isDueTodayOrEarlier(t, todayStr, endOfDayMs)).length;
+            debug.tasksPassingDueFilter = allTasks.filter((t) => isDueTodayOrEarlier(t, todayStr)).length;
             debug.tasksPassingBoth = allTasks.filter(
-              (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr, endOfDayMs)
+              (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr)
             ).length;
             if (taskFilter) {
               debug.matchingTasksRaw = allTasks.filter((t) => (t.title || '').toLowerCase().includes(taskFilter));
@@ -114,16 +114,22 @@ export default async function handler(req, res) {
 
     const groupsByLabel = new Map();
     let total = 0;
+    const failedProjects = [];
 
     await Promise.all(
       projectList.map(async (project) => {
         const dataRes = await fetch(`${API_BASE}/project/${project.id}/data`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        if (!dataRes.ok) return;
+        if (!dataRes.ok) {
+          // Don't swallow this: a rate-limited/expired fetch used to look
+          // exactly like "0 pending tasks".
+          failedProjects.push({ name: project.name || INBOX_LABEL, status: dataRes.status });
+          return;
+        }
         const projectData = await dataRes.json();
         const dueTasks = (projectData.tasks || []).filter(
-          (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr, endOfDayMs)
+          (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr)
         );
         if (dueTasks.length === 0) return;
         const label = project.name || INBOX_LABEL;
@@ -137,7 +143,9 @@ export default async function handler(req, res) {
           // ticktick:// scheme. Falls back to the web URL if it doesn't work.
           link: `ticktick://p/${t.projectId}/tasks/${t.id}`,
         }));
-        groupsByLabel.set(label, tasks);
+        // Merge instead of overwrite: two lists sharing a name used to
+        // clobber each other (and total double-counted the lost tasks).
+        groupsByLabel.set(label, [...(groupsByLabel.get(label) || []), ...tasks]);
         total += tasks.length;
       })
     );
@@ -149,7 +157,11 @@ export default async function handler(req, res) {
         tasks: [...tasks].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')),
       }));
 
-    res.status(200).json({ updatedAt: new Date().toISOString(), total, groups });
+    if (failedProjects.length === projectList.length) {
+      throw new Error(`TickTick project fetches all failed (e.g. status ${failedProjects[0].status}).`);
+    }
+
+    res.status(200).json({ updatedAt: new Date().toISOString(), total, groups, failedProjects });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || 'Unknown error fetching TickTick tasks.' });
