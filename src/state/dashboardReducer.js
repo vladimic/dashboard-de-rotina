@@ -49,6 +49,9 @@ export function dashboardReducer(state, action) {
     case 'SET_IAH':
       return { ...state, iahLog: { ...state.iahLog, [action.date]: action.value } };
 
+    case 'SET_QUALITY':
+      return { ...state, qualityLog: { ...state.qualityLog, [action.date]: action.value } };
+
     case 'TOGGLE_FLAG':
       return { ...state, [action.key]: !state[action.key] };
 

@@ -180,6 +180,7 @@ export default function Header({
   loading,
   userEmail,
   onGoPage,
+  saudePending,
   onRefreshAll,
   onSignOut,
   onExportData,
@@ -226,6 +227,9 @@ export default function Header({
             onClick={() => onGoPage(tab.key)}
           >
             {tab.label}
+            {tab.key === 'saude' && saudePending > 0 && (
+              <span className={styles.tabDot} title={`${saudePending} noite(s) sem nota de qualidade do sono`} />
+            )}
           </button>
         ))}
       </div>

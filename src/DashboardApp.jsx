@@ -11,7 +11,7 @@ import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { useHealthSamples } from './hooks/useHealthSamples';
-import { dailyWeights, sleepNights, weightTrends } from './utils/health';
+import { dailyWeights, pendingQualityKeys, sleepNights, weightTrends } from './utils/health';
 import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
@@ -240,13 +240,15 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
   const lastIahKey = Object.keys(state.iahLog || {}).sort().at(-1);
+  const lastQualityKey = Object.keys(state.qualityLog || {}).sort().at(-1);
   const lastNight = [...nights.values()].sort((a, b) => a.key.localeCompare(b.key)).at(-1) || null;
   const saudeSummary = {
     weight: weightSummary,
     iah: lastIahKey ? state.iahLog[lastIahKey] : null,
     lastNight,
-    nights,
+    quality: lastQualityKey ? state.qualityLog[lastQualityKey] : null,
   };
+  const qualityPending = pendingQualityKeys(nights, state.qualityLog || {}).length;
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel
@@ -351,6 +353,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         loading={anyLoading}
         userEmail={userEmail}
         onGoPage={(page) => dispatch({ type: 'GO_PAGE', page })}
+        saudePending={qualityPending}
         onRefreshAll={() => {
           setRefreshedAt(Date.now());
           dispatch({ type: 'REFRESH_ALL' });

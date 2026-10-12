@@ -568,3 +568,14 @@
     font-size: 13px;
   }
 }
+
+/* Pending-input dot on the Saúde tab. */
+.tabDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #e5a03a;
+  vertical-align: middle;
+}

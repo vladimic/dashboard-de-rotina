@@ -30,7 +30,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
         />
         <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
-        <SleepQualityCard nights={nights} />
+        <SleepQualityCard nights={nights} log={state.qualityLog || {}} onSave={(date, value) => dispatch({ type: 'SET_QUALITY', date, value })} />
         <div />
       </div>
     </div>

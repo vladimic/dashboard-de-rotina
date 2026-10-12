@@ -427,3 +427,16 @@
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
+
+/* "N noites sem nota" reminder under the quality card header. */
+.pendingBadge {
+  align-self: flex-start;
+  margin: 2px 0 6px;
+  padding: 3px 9px;
+  border: 1px solid #e5a03a;
+  border-radius: 999px;
+  background: #fdf3df;
+  color: #8a5a10;
+  font: 600 11px Inter, sans-serif;
+  cursor: pointer;
+}
