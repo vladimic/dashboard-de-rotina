@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import EntryEditor, { EditButton } from './EntryEditor';
-import MaToggles, { maDataset } from './MaToggles';
-import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
+import MaToggles, { maDataset, maTooltip } from './MaToggles';
+import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
 import { entryKeys, pendingEntryKeys, qualityLabel, qualityTrend, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
@@ -24,6 +24,8 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
 
   const config = useMemo(() => {
     const scores = axis.map((d) => log[d.key] ?? null);
+    const ma = { 7: rollingByKey(axis, (k) => log[k] ?? null, 7), 30: rollingByKey(axis, (k) => log[k] ?? null, 30) };
+    const tip = maTooltip(ma[7], ma[30], (v) => Math.round(v));
     return {
       type: 'bar',
       data: {
@@ -38,18 +40,21 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           },
           ...[7, 30]
             .filter((d) => (d === 7 ? showMa7 : showMa30))
-            .map((d) => maDataset(d, rollingByKey(axis, (k) => log[k] ?? null, d))),
+            .map((d) => maDataset(d, ma[d])),
         ],
       },
       options: {
         maintainAspectRatio: false,
         animation: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
+            ...tip,
             callbacks: {
+              ...tip.callbacks,
               title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
-              label: (item) => (item.dataset.type === 'line' ? `${item.dataset.label}: ${Math.round(item.parsed.y)}` : `Nota ${item.parsed.y}/100 · ${qualityLabel(item.parsed.y)}`),
+              label: (item) => `Nota ${item.parsed.y}/100 · ${qualityLabel(item.parsed.y)}`,
             },
           },
         },
@@ -58,7 +63,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           y: { min: 0, max: 100, grid: { color: GRID_COLOR }, ticks: { stepSize: 20 } },
         },
       },
-      plugins: [monthDividerPlugin(axis)],
+      plugins: [],
     };
   }, [axis, log, showMa7, showMa30]);
 

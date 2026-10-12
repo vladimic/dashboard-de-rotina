@@ -20,6 +20,22 @@ export function maDataset(days, data) {
   };
 }
 
+// Hover tooltip like the weight chart's: the day's value plus both moving
+// averages (shown whether or not their lines are switched on). `ma7`/`ma30`
+// are arrays aligned to the 30-day axis; `fmt` formats a number.
+export function maTooltip(ma7, ma30, fmt, noun = 'Média') {
+  return {
+    // One entry per bar/point: the moving-average lines go in the footer.
+    filter: (item) => item.dataset.type !== 'line',
+    callbacks: {
+      afterBody: (items) => {
+        const i = items[0].dataIndex;
+        return [[7, ma7[i]], [30, ma30[i]]].filter(([, v]) => v != null).map(([d, v]) => `${noun} ${d}d: ${fmt(v)}`);
+      },
+    },
+  };
+}
+
 // The two on/off pills for the 7d / 30d moving-average lines.
 export default function MaToggles({ show7, show30, onToggle7, onToggle30 }) {
   return (

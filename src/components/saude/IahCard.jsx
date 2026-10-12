@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
 import EntryEditor, { EditButton } from './EntryEditor';
-import MaToggles, { maDataset } from './MaToggles';
+import MaToggles, { maDataset, maTooltip } from './MaToggles';
 import { entryKeys, iahBand, iahTrend, pendingEntryKeys, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
@@ -22,8 +22,10 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
   const lastKey = Object.keys(log).sort().at(-1);
   const last = lastKey ? log[lastKey] : null;
 
-  const config = useMemo(
-    () => ({
+  const config = useMemo(() => {
+    const ma = { 7: rollingByKey(axis, (k) => log[k] ?? null, 7), 30: rollingByKey(axis, (k) => log[k] ?? null, 30) };
+    const tip = maTooltip(ma[7], ma[30], num);
+    return {
       type: 'line',
       data: {
         // Third-width chart: weekday as its initial (S, T, Q...).
@@ -39,31 +41,31 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
             tension: 0.2,
             spanGaps: true,
           },
-          { label: 'limite', data: axis.map(() => 5), borderColor: '#d9534f', borderDash: [4, 4], borderWidth: 1, pointRadius: 0 },
           ...[7, 30]
             .filter((d) => (d === 7 ? showMa7 : showMa30))
-            .map((d) => maDataset(d, rollingByKey(axis, (k) => log[k] ?? null, d))),
+            .map((d) => maDataset(d, ma[d])),
         ],
       },
       options: {
         maintainAspectRatio: false,
         animation: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
-            filter: (item) => item.datasetIndex !== 1,
+            ...tip,
             callbacks: {
+              ...tip.callbacks,
               title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
-              label: (item) => `${item.dataset.label === 'IAH' ? 'IAH' : item.dataset.label}: ${num(item.parsed.y)}`,
+              label: (item) => `IAH: ${num(item.parsed.y)}`,
             },
           },
         },
         scales: { x: thirtyDayScale(axis, 9), y: { min: 0, suggestedMax: 8, grid: { color: GRID_COLOR } } },
       },
-      plugins: [monthDividerPlugin(axis)],
-    }),
-    [axis, log, showMa7, showMa30]
-  );
+      plugins: [],
+    };
+  }, [axis, log, showMa7, showMa30]);
 
   const parse = (text) => {
     const value = Number(text.replace(',', '.'));

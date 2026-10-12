@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import MaToggles, { maDataset } from './MaToggles';
+import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import MaToggles, { maDataset, maTooltip } from './MaToggles';
 import { formatDuration, rollingByKey, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
@@ -70,8 +70,11 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
   );
   const last = [...nights.values()].sort((a, b) => a.key.localeCompare(b.key)).at(-1);
 
-  const config = useMemo(
-    () => ({
+  const config = useMemo(() => {
+    const valueOf = (k) => (nights.has(k) ? nights.get(k).asleepMin / 60 : null);
+    const ma = { 7: rollingByKey(axis, valueOf, 7), 30: rollingByKey(axis, valueOf, 30) };
+    const tip = maTooltip(ma[7], ma[30], (v) => formatDuration(v * 60));
+    return {
       type: 'bar',
       data: {
         // Half-width chart: weekday as its initial (S, T, Q...) so the 30
@@ -91,12 +94,13 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
           })),
           ...[7, 30]
             .filter((d) => (d === 7 ? showMa7 : showMa30))
-            .map((d) => maDataset(d, rollingByKey(axis, (k) => (nights.has(k) ? nights.get(k).asleepMin / 60 : null), d))),
+            .map((d) => maDataset(d, ma[d])),
         ],
       },
       options: {
         maintainAspectRatio: false,
         animation: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: {
             display: true,
@@ -112,7 +116,9 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
             },
           },
           tooltip: {
+            ...tip,
             callbacks: {
+              ...tip.callbacks,
               title: (items) => {
                 const night = nights.get(axis[items[0].dataIndex].key);
                 const day = axis[items[0].dataIndex].label.slice(0, 2).join(' ');
@@ -124,13 +130,12 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         },
         scales: {
           x: { ...thirtyDayScale(axis, 9), stacked: true },
-          y: { stacked: true, beginAtZero: true, suggestedMax: 10, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => `${v}h` } },
+          y: { stacked: true, beginAtZero: true, suggestedMax: 10, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => `${v}:00` } },
         },
       },
-      plugins: [monthDividerPlugin(axis), sleepLabelsPlugin(axis, nights)],
-    }),
-    [axis, nights, stages, showMa7, showMa30]
-  );
+      plugins: [sleepLabelsPlugin(axis, nights)],
+    };
+  }, [axis, nights, stages, showMa7, showMa30]);
 
   return (
     <div className={styles.card}>

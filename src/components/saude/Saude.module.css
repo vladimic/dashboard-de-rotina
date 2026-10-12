@@ -339,16 +339,64 @@
 }
 
 
-/* Third-width columns: there's no room for a one-line header, so it wraps
-   onto a second row instead of overflowing the card. */
-@container (max-width: 540px) {
+/* Third-width columns: the headers are tightened to stay on one line. Only
+   the weight card (lots of pills) and very narrow cards may wrap. */
+@container (max-width: 400px) {
+  .oneLine,
+  .oneLine .headerLeft,
+  .oneLine .headerRight {
+    gap: 3px;
+  }
+
+  .oneLine .bigValue {
+    font-size: 16px;
+  }
+
+  .oneLine .trend,
+  .oneLine .trend[data-tip] {
+    padding: 0 4px;
+    font-size: 10px;
+  }
+
+  .oneLine .trend .trendValue {
+    margin-left: 2px;
+  }
+
+  .oneLine .maToggle {
+    padding: 4px 4px;
+    gap: 3px;
+    font-size: 10px;
+  }
+
+  .oneLine .maToggle i {
+    width: 9px;
+  }
+
+  .editBtn {
+    min-width: 24px;
+    padding: 0 4px;
+  }
+}
+
+@container (max-width: 340px) {
   .oneLine,
   .oneLine .headerLeft,
   .oneLine .headerRight {
     flex-wrap: wrap;
   }
+}
 
-  .oneLine .title.hideNarrow {
+.allowWrap .headerLeft,
+.allowWrap .headerRight {
+  flex-wrap: wrap;
+}
+
+.allowWrap {
+  flex-wrap: wrap;
+}
+
+@container (max-width: 540px) {
+  .allowWrap .title.hideNarrow {
     display: inline;
   }
 }

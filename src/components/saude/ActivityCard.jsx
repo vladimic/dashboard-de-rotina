@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
+import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
 import { thirtyDayAxis, TREND_UI } from '../../utils/health';
 import { sampleActivity, WORKOUT_TYPES } from '../../utils/activitySample';
 import styles from './Saude.module.css';
@@ -100,7 +100,7 @@ export default function ActivityCard() {
           y1: { display: false, min: 0, max: 14000 },
         },
       },
-      plugins: [monthDividerPlugin(axis), workoutDots(days)],
+      plugins: [workoutDots(days)],
     }),
     [axis, days]
   );

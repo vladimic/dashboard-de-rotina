@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import MaToggles, { maDataset } from './MaToggles';
+import ChartCanvas, { GRID_COLOR, thirtyDayScale } from './ChartCanvas';
+import MaToggles, { maDataset, maTooltip } from './MaToggles';
 import { bedtimeHour as nightHour, bedtimeTrend, formatDuration, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
@@ -67,6 +67,9 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
 
   const config = useMemo(() => {
     const inWindow = axis.map((d) => nights.get(d.key) || null);
+    const bedOf = (k) => (nights.has(k) ? nightHour(nights.get(k).bedtime) : null);
+    const ma = { 7: rollingByKey(axis, bedOf, 7), 30: rollingByKey(axis, bedOf, 30) };
+    const tip = maTooltip(ma[7], ma[30], hourLabel, 'Média de dormir');
     const clamp = (v) => Math.min(Y_MAX, Math.max(Y_MIN, v));
     return {
       type: 'bar',
@@ -84,20 +87,22 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
           // Moving average of the bedtime (hour of the night, evening negative).
           ...[7, 30]
             .filter((d) => (d === 7 ? showMa7 : showMa30))
-            .map((d) => maDataset(d, rollingByKey(axis, (k) => (nights.has(k) ? nightHour(nights.get(k).bedtime) : null), d).map((v) => (v == null ? null : clamp(v))))),
+            .map((d) => maDataset(d, ma[d].map((v) => (v == null ? null : clamp(v))))),
         ],
       },
       options: {
         maintainAspectRatio: false,
         animation: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
+            ...tip,
             callbacks: {
+              ...tip.callbacks,
               title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
               label: (item) => {
                 const n = inWindow[item.dataIndex];
-                if (item.dataset.type === 'line') return `${item.dataset.label} de dormir: ${hourLabel(item.parsed.y)}`;
                 return `dormiu ${hourLabel(nightHour(n.bedtime))} · acordou ${hourLabel(nightHour(n.wake))} · ${formatDuration(n.asleepMin)}`;
               },
             },
@@ -108,7 +113,7 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
           y: { min: Y_MIN, max: Y_MAX, grid: { color: GRID_COLOR }, ticks: { stepSize: 1, autoSkip: false, callback: (v) => hourLabel(v) } },
         },
       },
-      plugins: [scheduleOverlay(inWindow.map((n) => n?.asleepMin ?? null)), monthDividerPlugin(axis)],
+      plugins: [scheduleOverlay(inWindow.map((n) => n?.asleepMin ?? null))],
     };
   }, [axis, nights, showMa7, showMa30]);
 

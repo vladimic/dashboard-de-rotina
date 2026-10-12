@@ -150,11 +150,11 @@ export function sleepNights(samples) {
   return nights;
 }
 
-// "7h12" from minutes.
+// "7:12" from minutes.
 export function formatDuration(min) {
   const h = Math.floor(min / 60);
   const m = Math.round(min - h * 60);
-  return m === 60 ? `${h + 1}h00` : `${h}h${String(m).padStart(2, '0')}`;
+  return m === 60 ? `${h + 1}:00` : `${h}:${String(m).padStart(2, '0')}`;
 }
 
 const HOME_TIMEZONE = 'America/Sao_Paulo';
