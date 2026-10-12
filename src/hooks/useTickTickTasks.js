@@ -19,6 +19,9 @@ export function useTickTickTasks() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to load TickTick tasks');
       setData(json);
+      if (json.failedProjects?.length) {
+        setError(`TickTick: falha ao ler ${json.failedProjects.length} lista(s) (${json.failedProjects.map((p) => p.name).join(', ')}) — contagem pode estar incompleta`);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
