@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 162, date: '2026-10-12', summary: 'Atividade: gráfico refeito — barras verdes são os minutos de exercício do dia (valor em cima de cada uma, eixo à esquerda) e a linha laranja a energia ativa em kcal (eixo à direita, sem corte em 900); passos ficam no pop-up e no rodapé' },
   { version: 161, date: '2026-10-12', summary: 'Atividade: minutos de exercício do dia (anel verde do Apple Watch) passam a vir do app Saúde pelo atalho — o iOS não lista treinos no Atalhos; barras ficam verdes nos dias com exercício' },
   { version: 160, date: '2026-10-12', summary: 'Servidor de saúde: energia ativa entende decimais (736.364 = 736,364 kcal) em vez de tratar o ponto como milhar' },
   { version: 159, date: '2026-10-12', summary: 'Servidor de saúde: totais diários de passos e energia ficam presos ao início do dia (sem duplicar), nunca são sobrescritos por um total parcial menor e entendem "3.287"' },
