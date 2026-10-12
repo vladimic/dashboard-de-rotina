@@ -88,6 +88,22 @@ function parseNumber(raw) {
   return match ? Number(match[0].replace(',', '.')) : NaN;
 }
 
+// Shortcuts formats big numbers with the locale's thousands dot ("3.287") —
+// read that as 3287, not 3.287. (Only for counts/energy, where a lone
+// "3.287" can't be a real decimal.)
+function parseCount(raw) {
+  const text = String(raw ?? '');
+  const grouped = /\d{1,3}(?:\.\d{3})+(?:,\d+)?/.exec(text);
+  if (grouped) return Number(grouped[0].replace(/\./g, '').replace(',', '.'));
+  return parseNumber(raw);
+}
+
+// São Paulo is UTC-3 year-round (no DST since 2019): midnight of that day.
+function saoPauloDayStart(iso) {
+  const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date(iso));
+  return `${key}T03:00:00.000Z`;
+}
+
 function parseDate(raw) {
   const d = new Date(raw);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
@@ -185,27 +201,51 @@ export default async function handler(req, res) {
       });
       continue;
     }
-    let value = parseNumber(s?.value);
+    const isDaily = type === 'steps' || type === 'energy';
+    let value = isDaily ? parseCount(s?.value) : parseNumber(s?.value);
     if (!startAt || !Number.isFinite(value)) {
       skipped++;
       continue;
     }
     if (type === 'weight') value = toKg(value, s.unit);
     if (type === 'energy' && /kj|joule/i.test(String(s.unit || ''))) value /= 4.184;
+    // Steps / energy are one total per day ("Agrupar por Dia" in the
+    // Shortcut). Each group's own start is just its first sample, which moves
+    // between runs, so the row is pinned to the day's start and the source
+    // blanked — re-sending a day then overwrites it instead of adding a row.
     rows.push({
       user_id: userId,
       type,
-      start_at: startAt,
-      end_at: endAt,
+      start_at: isDaily ? saoPauloDayStart(startAt) : startAt,
+      end_at: isDaily ? null : endAt,
       value: Math.round(value * 1000) / 1000,
       unit: type === 'weight' ? 'kg' : type === 'energy' ? 'kcal' : type === 'steps' ? 'steps' : s.unit || null,
-      source: String(s.source || ''),
+      source: isDaily ? '' : String(s.source || ''),
     });
   }
 
   // Same sample listed twice in one payload would make the upsert fail
   // ("cannot affect row a second time").
-  const unique = [...new Map(rows.map((r) => [`${r.start_at}|${r.source}`, r])).values()];
+  let unique = [...new Map(rows.map((r) => [`${r.start_at}|${r.source}`, r])).values()];
+
+  // A day's steps/energy only ever grow, but the Shortcut's rolling window
+  // sees only part of its oldest day. Never let a smaller (partial) total
+  // overwrite a bigger one already stored.
+  if ((type === 'steps' || type === 'energy') && unique.length) {
+    const { data: existing, error: existingError } = await supabase
+      .from('health_samples')
+      .select('start_at, value')
+      .eq('user_id', userId)
+      .eq('type', type)
+      .eq('source', '')
+      .in('start_at', unique.map((r) => r.start_at));
+    if (existingError) {
+      res.status(500).json({ error: existingError.message });
+      return;
+    }
+    const stored = new Map((existing || []).map((r) => [new Date(r.start_at).toISOString(), r.value]));
+    unique = unique.filter((r) => !(stored.get(new Date(r.start_at).toISOString()) >= r.value));
+  }
 
   try {
     for (let i = 0; i < unique.length; i += UPSERT_CHUNK) {

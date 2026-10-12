@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 159, date: '2026-10-12', summary: 'Servidor de saúde: totais diários de passos e energia ficam presos ao início do dia (sem duplicar), nunca são sobrescritos por um total parcial menor e entendem "3.287"' },
   { version: 158, date: '2026-10-12', summary: 'Atividade com dados reais do app Saúde: o servidor aceita passos, energia ativa e treinos pelo atalho; o card soma por dia (maior fonte, para não contar iPhone + Watch duas vezes), mostra treinos e totais do dia; sem dados mostra um aviso em vez dos exemplos' },
   { version: 157, date: '2026-10-12', summary: 'Saúde: o Acordado deixa de ser laranja (igual à média de 7d) e passa a verde-azulado; IAH e Qualidade mostram o valor de cada ponto; layout mais compacto na vertical (menos margem nos cards, cabeçalho e rodapé, gráficos mais baixos, eixo sem a linha do mês — o dia completo aparece no pop-up)' },
   { version: 156, date: '2026-10-12', summary: 'Sono: a legenda Profundo / Essencial / REM sobe para o cabeçalho principal (junto do botão Acordado e das médias 7/30), sem segunda linha; nomes abreviados em cards estreitos' },
