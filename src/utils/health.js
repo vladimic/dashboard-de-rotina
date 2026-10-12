@@ -210,29 +210,58 @@ export function bedtimeTrend(nights, days, now = new Date()) {
   return nightTrend(nights, days, (n) => bedtimeHour(n.bedtime) * 60, now);
 }
 
-// Sleep quality 0–100, computed from the night's stages (the Health app's
-// own sleep score isn't something the Shortcut can read):
-//   • Duração (50 pts): asleep time vs. 8h — 8h or more gets all 50.
-//   • Profundo + REM (30 pts): their share of the time asleep vs. 40% —
-//     40% or more gets all 30. Nights logged without stages get half (15).
-//   • Pouco acordado (20 pts): awake share of (asleep + awake) — 0% gets
-//     all 20, 15% or more gets 0.
-export function sleepQuality(night) {
-  const { deep, rem, core, awake } = night.stages;
-  const asleep = night.asleepMin;
-  const duration = Math.min(asleep / 480, 1) * 50;
-  const staged = deep + rem + core;
-  const restorative = staged > 0 ? Math.min((deep + rem) / asleep / 0.4, 1) * 30 : 15;
-  const awakeShare = awake / (asleep + awake);
-  const efficiency = Math.max(0, 1 - awakeShare / 0.15) * 20;
+// Sleep quality 0–100, modeled on the Health app's Sleep Score (which no
+// app can read — HealthKit doesn't expose it). Apple's three pillars and
+// weights, with curves fitted to a real night (7h07 asleep, bedtime 1h48
+// later than average, 8 min awake → 46 + 10 + 19 = 75), so it's an
+// estimate, not the same number:
+//   • Duração (50 pts): asleep time vs. ~7h45 — that or more gets all 50.
+//   • Hora de dormir (30 pts): how far bedtime is from the average of the
+//     previous 13 nights; on the average = 30, ~2h42 off = 0. Fewer than 3
+//     previous nights → neutral 15.
+//   • Interrupções (20 pts): minutes awake during the night, 1 pt lost per
+//     8 min (160 min awake = 0).
+const DURATION_FULL_MIN = 465;
+const BEDTIME_ZERO_MIN = 162;
+const AWAKE_MIN_PER_POINT = 8;
+
+export function sleepQuality(night, nights) {
+  const duration = Math.min(night.asleepMin / DURATION_FULL_MIN, 1) * 50;
+
+  const prior = nights
+    ? [...nights.values()]
+        .filter((n) => n.key < night.key)
+        .sort((a, b) => b.key.localeCompare(a.key))
+        .slice(0, 13)
+    : [];
+  let bedtime = 15;
+  let bedtimeDiffMin = null;
+  if (prior.length >= 3) {
+    const avg = prior.reduce((a, n) => a + bedtimeHour(n.bedtime) * 60, 0) / prior.length;
+    bedtimeDiffMin = bedtimeHour(night.bedtime) * 60 - avg;
+    bedtime = Math.max(0, 1 - Math.abs(bedtimeDiffMin) / BEDTIME_ZERO_MIN) * 30;
+  }
+
+  const interruptions = Math.max(0, 20 - night.stages.awake / AWAKE_MIN_PER_POINT);
+  const score = Math.round(duration + bedtime + interruptions);
   return {
-    score: Math.round(duration + restorative + efficiency),
-    parts: { duration: Math.round(duration), restorative: Math.round(restorative), efficiency: Math.round(efficiency) },
+    score,
+    bedtimeDiffMin,
+    parts: { duration: Math.round(duration), bedtime: Math.round(bedtime), interruptions: Math.round(interruptions) },
   };
+}
+
+// Apple's bands (Very Low 0–40, Low 41–60, OK 61–80, High 81–95, Very High 96+).
+export function qualityLabel(score) {
+  if (score >= 96) return 'Excelente';
+  if (score >= 81) return 'Alta';
+  if (score >= 61) return 'Regular';
+  if (score >= 41) return 'Baixa';
+  return 'Muito baixa';
 }
 
 // Same rolling-average comparison as sleepTrend, on the quality score.
 // "up" = better nights. avg in points.
 export function qualityTrend(nights, days, now = new Date()) {
-  return nightTrend(nights, days, (n) => sleepQuality(n).score, now);
+  return nightTrend(nights, days, (n) => sleepQuality(n, nights).score, now);
 }

@@ -20,7 +20,7 @@ function StatCard({ title, value, suffix, className, done, tip, tipAlign }) {
 
 const WEIGHT_TIP = 'Peso: última pesagem registrada no app Saúde (kg). As setas comparam com a pesagem mais antiga de cada janela — 7, 30 e 90 dias: ▼ perdeu, ▲ ganhou, ▬ variação menor que 0,2 kg.';
 const QUALITY_TIP =
-  'Qualidade: nota de 0 a 100 estimada pelo dashboard (não é a nota do app Saúde). Duração até 50 pts (8h = 50), profundo + REM até 30 pts (40% do sono = 30), pouco tempo acordado até 20 pts. Verde ≥ 80, amarelo ≥ 60, vermelho abaixo.';
+  'Qualidade: estimativa da nota do app Saúde (que nenhum app consegue ler), com os mesmos 3 pilares: Duração até 50 pts (≈7h45 = 50), Hora de dormir até 30 pts (quanto mais perto da média das 13 noites anteriores, melhor) e Interrupções até 20 pts (tempo acordado). ≥81 alta, 61–80 regular, abaixo baixa.';
 const IAH_TIP = 'IAH (índice de apneia-hipopneia): quantos eventos de apneia/hipopneia por hora de sono o CPAP registrou na última noite lançada. Menos é melhor; abaixo de 5 é considerado normal.';
 const SONO_TIP = 'Sono: tempo total dormindo na última noite (profundo + essencial + REM). Não conta o tempo acordado nem “na cama”.';
 const DORMIU_TIP = 'Dormiu: horário em que você pegou no sono na última noite (primeiro trecho de sono, não de “na cama”), no fuso de São Paulo.';
@@ -88,7 +88,7 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
         </div>
         <StatCard title="IAH" value={saude.iah != null ? formatKg(saude.iah) : '–'} className={styles.saudeCard} tip={IAH_TIP} />
         <StatCard title="Sono" value={saude.lastNight ? formatDuration(saude.lastNight.asleepMin) : '–'} className={styles.saudeCard} tip={SONO_TIP} />
-        <StatCard title="Qualidade" value={saude.lastNight ? sleepQuality(saude.lastNight).score : '–'} className={styles.saudeCard} tip={QUALITY_TIP} />
+        <StatCard title="Qualidade" value={saude.lastNight ? sleepQuality(saude.lastNight, saude.nights).score : '–'} className={styles.saudeCard} tip={QUALITY_TIP} />
         <StatCard title="Dormiu" value={saude.lastNight ? formatClockSP(saude.lastNight.bedtime) : '–'} className={styles.saudeCard} tip={DORMIU_TIP} />
         <StatCard title="Acordou" value={saude.lastNight ? formatClockSP(saude.lastNight.wake) : '–'} className={styles.saudeCard} tip={ACORDOU_TIP} tipAlign="right" />
         {/* Filled in once the Shortcut also sends steps and exercise. */}

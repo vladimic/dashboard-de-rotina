@@ -245,6 +245,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     weight: weightSummary,
     iah: lastIahKey ? state.iahLog[lastIahKey] : null,
     lastNight,
+    nights,
   };
 
   const todayLong = formatTodayLong();

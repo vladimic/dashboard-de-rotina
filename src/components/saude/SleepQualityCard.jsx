@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { qualityTrend, sleepQuality, thirtyDayAxis, TREND_UI } from '../../utils/health';
+import { qualityLabel, qualityTrend, sleepQuality, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
-const bandColor = (score) => (score >= 80 ? '#3f9b6b' : score >= 60 ? '#e5a03a' : '#d9534f');
+const bandColor = (score) => (score >= 81 ? '#3f9b6b' : score >= 61 ? '#e5a03a' : '#d9534f');
 
 // Last 30 nights' sleep quality score (see sleepQuality for the formula).
 export default function SleepQualityCard({ nights }) {
@@ -11,10 +11,10 @@ export default function SleepQualityCard({ nights }) {
   const hasNights = axis.some((d) => nights.has(d.key));
   const trends = [7, 30].map((days) => ({ days, trend: qualityTrend(nights, days) }));
   const last = [...nights.values()].sort((a, b) => a.key.localeCompare(b.key)).at(-1);
-  const lastScore = last ? sleepQuality(last).score : null;
+  const lastScore = last ? sleepQuality(last, nights).score : null;
 
   const config = useMemo(() => {
-    const quality = axis.map((d) => (nights.has(d.key) ? sleepQuality(nights.get(d.key)) : null));
+    const quality = axis.map((d) => (nights.has(d.key) ? sleepQuality(nights.get(d.key), nights) : null));
     return {
       type: 'bar',
       data: {
@@ -39,7 +39,7 @@ export default function SleepQualityCard({ nights }) {
               title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
               label: (item) => {
                 const q = quality[item.dataIndex];
-                return [`Nota ${q.score}/100`, `Duração ${q.parts.duration}/50`, `Profundo + REM ${q.parts.restorative}/30`, `Pouco acordado ${q.parts.efficiency}/20`];
+                return [`Nota ${q.score}/100 · ${qualityLabel(q.score)}`, `Duração ${q.parts.duration}/50`, `Hora de dormir ${q.parts.bedtime}/30`, `Interrupções ${q.parts.interruptions}/20`];
               },
             },
           },
@@ -57,7 +57,7 @@ export default function SleepQualityCard({ nights }) {
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="Qualidade do sono: nota 0–100 estimada pelo dashboard (não é a do app Saúde). Duração até 50 pts (8h = 50), profundo + REM até 30 pts, pouco tempo acordado até 20 pts. Verde ≥ 80, amarelo ≥ 60, vermelho abaixo. O número grande é a última noite.">Qualidade do sono</span>
+          <span className={styles.title} data-tip="Qualidade do sono: estimativa da nota do app Saúde (que nenhum app consegue ler), com os mesmos 3 pilares: Duração até 50 pts (≈7h45 = 50), Hora de dormir até 30 pts (quanto mais perto da média das 13 noites anteriores, melhor) e Interrupções até 20 pts (tempo acordado). Faixas: ≥81 alta (verde), 61–80 regular (amarelo), abaixo disso baixa (vermelho). O número grande é a última noite.">Qualidade do sono</span>
           {lastScore != null && <span className={styles.bigValue}>{lastScore}</span>}
           <div className={styles.trends}>
             {trends.map(({ days, trend }) => {
