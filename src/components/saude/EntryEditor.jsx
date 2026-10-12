@@ -120,3 +120,20 @@ export default function EntryEditor({ title, keys, log, skipped, placeholder, fo
     </div>
   );
 }
+
+// Pencil button that opens the editor; orange with a count while there are
+// blank days in the last 35.
+export function EditButton({ pendingCount, onClick }) {
+  return (
+    <button
+      type="button"
+      className={styles.editBtn}
+      data-alert={pendingCount > 0}
+      onClick={onClick}
+      title={pendingCount > 0 ? `Preencher: ${pendingCount} dia(s) em branco nos últimos 35` : 'Editar os registros'}
+      aria-label="Preencher ou editar os registros"
+    >
+      ✎{pendingCount > 0 && <span className={styles.editCount}>{pendingCount}</span>}
+    </button>
+  );
+}

@@ -522,3 +522,81 @@
 .input[data-invalid='true'] {
   border-color: #d9534f;
 }
+
+/* Pencil button (open the hand-entry editor). */
+.editBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid #d5e8de;
+  color: #3f6b57;
+  font: 600 14px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.editBtn[data-alert='true'] {
+  border-color: #e5a03a;
+  background: #fdf3df;
+  color: #8a5a10;
+}
+
+.editCount {
+  margin-left: 3px;
+  font: 700 10px Inter, sans-serif;
+}
+
+/* Activity card (sample data). */
+.sampleTag {
+  font: 600 10px Inter, sans-serif;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fdf3df;
+  color: #8a5a10;
+  white-space: nowrap;
+}
+
+.actList {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  font: 500 11px Inter, sans-serif;
+  color: #3f6b57;
+}
+
+.actRow {
+  display: grid;
+  grid-template-columns: 8px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.actRow i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.actRow .muted {
+  color: #7fa693;
+}
+
+.actStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(63, 107, 87, 0.12);
+  font: 500 11px Inter, sans-serif;
+  color: #7fa693;
+}
+
+.actStrip b {
+  color: #3f6b57;
+  font-weight: 600;
+}

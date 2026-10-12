@@ -1,4 +1,4 @@
-import { dateKeySaoPaulo, lastNDateKeys } from './format';
+import { dateKeySaoPaulo, lastNDateKeys, shiftDateKey } from './format';
 
 const DAY_MS = 86400000;
 
@@ -186,7 +186,7 @@ export function bedtimeHour(t) {
 // yesterday: the arrow says whether today's average went up or down vs.
 // yesterday's. Nights with no data are left out of an average. null when
 // either window has no nights at all.
-function nightTrend(nights, days, minutesOf, now) {
+function nightTrend(nights, days, minutesOf, now, stableBelow = SLEEP_STABLE_MIN) {
   const avgOf = (keys) => {
     const vals = keys.map((k) => nights.get(k)).filter(Boolean).map(minutesOf);
     return vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null;
@@ -195,7 +195,7 @@ function nightTrend(nights, days, minutesOf, now) {
   const prevAvg = avgOf(lastNDateKeys(days, new Date(now.getTime() - 86400000)));
   if (avg == null || prevAvg == null) return null;
   const diff = avg - prevAvg;
-  const direction = Math.abs(diff) < SLEEP_STABLE_MIN ? 'stable' : diff > 0 ? 'up' : 'down';
+  const direction = Math.abs(diff) < stableBelow ? 'stable' : diff > 0 ? 'up' : 'down';
   return { avg, prevAvg, diff, direction };
 }
 
@@ -224,6 +224,32 @@ export function qualityLabel(score) {
 export function qualityTrend(log, days, now = new Date()) {
   const nights = new Map(Object.entries(log || {}).map(([key, score]) => [key, { score }]));
   return nightTrend(nights, days, (n) => n.score, now);
+}
+
+// Same, on the typed-in IAH log. "up" = more events per hour = worse; stable
+// under 0.1.
+export function iahTrend(log, days, now = new Date()) {
+  const nights = new Map(Object.entries(log || {}).map(([key, value]) => [key, { value }]));
+  return nightTrend(nights, days, (n) => n.value, now, 0.1);
+}
+
+// Moving average drawn on a day axis: for each axis day, the mean of
+// `valueOf(key)` over that day and the days-1 before it (days with no value
+// are left out; null when the whole window is empty). `valueOf` can reach
+// back before the axis starts, so the line is complete from its first day.
+export function rollingByKey(axis, valueOf, days) {
+  return axis.map((d) => {
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < days; i++) {
+      const v = valueOf(shiftDateKey(d.key, -i));
+      if (v != null) {
+        sum += v;
+        n++;
+      }
+    }
+    return n ? sum / n : null;
+  });
 }
 
 // Hand-typed daily entries (IAH, sleep quality) can be filled in for this

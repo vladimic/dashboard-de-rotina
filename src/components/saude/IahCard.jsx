@@ -1,22 +1,23 @@
 import { useMemo, useState } from 'react';
-import EntryEditor from './EntryEditor';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { entryKeys, iahBand, pendingEntryKeys, thirtyDayAxis } from '../../utils/health';
+import EntryEditor, { EditButton } from './EntryEditor';
+import MaToggles, { maDataset } from './MaToggles';
+import { entryKeys, iahBand, iahTrend, pendingEntryKeys, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 const num = (v) => v.toFixed(1).replace('.', ',');
 
-// CPAP apnea-hypopnea index, typed in by hand once a day. `log` maps
-// "YYYY-MM-DD" (the night's date — the day the user went to bed) → value.
-export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
+const BAND_COLOR = { normal: '#2f8a5c', leve: '#c58a1f', moderado: '#d9772f', grave: '#d9534f' };
+
+// CPAP apnea-hypopnea index, typed in by hand. `log` maps "YYYY-MM-DD" (the
+// day you woke up, like sleep and quality) → value.
+export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7, showMa30, onToggleFlag }) {
   const [editing, setEditing] = useState(false);
   const keys = useMemo(() => entryKeys(), []);
   const pendingCount = pendingEntryKeys(keys, log, skipped).length;
 
   const axis = useMemo(() => thirtyDayAxis(), []);
-  const values = axis.map((d) => log[d.key] ?? null);
-  const recorded = values.filter((v) => v != null);
-  const avg = recorded.length ? recorded.reduce((a, b) => a + b, 0) / recorded.length : null;
+  const trends = [7, 30].map((days) => ({ days, trend: iahTrend(log, days) }));
 
   const lastKey = Object.keys(log).sort().at(-1);
   const last = lastKey ? log[lastKey] : null;
@@ -39,6 +40,9 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
             spanGaps: true,
           },
           { label: 'limite', data: axis.map(() => 5), borderColor: '#d9534f', borderDash: [4, 4], borderWidth: 1, pointRadius: 0 },
+          ...[7, 30]
+            .filter((d) => (d === 7 ? showMa7 : showMa30))
+            .map((d) => maDataset(d, rollingByKey(axis, (k) => log[k] ?? null, d))),
         ],
       },
       options: {
@@ -47,15 +51,18 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
         plugins: {
           legend: { display: false },
           tooltip: {
-            filter: (item) => item.datasetIndex === 0,
-            callbacks: { title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '), label: (item) => `IAH ${num(item.parsed.y)}` },
+            filter: (item) => item.datasetIndex !== 1,
+            callbacks: {
+              title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
+              label: (item) => `${item.dataset.label === 'IAH' ? 'IAH' : item.dataset.label}: ${num(item.parsed.y)}`,
+            },
           },
         },
         scales: { x: thirtyDayScale(axis, 9), y: { min: 0, suggestedMax: 8, grid: { color: GRID_COLOR } } },
       },
       plugins: [monthDividerPlugin(axis)],
     }),
-    [axis, log]
+    [axis, log, showMa7, showMa30]
   );
 
   const parse = (text) => {
@@ -68,21 +75,36 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor; abaixo de 5 é considerado normal (5–15 leve, 15–30 moderado, acima de 30 grave). Lançamento manual, pelo dia em que você acordou.">IAH · CPAP</span>
+          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor: abaixo de 5 normal, 5–15 leve, 15–30 moderado, acima de 30 grave. Lançamento manual, pelo dia em que você acordou. A cor do número mostra a faixa.">IAH · CPAP</span>
           {last != null && (
-            <>
-              <span className={styles.bigValue}>{num(last)}</span>
-              <span className={styles.band} data-band={iahBand(last)}>
-                {iahBand(last)}
-              </span>
-            </>
+            <span className={styles.bigValue} style={{ color: BAND_COLOR[iahBand(last)] }} title={`Faixa: ${iahBand(last)}`}>
+              {num(last)}
+            </span>
           )}
-          {avg != null && <span className={styles.muted}>média {num(avg)}</span>}
+          <div className={styles.trends}>
+            {trends.map(({ days, trend }) => {
+              const ui = trend ? TREND_UI[trend.direction] : null;
+              // Fewer events per hour is the good direction here.
+              const tone = !trend || trend.direction === 'stable' ? 'flat' : trend.direction === 'up' ? 'bad' : 'good';
+              const comment = trend && { up: 'subindo, pior', down: 'descendo, melhor', stable: 'estável' }[trend.direction];
+              return (
+                <span
+                  key={days}
+                  className={styles.trend}
+                  data-tone={tone}
+                  data-tip={trend ? `Média dos últimos ${days} dias: ${num(trend.avg)} (${iahBand(trend.avg)}). Média de ontem: ${num(trend.prevAvg)} · ${comment}` : `${days} dias: registros insuficientes`}
+                >
+                  {days}
+                  <b>{ui ? ui.symbol : '–'}</b>
+                  {trend && <span className={styles.trendValue}>{num(trend.avg)}</span>}
+                </span>
+              );
+            })}
+          </div>
         </div>
         <div className={styles.headerRight}>
-          <button type="button" className={styles.saveBtn} data-alert={pendingCount > 0} onClick={() => setEditing(true)}>
-            {pendingCount > 0 ? `Preencher (${pendingCount})` : 'Editar'}
-          </button>
+          <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('iahShowMa7')} onToggle30={() => onToggleFlag('iahShowMa30')} />
+          <EditButton pendingCount={pendingCount} onClick={() => setEditing(true)} />
         </div>
       </div>
       <ChartCanvas config={config} height={240} />

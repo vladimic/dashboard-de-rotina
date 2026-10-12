@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { bedtimeHour as nightHour, bedtimeTrend, formatDuration, thirtyDayAxis, TREND_UI } from '../../utils/health';
+import MaToggles, { maDataset } from './MaToggles';
+import { bedtimeHour as nightHour, bedtimeTrend, formatDuration, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // y axis runs bottom-up from 21:00 to 09:00. Evening hours are stored as
@@ -59,7 +60,7 @@ function scheduleOverlay(durations) {
 }
 
 // Last 30 nights: a bar from when you fell asleep to when you woke up.
-export default function SleepScheduleCard({ nights }) {
+export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleFlag }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const hasNights = axis.some((d) => nights.has(d.key));
   const trends = [7, 30].map((days) => ({ days, trend: bedtimeTrend(nights, days) }));
@@ -80,6 +81,10 @@ export default function SleepScheduleCard({ nights }) {
             borderSkipped: false,
             barPercentage: 0.75,
           },
+          // Moving average of the bedtime (hour of the night, evening negative).
+          ...[7, 30]
+            .filter((d) => (d === 7 ? showMa7 : showMa30))
+            .map((d) => maDataset(d, rollingByKey(axis, (k) => (nights.has(k) ? nightHour(nights.get(k).bedtime) : null), d).map((v) => (v == null ? null : clamp(v))))),
         ],
       },
       options: {
@@ -92,6 +97,7 @@ export default function SleepScheduleCard({ nights }) {
               title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
               label: (item) => {
                 const n = inWindow[item.dataIndex];
+                if (item.dataset.type === 'line') return `${item.dataset.label} de dormir: ${hourLabel(item.parsed.y)}`;
                 return `dormiu ${hourLabel(nightHour(n.bedtime))} · acordou ${hourLabel(nightHour(n.wake))} · ${formatDuration(n.asleepMin)}`;
               },
             },
@@ -104,7 +110,7 @@ export default function SleepScheduleCard({ nights }) {
       },
       plugins: [scheduleOverlay(inWindow.map((n) => n?.asleepMin ?? null)), monthDividerPlugin(axis)],
     };
-  }, [axis, nights]);
+  }, [axis, nights, showMa7, showMa30]);
 
   return (
     <div className={styles.card}>
@@ -131,6 +137,9 @@ export default function SleepScheduleCard({ nights }) {
               );
             })}
           </div>
+        </div>
+        <div className={styles.headerRight}>
+          <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('scheduleShowMa7')} onToggle30={() => onToggleFlag('scheduleShowMa30')} />
         </div>
       </div>
       {hasNights ? (

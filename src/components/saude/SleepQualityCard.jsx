@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import EntryEditor from './EntryEditor';
+import EntryEditor, { EditButton } from './EntryEditor';
+import MaToggles, { maDataset } from './MaToggles';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { entryKeys, pendingEntryKeys, qualityLabel, qualityTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
+import { entryKeys, pendingEntryKeys, qualityLabel, qualityTrend, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // Apple's bands: 81+ alta, 61–80 regular, below that baixa.
@@ -10,7 +11,7 @@ const bandColor = (score) => (score >= 81 ? '#3f9b6b' : score >= 61 ? '#e5a03a' 
 // Sleep quality score from the Health app, typed in by hand (no app can read
 // it). `log` maps the night's wake-up date → score 0–100, the same date the
 // Health app prints at the top of its score screen.
-export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear }) {
+export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear, showMa7, showMa30, onToggleFlag }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const [editing, setEditing] = useState(false);
   const keys = useMemo(() => entryKeys(), []);
@@ -35,6 +36,9 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
             borderRadius: 3,
             barPercentage: 0.75,
           },
+          ...[7, 30]
+            .filter((d) => (d === 7 ? showMa7 : showMa30))
+            .map((d) => maDataset(d, rollingByKey(axis, (k) => log[k] ?? null, d))),
         ],
       },
       options: {
@@ -45,7 +49,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           tooltip: {
             callbacks: {
               title: (items) => axis[items[0].dataIndex].label.slice(0, 2).join(' '),
-              label: (item) => `Nota ${item.parsed.y}/100 · ${qualityLabel(item.parsed.y)}`,
+              label: (item) => (item.dataset.type === 'line' ? `${item.dataset.label}: ${Math.round(item.parsed.y)}` : `Nota ${item.parsed.y}/100 · ${qualityLabel(item.parsed.y)}`),
             },
           },
         },
@@ -56,7 +60,7 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
       },
       plugins: [monthDividerPlugin(axis)],
     };
-  }, [axis, log]);
+  }, [axis, log, showMa7, showMa30]);
 
   const parse = (text) => {
     const value = Number(text.replace(',', '.'));
@@ -71,8 +75,9 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           <span className={styles.title} data-tip="Qualidade do sono: a nota (0–100) do app Saúde, que nenhum app consegue ler — você digita aqui. A data é a do dia em que você acordou, a mesma que o app Saúde mostra no topo da tela da nota. Faixas: 81+ alta (verde), 61–80 regular (amarelo), abaixo baixa (vermelho).">Qualidade do sono</span>
           {lastScore != null && (
             <>
-              <span className={styles.bigValue}>{lastScore}</span>
-              <span className={styles.muted}>{qualityLabel(lastScore)}</span>
+              <span className={styles.bigValue} title={qualityLabel(lastScore)}>
+                {lastScore}
+              </span>
             </>
           )}
           <div className={styles.trends}>
@@ -95,9 +100,8 @@ export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear
           </div>
         </div>
         <div className={styles.headerRight}>
-          <button type="button" className={styles.saveBtn} data-alert={pendingCount > 0} onClick={() => setEditing(true)}>
-            {pendingCount > 0 ? `Preencher (${pendingCount})` : 'Editar'}
-          </button>
+          <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('qualityShowMa7')} onToggle30={() => onToggleFlag('qualityShowMa30')} />
+          <EditButton pendingCount={pendingCount} onClick={() => setEditing(true)} />
         </div>
       </div>
       {hasScores ? (

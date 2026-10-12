@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { formatDuration, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
+import MaToggles, { maDataset } from './MaToggles';
+import { formatDuration, rollingByKey, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // Stacked bottom-up in this order; "Dormindo" is sleep logged without stage
@@ -34,7 +35,7 @@ function sleepLabelsPlugin(axis, nights) {
         if (!night) return;
         let total = 0;
         chart.data.datasets.forEach((ds, di) => {
-          if (chart.isDatasetVisible(di)) total += ds.data[i] || 0;
+          if (ds.type !== 'line' && chart.isDatasetVisible(di)) total += ds.data[i] || 0;
         });
         const x = scales.x.getPixelForValue(i);
         const y = scales.y.getPixelForValue(total) - 3;
@@ -58,7 +59,7 @@ function sleepLabelsPlugin(axis, nights) {
   };
 }
 
-export default function SleepCard({ nights, loading, error, showAwake, onToggleAwake }) {
+export default function SleepCard({ nights, loading, error, showAwake, onToggleAwake, showMa7, showMa30, onToggleFlag }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
   const trends = [7, 30].map((days) => ({ days, trend: sleepTrend(nights, days) }));
   const hasUnstaged = axis.some((d) => nights.get(d.key)?.stages.asleep > 0);
@@ -76,7 +77,8 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         // Half-width chart: weekday as its initial (S, T, Q...) so the 30
         // columns don't run into each other.
         labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase(), d.label[2]]),
-        datasets: stages.map((s) => ({
+        datasets: [
+          ...stages.map((s) => ({
           label: s.label,
           data: axis.map((d) => {
             const min = nights.get(d.key)?.stages[s.key];
@@ -86,13 +88,29 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
           stack: 'sleep',
           barPercentage: 0.75,
           categoryPercentage: 0.9,
-        })),
+          })),
+          ...[7, 30]
+            .filter((d) => (d === 7 ? showMa7 : showMa30))
+            .map((d) => maDataset(d, rollingByKey(axis, (k) => (nights.has(k) ? nights.get(k).asleepMin / 60 : null), d))),
+        ],
       },
       options: {
         maintainAspectRatio: false,
         animation: false,
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'start',
+            labels: {
+              boxWidth: 8,
+              boxHeight: 8,
+              padding: 8,
+              font: { size: 10 },
+              // Stage swatches only — not the moving-average lines.
+              filter: (item) => item.datasetIndex < stages.length && item.text !== 'Acordado',
+            },
+          },
           tooltip: {
             callbacks: {
               title: (items) => {
@@ -111,7 +129,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
       },
       plugins: [monthDividerPlugin(axis), sleepLabelsPlugin(axis, nights)],
     }),
-    [axis, nights, stages]
+    [axis, nights, stages, showMa7, showMa30]
   );
 
   return (
@@ -142,12 +160,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         </div>
         {nights.size > 0 && (
           <div className={styles.headerRight}>
-            {STAGES.filter((s) => s.key !== 'awake' && (s.key !== 'asleep' || hasUnstaged)).map((s) => (
-              <span key={s.key} className={styles.legend}>
-                <i style={{ background: s.color, height: 8, width: 8, borderRadius: 2 }} />
-                {s.label}
-              </span>
-            ))}
+            <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('sleepShowMa7')} onToggle30={() => onToggleFlag('sleepShowMa30')} />
             <button type="button" className={styles.maToggle} data-on={showAwake} onClick={onToggleAwake} title="Mostrar o tempo acordado em cima das barras">
               <i style={{ borderTop: 'none', height: 8, width: 8, borderRadius: 2, background: '#f0a487' }} />
               Acordado

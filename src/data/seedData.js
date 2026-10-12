@@ -133,6 +133,15 @@ export function createSeedState() {
     weightShowMin: true,
     // Sleep chart: show the "acordado" slice on top of the bars.
     sleepShowAwake: false,
+    // Moving-average lines (7d / 30d) on the sleep, bedtime, IAH and quality charts.
+    sleepShowMa7: true,
+    sleepShowMa30: true,
+    scheduleShowMa7: true,
+    scheduleShowMa30: true,
+    iahShowMa7: true,
+    iahShowMa30: true,
+    qualityShowMa7: true,
+    qualityShowMa30: true,
 
     downloadsCount: 61,
     backlogCount: 128,
