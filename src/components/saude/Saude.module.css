@@ -440,3 +440,85 @@
   font: 600 11px Inter, sans-serif;
   cursor: pointer;
 }
+
+.card {
+  position: relative;
+}
+
+.saveBtn[data-alert='true'] {
+  background: #e5a03a;
+}
+
+/* Overlay for typing/editing the hand-filled daily logs (IAH, quality). */
+.entryPanel {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(63, 107, 87, 0.15), 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.entryHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.entryHead .muted {
+  flex: 1;
+  min-width: 0;
+}
+
+.entryList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.entryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(63, 107, 87, 0.08);
+  font: 500 12px Inter, sans-serif;
+  color: #3f6b57;
+}
+
+.entryDay {
+  width: 78px;
+  flex: none;
+}
+
+.entrySkipped {
+  flex: 1;
+  color: #9dbfae;
+  font-style: italic;
+}
+
+.entryLink {
+  font: 600 11px Inter, sans-serif;
+  color: #7fa693;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.entryLink:hover {
+  color: #3f6b57;
+  text-decoration: underline;
+}
+
+.entryError {
+  font: 500 11px Inter, sans-serif;
+  color: #c0453a;
+}
+
+.input[data-invalid='true'] {
+  border-color: #d9534f;
+}

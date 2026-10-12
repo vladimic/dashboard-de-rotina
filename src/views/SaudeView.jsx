@@ -29,8 +29,20 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights }) {
           showAwake={state.sleepShowAwake}
           onToggleAwake={() => dispatch({ type: 'TOGGLE_FLAG', key: 'sleepShowAwake' })}
         />
-        <IahCard log={state.iahLog} onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })} />
-        <SleepQualityCard nights={nights} log={state.qualityLog || {}} onSave={(date, value) => dispatch({ type: 'SET_QUALITY', date, value })} />
+        <IahCard
+          log={state.iahLog}
+          skipped={state.iahSkip || {}}
+          onSave={(date, value) => dispatch({ type: 'SET_IAH', date, value })}
+          onSkip={(date) => dispatch({ type: 'SKIP_ENTRY', logKey: 'iahLog', skipKey: 'iahSkip', date })}
+          onClear={(date) => dispatch({ type: 'CLEAR_ENTRY', logKey: 'iahLog', skipKey: 'iahSkip', date })}
+        />
+        <SleepQualityCard
+          log={state.qualityLog || {}}
+          skipped={state.qualitySkip || {}}
+          onSave={(date, value) => dispatch({ type: 'SET_QUALITY', date, value })}
+          onSkip={(date) => dispatch({ type: 'SKIP_ENTRY', logKey: 'qualityLog', skipKey: 'qualitySkip', date })}
+          onClear={(date) => dispatch({ type: 'CLEAR_ENTRY', logKey: 'qualityLog', skipKey: 'qualitySkip', date })}
+        />
         <div />
       </div>
     </div>

@@ -11,7 +11,7 @@ import { useTickTickTasks } from './hooks/useTickTickTasks';
 import { useUsdQuote } from './hooks/useUsdQuote';
 import { useAppBadge } from './hooks/useAppBadge';
 import { useHealthSamples } from './hooks/useHealthSamples';
-import { dailyWeights, pendingQualityKeys, sleepNights, weightTrends } from './utils/health';
+import { dailyWeights, entryKeys, pendingEntryKeys, sleepNights, weightTrends } from './utils/health';
 import { computeAgenda, computeCounts, computeHabitGroup } from './utils/derived';
 import { formatTodayLong, formatClock, syncRemindersShortcutUrl, currentWeekResetKey, lastNDateKeys, dateKeySaoPaulo } from './utils/format';
 import Header from './components/Header';
@@ -248,7 +248,9 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     lastNight,
     quality: lastQualityKey ? state.qualityLog[lastQualityKey] : null,
   };
-  const qualityPending = pendingQualityKeys(nights, state.qualityLog || {}).length;
+  const entryPending =
+    pendingEntryKeys(entryKeys('quality'), state.qualityLog, state.qualitySkip).length +
+    pendingEntryKeys(entryKeys('iah'), state.iahLog, state.iahSkip).length;
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel
@@ -353,7 +355,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         loading={anyLoading}
         userEmail={userEmail}
         onGoPage={(page) => dispatch({ type: 'GO_PAGE', page })}
-        saudePending={qualityPending}
+        saudePending={entryPending}
         onRefreshAll={() => {
           setRefreshedAt(Date.now());
           dispatch({ type: 'REFRESH_ALL' });

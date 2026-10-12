@@ -226,13 +226,19 @@ export function qualityTrend(log, days, now = new Date()) {
   return nightTrend(nights, days, (n) => n.score, now);
 }
 
-// How many recent nights the "sem nota" reminder looks back.
-export const QUALITY_REMINDER_DAYS = 7;
+// Hand-typed daily entries (IAH, sleep quality) can be filled in for this
+// many recent days.
+export const ENTRY_WINDOW_DAYS = 35;
 
-// Nights in the last 7 that have sleep synced from Health but no typed-in
-// quality score yet, oldest first. Nights with no sleep data are left out —
-// they'd never have a score to copy.
-export function pendingQualityKeys(nights, log, now = new Date()) {
-  return lastNDateKeys(QUALITY_REMINDER_DAYS, now).filter((key) => nights.has(key) && log?.[key] == null);
+// Date keys of the editable window, newest first. Quality is keyed by the day
+// you woke up (today counts); IAH by the day you went to bed, so tonight's
+// isn't there yet and the window starts yesterday.
+export function entryKeys(kind, now = new Date()) {
+  const keys = lastNDateKeys(ENTRY_WINDOW_DAYS + (kind === 'iah' ? 1 : 0), now).reverse();
+  return kind === 'iah' ? keys.slice(1) : keys;
 }
 
+// Days in the window with neither a value nor a "sem informação" mark.
+export function pendingEntryKeys(keys, log, skipped) {
+  return keys.filter((key) => log?.[key] == null && !skipped?.[key]);
+}

@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react';
+import EntryEditor from './EntryEditor';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { iahBand, thirtyDayAxis } from '../../utils/health';
-import { dateKeySaoPaulo, shiftDateKey } from '../../utils/format';
+import { entryKeys, iahBand, pendingEntryKeys, thirtyDayAxis } from '../../utils/health';
 import styles from './Saude.module.css';
 
 const num = (v) => v.toFixed(1).replace('.', ',');
 
 // CPAP apnea-hypopnea index, typed in by hand once a day. `log` maps
 // "YYYY-MM-DD" (the night's date — the day the user went to bed) → value.
-export default function IahCard({ log, onSave }) {
-  const [text, setText] = useState('');
-  const [dateKey, setDateKey] = useState(() => shiftDateKey(dateKeySaoPaulo(), -1));
-  const [inputError, setInputError] = useState('');
+export default function IahCard({ log, skipped, onSave, onSkip, onClear }) {
+  const [editing, setEditing] = useState(false);
+  const keys = useMemo(() => entryKeys('iah'), []);
+  const pendingCount = pendingEntryKeys(keys, log, skipped).length;
 
   const axis = useMemo(() => thirtyDayAxis(), []);
   const values = axis.map((d) => log[d.key] ?? null);
@@ -58,22 +58,17 @@ export default function IahCard({ log, onSave }) {
     [axis, log]
   );
 
-  function save() {
+  const parse = (text) => {
     const value = Number(text.replace(',', '.'));
-    if (!text.trim() || !Number.isFinite(value) || value < 0 || value > 150) {
-      setInputError('Digite um número entre 0 e 150');
-      return;
-    }
-    onSave(dateKey, Math.round(value * 10) / 10);
-    setText('');
-    setInputError('');
-  }
+    if (!text.trim() || !Number.isFinite(value) || value < 0 || value > 150) return { error: 'Digite um número entre 0 e 150' };
+    return { value: Math.round(value * 10) / 10 };
+  };
 
   return (
     <div className={styles.card}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor; abaixo de 5 é considerado normal. Lançamento manual, uma nota por noite.">IAH · CPAP</span>
+          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor; abaixo de 5 é considerado normal (5–15 leve, 15–30 moderado, acima de 30 grave). Lançamento manual, uma nota por noite.">IAH · CPAP</span>
           {last != null && (
             <>
               <span className={styles.bigValue}>{num(last)}</span>
@@ -84,41 +79,28 @@ export default function IahCard({ log, onSave }) {
           )}
           {avg != null && <span className={styles.muted}>média {num(avg)}</span>}
         </div>
-        <form
-          className={styles.headerRight}
-          onSubmit={(e) => {
-            e.preventDefault();
-            save();
-          }}
-        >
-          <input
-            type="date"
-            className={styles.input}
-            value={dateKey}
-            max={dateKeySaoPaulo()}
-            onChange={(e) => setDateKey(e.target.value)}
-          />
-          <input
-            className={styles.input}
-            style={{ width: 70 }}
-            inputMode="decimal"
-            placeholder="2,1"
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              setInputError('');
-            }}
-          />
-          <button type="submit" className={styles.saveBtn}>
-            Registrar
+        <div className={styles.headerRight}>
+          <button type="button" className={styles.saveBtn} data-alert={pendingCount > 0} onClick={() => setEditing(true)}>
+            {pendingCount > 0 ? `Preencher (${pendingCount})` : 'Editar'}
           </button>
-        </form>
+        </div>
       </div>
-      {inputError && <div className={styles.error}>{inputError}</div>}
       <ChartCanvas config={config} height={240} />
-      <div className={styles.footer}>
-        <span className={styles.muted}>&lt;5 normal · 5–15 leve · 15–30 moderado · &gt;30 grave</span>
-      </div>
+      {editing && (
+        <EntryEditor
+          title="IAH · noite de"
+          keys={keys}
+          log={log}
+          skipped={skipped}
+          placeholder="2,1"
+          format={(v) => String(v).replace('.', ',')}
+          parse={parse}
+          onSet={onSave}
+          onSkip={onSkip}
+          onClear={onClear}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </div>
   );
 }

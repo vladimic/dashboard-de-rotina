@@ -10,6 +10,8 @@
   gap: 14px;
   /* Same height for the three cards; each chart stretches to fill. */
   align-items: stretch;
+  /* Both rows the same height, so the IAH/quality charts match the sleep chart. */
+  grid-auto-rows: 1fr;
 }
 
 @media (max-width: 680px) {

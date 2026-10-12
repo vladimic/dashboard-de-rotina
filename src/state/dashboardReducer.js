@@ -1,5 +1,17 @@
 import { NOTE_COLORS } from '../data/seedData';
 
+// Sets (value given), skips (skip = true) or clears one day of a hand-typed
+// log; a day is never both valued and skipped.
+function setEntry(state, logKey, skipKey, date, value, skip = false) {
+  const log = { ...(state[logKey] || {}) };
+  const skipped = { ...(state[skipKey] || {}) };
+  delete log[date];
+  delete skipped[date];
+  if (value !== undefined) log[date] = value;
+  if (skip) skipped[date] = true;
+  return { ...state, [logKey]: log, [skipKey]: skipped };
+}
+
 export function dashboardReducer(state, action) {
   switch (action.type) {
     case 'HYDRATE':
@@ -47,10 +59,18 @@ export function dashboardReducer(state, action) {
       return { ...state, agendaDay: state.agendaDay === 'hoje' ? 'amanha' : 'hoje' };
 
     case 'SET_IAH':
-      return { ...state, iahLog: { ...state.iahLog, [action.date]: action.value } };
+      return setEntry(state, 'iahLog', 'iahSkip', action.date, action.value);
 
     case 'SET_QUALITY':
-      return { ...state, qualityLog: { ...state.qualityLog, [action.date]: action.value } };
+      return setEntry(state, 'qualityLog', 'qualitySkip', action.date, action.value);
+
+    // Hand-typed daily entries (IAH, sleep quality): leave a day blank on
+    // purpose ("sem informação") or clear it back to unfilled.
+    case 'SKIP_ENTRY':
+      return setEntry(state, action.logKey, action.skipKey, action.date, undefined, true);
+
+    case 'CLEAR_ENTRY':
+      return setEntry(state, action.logKey, action.skipKey, action.date, undefined, false);
 
     case 'TOGGLE_FLAG':
       return { ...state, [action.key]: !state[action.key] };

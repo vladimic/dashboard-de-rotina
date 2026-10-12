@@ -120,9 +120,12 @@ export function createSeedState() {
     agendaDay: 'hoje',
     // CPAP apnea-hypopnea index typed in daily: { 'YYYY-MM-DD': number }.
     iahLog: {},
+    // Days deliberately left blank (no information): { 'YYYY-MM-DD': true }.
+    iahSkip: {},
     // Sleep quality score (0–100) copied from the Health app by hand, by the
     // night's wake-up date: { 'YYYY-MM-DD': number }.
     qualityLog: {},
+    qualitySkip: {},
     // Weight chart moving-average toggles, kept across reloads/devices.
     weightShowMa7: true,
     weightShowMa30: true,

@@ -1,7 +1,7 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import EntryEditor from './EntryEditor';
 import ChartCanvas, { GRID_COLOR, monthDividerPlugin, thirtyDayScale } from './ChartCanvas';
-import { pendingQualityKeys, qualityLabel, qualityTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
-import { dateKeySaoPaulo } from '../../utils/format';
+import { entryKeys, pendingEntryKeys, qualityLabel, qualityTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // Apple's bands: 81+ alta, 61–80 regular, below that baixa.
@@ -10,13 +10,11 @@ const bandColor = (score) => (score >= 81 ? '#3f9b6b' : score >= 61 ? '#e5a03a' 
 // Sleep quality score from the Health app, typed in by hand (no app can read
 // it). `log` maps the night's wake-up date → score 0–100, the same date the
 // Health app prints at the top of its score screen.
-export default function SleepQualityCard({ nights, log, onSave }) {
+export default function SleepQualityCard({ log, skipped, onSave, onSkip, onClear }) {
   const axis = useMemo(() => thirtyDayAxis(), []);
-  const pending = pendingQualityKeys(nights, log);
-  const [dateKey, setDateKey] = useState(() => pending[0] || dateKeySaoPaulo());
-  const [text, setText] = useState('');
-  const [inputError, setInputError] = useState('');
-  const inputRef = useRef(null);
+  const [editing, setEditing] = useState(false);
+  const keys = useMemo(() => entryKeys('quality'), []);
+  const pendingCount = pendingEntryKeys(keys, log, skipped).length;
 
   const hasScores = axis.some((d) => log[d.key] != null);
   const trends = [7, 30].map((days) => ({ days, trend: qualityTrend(log, days) }));
@@ -60,28 +58,15 @@ export default function SleepQualityCard({ nights, log, onSave }) {
     };
   }, [axis, log]);
 
-  function save() {
+  const parse = (text) => {
     const value = Number(text.replace(',', '.'));
-    if (!text.trim() || !Number.isInteger(value) || value < 0 || value > 100) {
-      setInputError('Digite a nota, um número inteiro de 0 a 100');
-      return;
-    }
-    onSave(dateKey, value);
-    setText('');
-    setInputError('');
-    // Jump to the next night still blank, so a backlog is filled in order.
-    const next = pending.filter((k) => k !== dateKey)[0];
-    if (next) setDateKey(next);
-  }
-
-  function goToOldestPending() {
-    if (pending[0]) setDateKey(pending[0]);
-    inputRef.current?.focus();
-  }
+    if (!text.trim() || !Number.isInteger(value) || value < 0 || value > 100) return { error: 'Nota: inteiro de 0 a 100' };
+    return { value };
+  };
 
   return (
     <div className={styles.card}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
           <span className={styles.title} data-tip="Qualidade do sono: a nota (0–100) do app Saúde, que nenhum app consegue ler — você digita aqui. A data é a do dia em que você acordou, a mesma que o app Saúde mostra no topo da tela da nota. Faixas: 81+ alta (verde), 61–80 regular (amarelo), abaixo baixa (vermelho).">Qualidade do sono</span>
           {lastScore != null && (
@@ -109,41 +94,31 @@ export default function SleepQualityCard({ nights, log, onSave }) {
             })}
           </div>
         </div>
-        <form
-          className={styles.headerRight}
-          onSubmit={(e) => {
-            e.preventDefault();
-            save();
-          }}
-        >
-          <input type="date" className={styles.input} value={dateKey} max={dateKeySaoPaulo()} onChange={(e) => setDateKey(e.target.value)} />
-          <input
-            ref={inputRef}
-            className={styles.input}
-            style={{ width: 56 }}
-            inputMode="numeric"
-            placeholder="75"
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              setInputError('');
-            }}
-          />
-          <button type="submit" className={styles.saveBtn}>
-            Registrar
+        <div className={styles.headerRight}>
+          <button type="button" className={styles.saveBtn} data-alert={pendingCount > 0} onClick={() => setEditing(true)}>
+            {pendingCount > 0 ? `Preencher (${pendingCount})` : 'Editar'}
           </button>
-        </form>
+        </div>
       </div>
-      {pending.length > 0 && (
-        <button type="button" className={styles.pendingBadge} onClick={goToOldestPending}>
-          {pending.length} {pending.length === 1 ? 'noite sem nota' : 'noites sem nota'} · preencher
-        </button>
-      )}
-      {inputError && <div className={styles.error}>{inputError}</div>}
       {hasScores ? (
         <ChartCanvas config={config} height={240} />
       ) : (
         <div className={styles.empty}>Nenhuma nota ainda — digite a nota do app Saúde acima.</div>
+      )}
+      {editing && (
+        <EntryEditor
+          title="Qualidade · acordou em"
+          keys={keys}
+          log={log}
+          skipped={skipped}
+          placeholder="75"
+          format={String}
+          parse={parse}
+          onSet={onSave}
+          onSkip={onSkip}
+          onClear={onClear}
+          onClose={() => setEditing(false)}
+        />
       )}
     </div>
   );

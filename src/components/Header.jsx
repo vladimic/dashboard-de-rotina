@@ -228,7 +228,7 @@ export default function Header({
           >
             {tab.label}
             {tab.key === 'saude' && saudePending > 0 && (
-              <span className={styles.tabDot} title={`${saudePending} noite(s) sem nota de qualidade do sono`} />
+              <span className={styles.tabDot} title={`${saudePending} dia(s) sem IAH ou qualidade do sono`} />
             )}
           </button>
         ))}
