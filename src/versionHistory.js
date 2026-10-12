@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 147, date: '2026-10-12', summary: 'TickTick: listas grandes (ex.: Bíblia 365, 365 tarefas) vinham cortadas em ~99 tarefas pela API e as vencidas de hoje não apareciam; agora listas cheias são complementadas pelo filtro de tarefas do TickTick' },
   { version: 146, date: '2026-10-12', summary: 'TickTick: o card mostrava 0 pendentes mesmo com tarefas abertas — falha na leitura de uma lista era engolida em silêncio (agora aparece como erro), tarefas de hoje depois de ~21h eram cortadas pelo fuso do servidor e listas com o mesmo nome se sobrescreviam' },
   { version: 145, date: '2026-10-06', summary: 'Proteção contra perda de dados: falha de leitura não sobrescreve mais o estado salvo; importar backup; snapshot diário' },
   { version: 144, date: '2026-10-05', summary: 'Notion: o card mostrava só 9 das 38 tarefas vencidas/de hoje — o Notion devolve a consulta filtrada em partes (menos de 100 por vez, com "tem mais") e o dashboard lia só a primeira parte; agora lê todas' },

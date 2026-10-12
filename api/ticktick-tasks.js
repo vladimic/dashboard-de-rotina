@@ -42,6 +42,43 @@ function isDueTodayOrEarlier(task, todayStr) {
   return dateFormatter.format(due) <= todayStr;
 }
 
+// GET /project/{id}/data returns only ~99 tasks, so big lists (e.g. a
+// 365-task "Bíblia 365" list) lose their later tasks — exactly the overdue/
+// today ones. POST /task/filter isn't capped that way, so for suspiciously
+// full lists we also ask it for open tasks due up to today and merge by id.
+// Best-effort: any failure just falls back to the /data result.
+const CAP_SUSPECT = 90;
+
+async function fetchFilteredOpenTasks(accessToken, projectId) {
+  const fmt = (d) => d.toISOString().replace(/\.\d{3}Z$/, '+0000');
+  try {
+    const res = await fetch(`${API_BASE}/task/filter`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        projectIds: [projectId],
+        status: [0],
+        startDate: '2000-01-01T00:00:00+0000',
+        endDate: fmt(new Date(Date.now() + 36 * 3600 * 1000)),
+      }),
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json) ? json : [];
+  } catch {
+    return [];
+  }
+}
+
+async function loadProjectTasks(accessToken, project, projectData) {
+  const tasks = projectData.tasks || [];
+  if (tasks.length < CAP_SUSPECT) return tasks;
+  const extra = await fetchFilteredOpenTasks(accessToken, project.id);
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  for (const t of extra) if (!byId.has(t.id)) byId.set(t.id, t);
+  return [...byId.values()];
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
@@ -95,7 +132,8 @@ export default async function handler(req, res) {
             debug.projectDataFetch = { status: dataRes.status, ok: false, body: (await dataRes.text()).slice(0, 1000) };
           } else {
             const projectData = await dataRes.json();
-            const allTasks = projectData.tasks || [];
+            const allTasks = await loadProjectTasks(accessToken, match, projectData);
+            debug.tasksFromData = (projectData.tasks || []).length;
             debug.totalTasksInProject = allTasks.length;
             debug.tasksPassingStatusFilter = allTasks.filter((t) => t.status === 0).length;
             debug.tasksPassingDueFilter = allTasks.filter((t) => isDueTodayOrEarlier(t, todayStr)).length;
@@ -128,7 +166,7 @@ export default async function handler(req, res) {
           return;
         }
         const projectData = await dataRes.json();
-        const dueTasks = (projectData.tasks || []).filter(
+        const dueTasks = (await loadProjectTasks(accessToken, project, projectData)).filter(
           (t) => t.status === 0 && isDueTodayOrEarlier(t, todayStr)
         );
         if (dueTasks.length === 0) return;
