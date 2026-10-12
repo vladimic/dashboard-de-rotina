@@ -211,7 +211,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={`${styles.title} ${styles.hideNarrow}`}>Peso</span>
+          <span className={`${styles.title} ${styles.hideNarrow}`} data-tip="Peso: pesagens do app Saúde. O número grande é a última; 7/30/90/365d são as janelas do gráfico e as setas comparam o peso atual com o primeiro da janela. Linhas tracejadas = médias móveis.">Peso</span>
           {latest && (
             <span className={styles.bigValue}>
               {kg(latest.value)}

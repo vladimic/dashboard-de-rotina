@@ -76,7 +76,7 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>Sono</span>
+          <span className={styles.title} data-tip="Sono: tempo dormindo por noite, empilhado por fase (profundo, essencial, REM; e acordado, se ligado). O número grande é a última noite; 7 e 30 comparam a média móvel de hoje com a de ontem.">Sono</span>
           {last && <span className={styles.bigValue}>{formatDuration(last.asleepMin)}</span>}
           <div className={styles.trends}>
             {trends.map(({ days, trend }) => {

@@ -73,7 +73,7 @@ export default function IahCard({ log, onSave }) {
     <div className={styles.card}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>IAH · CPAP</span>
+          <span className={styles.title} data-tip="IAH (índice de apneia-hipopneia): eventos por hora de sono registrados pelo CPAP. Menos é melhor; abaixo de 5 é considerado normal. Lançamento manual, uma nota por noite.">IAH · CPAP</span>
           {last != null && (
             <>
               <span className={styles.bigValue}>{num(last)}</span>

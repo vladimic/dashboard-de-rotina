@@ -304,3 +304,42 @@
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
+
+/* Instant explanatory hover tooltip for the health indicators (data-tip on
+   the card/title/value). Wraps to several lines; data-tip-align="right"
+   anchors it to the right edge so it doesn't run off-screen. */
+.saudeCard[data-tip],
+.saudeCard [data-tip] {
+  position: relative;
+}
+
+.saudeCard [data-tip]:not(.weightTrend) {
+  overflow: visible;
+}
+
+.saudeCard[data-tip]:hover::after,
+.saudeCard .cardTitle[data-tip]:hover::after,
+.saudeCard .cardValue[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  width: max-content;
+  max-width: 260px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: #2f4f40;
+  color: #fff;
+  font: 500 11px/1.4 Inter, sans-serif;
+  white-space: normal;
+  text-align: left;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.saudeCard[data-tip-align='right']:hover::after,
+.saudeCard [data-tip-align='right']:hover::after {
+  left: auto;
+  right: 0;
+}

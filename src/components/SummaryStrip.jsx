@@ -1,9 +1,9 @@
 import styles from './SummaryStrip.module.css';
 import { formatClockSP, formatDuration, formatKg, sleepQuality, TREND_UI } from '../utils/health';
 
-function StatCard({ title, value, suffix, className, done }) {
+function StatCard({ title, value, suffix, className, done, tip, tipAlign }) {
   return (
-    <div className={`${styles.card} ${className || ''} ${done ? styles.cardDone : ''}`}>
+    <div className={`${styles.card} ${className || ''} ${done ? styles.cardDone : ''}`} data-tip={tip} data-tip-align={tipAlign}>
       {done && (
         <div className={styles.doneBadge}>
           <span className={styles.doneBadgeCheck}>✓</span>
@@ -17,6 +17,14 @@ function StatCard({ title, value, suffix, className, done }) {
     </div>
   );
 }
+
+const WEIGHT_TIP = 'Peso: última pesagem registrada no app Saúde (kg). As setas comparam com a pesagem mais antiga de cada janela — 7, 30 e 90 dias: ▼ perdeu, ▲ ganhou, ▬ variação menor que 0,2 kg.';
+const QUALITY_TIP =
+  'Qualidade: nota de 0 a 100 estimada pelo dashboard (não é a nota do app Saúde). Duração até 50 pts (8h = 50), profundo + REM até 30 pts (40% do sono = 30), pouco tempo acordado até 20 pts. Verde ≥ 80, amarelo ≥ 60, vermelho abaixo.';
+const IAH_TIP = 'IAH (índice de apneia-hipopneia): quantos eventos de apneia/hipopneia por hora de sono o CPAP registrou na última noite lançada. Menos é melhor; abaixo de 5 é considerado normal.';
+const SONO_TIP = 'Sono: tempo total dormindo na última noite (profundo + essencial + REM). Não conta o tempo acordado nem “na cama”.';
+const DORMIU_TIP = 'Dormiu: horário em que você pegou no sono na última noite (primeiro trecho de sono, não de “na cama”), no fuso de São Paulo.';
+const ACORDOU_TIP = 'Acordou: horário do fim do último trecho de sono da noite, no fuso de São Paulo.';
 
 export default function SummaryStrip({ page, counts, saude, lists, dayProgressPercent }) {
   const isHoje = page === 'hoje';
@@ -58,7 +66,7 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
 
       <div className={styles.saudeGroup} data-dim={isHoje}>
         <div className={`${styles.card} ${styles.saudeCard}`}>
-          <div className={styles.cardTitle}>Peso</div>
+          <div className={styles.cardTitle} data-tip={WEIGHT_TIP}>Peso</div>
           <div className={styles.weightRow}>
             <div className={styles.weightTrends}>
               {(saude.weight?.trends || []).map(({ days, trend }) => (
@@ -72,20 +80,20 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
                 </span>
               ))}
             </div>
-            <div className={styles.cardValue}>
+            <div className={styles.cardValue} data-tip={WEIGHT_TIP} data-tip-align="right">
               {saude.weight ? formatKg(saude.weight.value) : '–'}
               <span className={styles.cardSuffix}>kg</span>
             </div>
           </div>
         </div>
-        <StatCard title="IAH" value={saude.iah != null ? formatKg(saude.iah) : '–'} className={styles.saudeCard} />
-        <StatCard title="Sono" value={saude.lastNight ? formatDuration(saude.lastNight.asleepMin) : '–'} className={styles.saudeCard} />
-        <StatCard title="Qualidade" value={saude.lastNight ? sleepQuality(saude.lastNight).score : '–'} className={styles.saudeCard} />
-        <StatCard title="Dormiu" value={saude.lastNight ? formatClockSP(saude.lastNight.bedtime) : '–'} className={styles.saudeCard} />
-        <StatCard title="Acordou" value={saude.lastNight ? formatClockSP(saude.lastNight.wake) : '–'} className={styles.saudeCard} />
+        <StatCard title="IAH" value={saude.iah != null ? formatKg(saude.iah) : '–'} className={styles.saudeCard} tip={IAH_TIP} />
+        <StatCard title="Sono" value={saude.lastNight ? formatDuration(saude.lastNight.asleepMin) : '–'} className={styles.saudeCard} tip={SONO_TIP} />
+        <StatCard title="Qualidade" value={saude.lastNight ? sleepQuality(saude.lastNight).score : '–'} className={styles.saudeCard} tip={QUALITY_TIP} />
+        <StatCard title="Dormiu" value={saude.lastNight ? formatClockSP(saude.lastNight.bedtime) : '–'} className={styles.saudeCard} tip={DORMIU_TIP} />
+        <StatCard title="Acordou" value={saude.lastNight ? formatClockSP(saude.lastNight.wake) : '–'} className={styles.saudeCard} tip={ACORDOU_TIP} tipAlign="right" />
         {/* Filled in once the Shortcut also sends steps and exercise. */}
-        <StatCard title="Passos" value="–" className={styles.saudeCard} />
-        <StatCard title="Exercício" value="–" className={styles.saudeCard} />
+        <StatCard title="Passos" value="–" className={styles.saudeCard} tip="Passos: total do dia no app Saúde. Ainda não sincronizado — o atalho “Sincronizar Saúde” só envia peso e sono por enquanto." />
+        <StatCard title="Exercício" value="–" className={styles.saudeCard} tip="Exercício: minutos de treino do dia no app Saúde. Ainda não sincronizado — o atalho só envia peso e sono por enquanto." tipAlign="right" />
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 148, date: '2026-10-12', summary: 'Saúde: ao passar o mouse sobre cada indicador (Peso, IAH, Sono, Qualidade, Dormiu, Acordou, Passos, Exercício) e sobre o título de cada gráfico aparece uma explicação do que o valor significa e como é calculado' },
   { version: 147, date: '2026-10-12', summary: 'TickTick: listas grandes (ex.: Bíblia 365, 365 tarefas) vinham cortadas em ~99 tarefas pela API e as vencidas de hoje não apareciam; agora listas cheias são complementadas pelo filtro de tarefas do TickTick' },
   { version: 146, date: '2026-10-12', summary: 'TickTick: o card mostrava 0 pendentes mesmo com tarefas abertas — falha na leitura de uma lista era engolida em silêncio (agora aparece como erro), tarefas de hoje depois de ~21h eram cortadas pelo fuso do servidor e listas com o mesmo nome se sobrescreviam' },
   { version: 145, date: '2026-10-06', summary: 'Proteção contra perda de dados: falha de leitura não sobrescreve mais o estado salvo; importar backup; snapshot diário' },

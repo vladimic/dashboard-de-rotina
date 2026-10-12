@@ -403,3 +403,27 @@
   font-size: 13px;
   margin-left: 2px;
 }
+
+/* Explanatory hover tooltip on card titles (data-tip). */
+.title[data-tip] {
+  position: relative;
+  cursor: help;
+}
+
+.title[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  width: max-content;
+  max-width: 280px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: #2f4f40;
+  color: #fff;
+  font: 500 11px/1.4 Inter, sans-serif;
+  white-space: normal;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}

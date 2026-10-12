@@ -57,7 +57,7 @@ export default function SleepQualityCard({ nights }) {
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>Qualidade do sono</span>
+          <span className={styles.title} data-tip="Qualidade do sono: nota 0–100 estimada pelo dashboard (não é a do app Saúde). Duração até 50 pts (8h = 50), profundo + REM até 30 pts, pouco tempo acordado até 20 pts. Verde ≥ 80, amarelo ≥ 60, vermelho abaixo. O número grande é a última noite.">Qualidade do sono</span>
           {lastScore != null && <span className={styles.bigValue}>{lastScore}</span>}
           <div className={styles.trends}>
             {trends.map(({ days, trend }) => {

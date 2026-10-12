@@ -110,7 +110,7 @@ export default function SleepScheduleCard({ nights }) {
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title}>Horário do sono</span>
+          <span className={styles.title} data-tip="Horário do sono: cada barra vai da hora em que você dormiu até a que acordou. 7 e 30 mostram a hora média de dormir (verde = dormindo mais cedo) comparada com a de ontem.">Horário do sono</span>
           <div className={styles.trends}>
             {trends.map(({ days, trend }) => {
               const ui = trend ? TREND_UI[trend.direction] : null;
