@@ -132,15 +132,6 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
   const ma30 = useMemo(() => movingAverage(daily, 30), [daily]);
   // Only 7 and 30 days here; the longer windows were noise on this chart.
   const trends = useMemo(() => weightTrends(daily).filter((t) => t.days <= 30), [daily]);
-  // Average weight of each window, printed in its chip (same as the header).
-  const windowAvg = useMemo(() => {
-    const now = Date.now();
-    const avgOf = (days) => {
-      const win = daily.filter((p) => p.t > now - days * DAY_MS);
-      return win.length ? win.reduce((a, p) => a + p.value, 0) / win.length : null;
-    };
-    return { 7: avgOf(7), 30: avgOf(30) };
-  }, [daily]);
 
   const latest = samples.at(-1);
   // Memoized so the chart config (and the chart itself) isn't rebuilt on
@@ -160,7 +151,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
       type: 'line',
       data: {
         datasets: [
-          { label: 'Peso', data: xy(daily), borderColor: COLORS.weight, backgroundColor: 'rgba(47, 158, 111, 0.08)', fill: true, borderWidth: 1.5, pointRadius: periodDays && periodDays <= 30 ? 2.5 : 0, tension: 0.25 },
+          { label: 'Peso', data: xy(daily), borderColor: COLORS.weight, backgroundColor: 'rgba(47, 158, 111, 0.08)', fill: true, borderWidth: 1.5, pointRadius: 0, tension: 0.25 },
           { label: 'Média 7d', data: xy(ma7), borderColor: COLORS.ma7, borderWidth: 1.75, borderDash: [5, 4], pointRadius: 0, tension: 0.3, hidden: !showMa7 },
           { label: 'Média 30d', data: xy(ma30), borderColor: COLORS.ma30, borderWidth: 1.75, borderDash: [5, 4], pointRadius: 0, tension: 0.3, hidden: !showMa30 },
         ],
@@ -240,7 +231,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
                 >
                   {days}
                   <b>{ui ? ui.symbol : '–'}</b>
-                  {windowAvg[days] != null && <span className={styles.trendValue}>{kg(windowAvg[days])}</span>}
+                  {trend && <span className={styles.trendValue}>{trend.diff > 0 ? '+' : ''}{kg(trend.diff)}</span>}
                 </span>
               );
             })}
