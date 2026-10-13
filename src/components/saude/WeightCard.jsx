@@ -11,7 +11,7 @@ const PERIODS = [
   { days: 0, label: 'Geral' },
 ];
 
-const COLORS = { down: '#3f9b6b', up: '#d9534f', ma7: 'rgba(229, 160, 58, 0.9)', ma30: 'rgba(107, 95, 199, 0.75)' };
+const COLORS = { weight: '#2f9e6f', ma7: 'rgba(229, 160, 58, 0.75)', ma30: 'rgba(107, 95, 199, 0.65)' };
 
 const DAY_MS = 86400000;
 
@@ -61,44 +61,30 @@ function evenTicks(min, max, stepDays) {
 // Solid horizontal reference lines across the whole chart, each optionally
 // labelled: the current weight (red, value just right of the plot) and the
 // lowest weight in the period (blue, value just under the lowest point).
-// "início 104,3 · −1,1" in the top-left corner of the plot (above the
-// columns): weight on the first day of the period and the change since.
+// "início 104,3 · −1,1" in the bottom-left corner of the plot, over the
+// green fill: weight on the first day of the period and the change since.
 function periodStartLabel(start, delta) {
   return {
     id: 'periodStart',
     afterDatasetsDraw(chart) {
       const { ctx, chartArea } = chart;
       const x = chartArea.left + 6;
-      const y = chartArea.top + 4;
+      const y = chartArea.bottom - 6;
       const first = `início ${kg(start)} · `;
       const second = `${delta > 0 ? '+' : ''}${kg(delta)} kg`;
       ctx.save();
       ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.font = '500 10.5px Inter, sans-serif';
-      const w = ctx.measureText(first).width;
-      ctx.font = '700 10.5px Inter, sans-serif';
-      const w2 = ctx.measureText(second).width;
-      // Light backdrop so the text stays readable over the columns.
-      backdrop(ctx, x - 4, y - 2, w + w2 + 8, 17);
+      ctx.textBaseline = 'bottom';
       ctx.font = '500 10.5px Inter, sans-serif';
       ctx.fillStyle = '#5f8b75';
       ctx.fillText(first, x, y);
+      const w = ctx.measureText(first).width;
       ctx.font = '700 10.5px Inter, sans-serif';
       ctx.fillStyle = delta > 0 ? '#c0453a' : delta < 0 ? '#2f8a5c' : '#3f6b57';
       ctx.fillText(second, x + w, y);
       ctx.restore();
     },
   };
-}
-
-function backdrop(ctx, x, y, w, h) {
-  ctx.save();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
-  ctx.beginPath();
-  ctx.roundRect(x, y, w, h, 4);
-  ctx.fill();
-  ctx.restore();
 }
 
 function referenceLines(lines) {
@@ -130,9 +116,6 @@ function referenceLines(lines) {
           ctx.fill();
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
-          const tw = ctx.measureText(kg(value)).width;
-          backdrop(ctx, x - tw / 2 - 3, y + 4, tw + 6, 14);
-          ctx.fillStyle = color;
           ctx.fillText(kg(value), x, y + 5);
         }
         ctx.restore();
@@ -173,20 +156,13 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
     const stepDays = TICK_STEP_DAYS[periodDays];
     const stepMonths = periodDays === 365 ? 2 : Math.max(1, Math.ceil((todayNoon - xMin) / DAY_MS / 30.4 / 6));
     const xy = (points) => points.filter(inRange).map((p) => ({ x: p.t, y: Math.round(p.value * 100) / 100 }));
-    // One column per weigh-in day: green when it went down since the previous
-    // weigh-in (even one before the period), red when it went up.
-    const shown = [...inPeriod, ...(showMa7 ? ma7.filter(inRange) : []), ...(showMa30 ? ma30.filter(inRange) : [])].map((p) => p.value);
-    const yLo = shown.length ? Math.min(...shown) : 0;
-    const yHi = shown.length ? Math.max(...shown) : 1;
-    const yRange = yHi - yLo || 1;
-    const barColor = daily.map((p, i) => (i === 0 || p.value <= daily[i - 1].value ? COLORS.down : COLORS.up)).filter((_, i) => inRange(daily[i]));
     return {
-      type: 'bar',
+      type: 'line',
       data: {
         datasets: [
-          { label: 'Peso', data: xy(daily), backgroundColor: barColor, borderRadius: 2, barPercentage: 0.8, categoryPercentage: 1, grouped: false, order: 2 },
-          { type: 'line', label: 'Média 7d', data: xy(ma7), borderColor: COLORS.ma7, borderWidth: 1.75, borderDash: [5, 4], pointRadius: 0, tension: 0.3, hidden: !showMa7, order: 1 },
-          { type: 'line', label: 'Média 30d', data: xy(ma30), borderColor: COLORS.ma30, borderWidth: 1.75, borderDash: [5, 4], pointRadius: 0, tension: 0.3, hidden: !showMa30, order: 1 },
+          { label: 'Peso', data: xy(daily), borderColor: COLORS.weight, backgroundColor: 'rgba(47, 158, 111, 0.08)', fill: true, borderWidth: 1.5, pointRadius: periodDays && periodDays <= 30 ? 2.5 : 0, tension: 0.25 },
+          { label: 'Média 7d', data: xy(ma7), borderColor: COLORS.ma7, borderWidth: 1.75, borderDash: [5, 4], pointRadius: 0, tension: 0.3, hidden: !showMa7 },
+          { label: 'Média 30d', data: xy(ma30), borderColor: COLORS.ma30, borderWidth: 1.75, borderDash: [5, 4], pointRadius: 0, tension: 0.3, hidden: !showMa30 },
         ],
       },
       options: {
@@ -221,11 +197,11 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
           y: {
             // Headroom under the lowest point for its label, and above
             // the highest so the top point isn't clipped.
-            // Columns would pull the axis down to 0; the range comes from
-            // the period's weights instead, with headroom under the lowest
-            // for its label and above the highest so it isn't clipped.
-            min: yLo - yRange * 0.18,
-            max: yHi + yRange * 0.16,
+            afterDataLimits: (scale) => {
+              const range = scale.max - scale.min || 1;
+              scale.min -= range * 0.18;
+              scale.max += range * 0.05;
+            },
             grid: { color: GRID_COLOR },
             ticks: { callback: (v) => kg(v) },
           },
@@ -245,7 +221,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine} ${styles.allowWrap}`}>
         <div className={styles.headerLeft}>
-          <span className={`${styles.title} ${styles.hideNarrow}`} data-tip="Peso: uma coluna por dia com pesagem (média do dia), verde quando desceu desde a pesagem anterior e vermelha quando subiu. O número grande é a última pesagem. 7 e 30: a seta compara o peso atual com o primeiro da janela e o número ao lado é a média da janela. Tracejadas = médias móveis; linha vermelha = peso atual, azul = menor peso do período.">Peso</span>
+          <span className={`${styles.title} ${styles.hideNarrow}`} data-tip="Peso: pesagens do app Saúde. O número grande é a última; 7/30/90/365d são as janelas do gráfico e as setas comparam o peso atual com o primeiro da janela. Linhas tracejadas = médias móveis.">Peso</span>
           {latest && (
             <span className={styles.bigValue}>
               {kg(latest.value)}
