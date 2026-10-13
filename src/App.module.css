@@ -5,7 +5,7 @@
      chart columns need it); only very wide screens get side margins. */
   max-width: 2400px;
   margin: 0 auto;
-  padding: 14px 18px 22px;
+  padding: 6px 18px 22px;
 }
 
 @media (max-width: 680px) {

@@ -252,19 +252,21 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const dayProgressPercent =
     dayProgressBaseline > 0 ? Math.max(0, Math.min(100, Math.round((dayProgressDone / dayProgressBaseline) * 100))) : 0;
   const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
+  const iahPending = pendingEntryKeys(entryKeys(), state.iahLog, state.iahSkip).length;
+  const qualityPending = pendingEntryKeys(entryKeys(), state.qualityLog, state.qualitySkip).length;
   const saudeSummary = buildSaudeSummary({
     weightDaily,
     weightLatest: weight.samples.at(-1)?.value ?? null,
     iahLog: state.iahLog,
+    iahPending,
     qualityLog: state.qualityLog,
+    qualityPending,
     nights,
     activityDays: activity.days,
     habitosLog: state.habitosLog,
     habitIds: [...state.habitosBons, ...state.habitosRuins].map((h) => h.id),
   });
-  const entryPending =
-    pendingEntryKeys(entryKeys(), state.qualityLog, state.qualitySkip).length +
-    pendingEntryKeys(entryKeys(), state.iahLog, state.iahSkip).length;
+  const entryPending = iahPending + qualityPending;
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel

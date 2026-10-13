@@ -26,7 +26,7 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
     const ma = { 7: rollingByKey(axis, (k) => log[k] ?? null, 7), 30: rollingByKey(axis, (k) => log[k] ?? null, 30) };
     const tip = maTooltip(ma[7], ma[30], num);
     return {
-      type: 'line',
+      type: 'bar',
       data: {
         // Third-width chart: weekday as its initial (S, T, Q...).
         labels: axis.map((d) => [d.label[0], d.label[1][0].toUpperCase()]),
@@ -34,12 +34,9 @@ export default function IahCard({ log, skipped, onSave, onSkip, onClear, showMa7
           {
             label: 'IAH',
             data: axis.map((d) => log[d.key] ?? null),
-            borderColor: '#2f6fae',
             backgroundColor: '#2f6fae',
-            borderWidth: 1.5,
-            pointRadius: 3.5,
-            tension: 0.2,
-            spanGaps: true,
+            borderRadius: 3,
+            barPercentage: 0.75,
           },
           ...[7, 30]
             .filter((d) => (d === 7 ? showMa7 : showMa30))

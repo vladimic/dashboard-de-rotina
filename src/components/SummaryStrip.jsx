@@ -53,6 +53,9 @@ function MetricTile({ metric }) {
     <div className={`${styles.card} ${styles.saudeCard} ${styles.metric}`}>
       <div className={styles.cardTitle} data-tip={metric.tip} data-tip-align={metric.tipAlign}>
         {metric.title}
+        {metric.pending > 0 && (
+          <span className={styles.pendingDot} title={`${metric.pending} dia(s) sem registro nos últimos 35 — preencha pelo lápis do card`} />
+        )}
       </div>
       <div className={styles.cardValue}>
         {metric.value ?? '–'}

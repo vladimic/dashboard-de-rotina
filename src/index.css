@@ -23,7 +23,8 @@ body {
 
 #root {
   overflow-x: auto;
-  padding: 16px 12px;
+  /* Almost no space above the header (date line), so the page sits higher. */
+  padding: 4px 12px 16px;
 }
 
 @media (max-width: 680px) {

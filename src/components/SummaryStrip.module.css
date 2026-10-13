@@ -123,6 +123,17 @@
   color: #9dbfae;
 }
 
+/* Same orange dot as on the Saúde tab: a day of the last 35 still blank. */
+.pendingDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: #e5a03a;
+  vertical-align: middle;
+}
+
 .metricTrends {
   display: flex;
   gap: 3px;

@@ -122,6 +122,7 @@ function HabitRows({ rows, days, badColor, onCycleMark }) {
 export default function HabitTrackerCard({
   open,
   collapsible = true,
+  twoColumns = false,
   edit,
   onToggleOpen,
   onToggleEdit,
@@ -181,10 +182,11 @@ export default function HabitTrackerCard({
       </div>
 
       {open && (
-        <>
+        <div className={twoColumns ? styles.twoCols : undefined}>
+          <div className={styles.group}>
           <div className={styles.groupHeader}>
             <div className={styles.groupHeaderLeft}>
-              <span className={styles.groupLabel}>Hábitos Diários</span>
+              <span className={styles.groupLabel}>{twoColumns ? 'Diários' : 'Hábitos Diários'}</span>
               <span className={styles.groupCount}>
                 {bons.pend}/{bons.total}
               </span>
@@ -216,11 +218,13 @@ export default function HabitTrackerCard({
             />
           )}
 
-          <div className={styles.divider} />
+          </div>
+          {!twoColumns && <div className={styles.divider} />}
+          <div className={styles.group}>
 
           <div className={styles.groupHeader}>
             <div className={styles.groupHeaderLeft}>
-              <span className={styles.groupLabelBad}>Hábitos a Evitar</span>
+              <span className={styles.groupLabelBad}>{twoColumns ? 'A evitar' : 'Hábitos a Evitar'}</span>
               <span className={styles.groupCount}>
                 {ruins.pend}/{ruins.total}
               </span>
@@ -251,7 +255,8 @@ export default function HabitTrackerCard({
               onLinkChange={onNewRuimLinkChange}
             />
           )}
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

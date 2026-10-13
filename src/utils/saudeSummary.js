@@ -25,7 +25,7 @@ function habitPercent(log, habitIds, firstKey, key) {
 // Qualidade). Each: today's value, the last 30 days for the sparkline (the
 // last 7 drawn darker) and the 7d / 30d arrows. `good` is the direction
 // that counts as better (green arrow); the other one is red.
-export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, qualityLog, nights, activityDays, habitosLog, habitIds }, now = new Date()) {
+export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPending = 0, qualityLog, qualityPending = 0, nights, activityDays, habitosLog, habitIds }, now = new Date()) {
   const keys = lastNDateKeys(30, now);
   const series = (valueOf) => keys.map(valueOf);
   const actByKey = new Map(activityDays.map((d) => [d.key, d]));
@@ -81,6 +81,8 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, qualityLo
     },
     {
       id: 'iah',
+      // Days of the last 35 with neither a value nor "sem info": orange dot.
+      pending: iahPending,
       title: 'IAH',
       value: lastOf(iahLog) != null ? num1(lastOf(iahLog)) : null,
       good: 'down',
@@ -149,6 +151,7 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, qualityLo
     },
     {
       id: 'qualidade',
+      pending: qualityPending,
       title: 'Qualidade',
       value: lastOf(qualityLog) != null ? String(lastOf(qualityLog)) : null,
       good: 'up',
