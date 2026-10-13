@@ -1,6 +1,6 @@
 import { dateKeySaoPaulo, lastNDateKeys } from './format';
 
-// Workout kinds the Atividade card colors (the webhook maps Health's
+// Workout kinds the Exercício card colors (the webhook maps Health's
 // workout names onto these).
 export const WORKOUT_TYPES = {
   walk: { label: 'Caminhada', color: '#2f8a5c' },

@@ -43,7 +43,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // 35 days so the oldest of the 30 charted nights is complete.
   const sleep = useHealthSamples('sleep', 35);
   const nights = useMemo(() => sleepNights(sleep.samples), [sleep.samples]);
-  // Atividade card: steps and active energy per day, plus workouts.
+  // Exercício card: steps and active energy per day, plus workouts.
   const steps = useHealthSamples('steps', 35);
   const energy = useHealthSamples('energy', 35);
   const exercise = useHealthSamples('exercise', 35);
