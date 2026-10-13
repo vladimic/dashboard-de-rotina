@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styles from './Saude.module.css';
 
 const dayLabel = (key) =>
   new Date(`${key}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
-function Row({ dayKey, value, skipped, placeholder, format, parse, onSet, onSkip, onClear }) {
+function Row({ dayKey, value, skipped, placeholder, format, parse, focused, onSet, onSkip, onClear }) {
   const [text, setText] = useState(value != null ? format(value) : '');
   const [error, setError] = useState('');
+  const inputRef = useRef(null);
+
+  // The row the cursor should be in (first blank day, then the next one).
+  useEffect(() => {
+    if (focused) inputRef.current?.focus();
+  }, [focused]);
 
   // Follows the stored value (saved, removed or restored elsewhere).
   useEffect(() => {
@@ -37,6 +43,7 @@ function Row({ dayKey, value, skipped, placeholder, format, parse, onSet, onSkip
       ) : (
         <>
           <input
+            ref={inputRef}
             className={styles.input}
             style={{ width: 64 }}
             inputMode="decimal"
@@ -86,6 +93,15 @@ export default function EntryEditor({ title, keys, log, skipped, placeholder, fo
   const [openedBlank] = useState(() => new Set(pending));
   const visible = showAll ? keys : keys.filter((k) => openedBlank.has(k) || pending.includes(k));
 
+  // Opens straight on the first blank day's input; after OK / "Sem info" the
+  // cursor moves to the next blank one (listed order, newest first).
+  const [focusKey, setFocusKey] = useState(() => keys.find((k) => log[k] == null && !skipped[k]) ?? null);
+  const advance = (fromKey) => {
+    const after = keys.slice(keys.indexOf(fromKey) + 1).find((k) => log[k] == null && !skipped[k]);
+    const before = keys.find((k) => k !== fromKey && log[k] == null && !skipped[k]);
+    setFocusKey(after ?? before ?? null);
+  };
+
   return (
     <div className={styles.entryPanel}>
       <div className={styles.entryHead}>
@@ -111,8 +127,15 @@ export default function EntryEditor({ title, keys, log, skipped, placeholder, fo
             placeholder={placeholder}
             format={format}
             parse={parse}
-            onSet={onSet}
-            onSkip={onSkip}
+            focused={focusKey === key}
+            onSet={(k, v) => {
+              onSet(k, v);
+              if (log[k] == null) advance(k);
+            }}
+            onSkip={(k) => {
+              onSkip(k);
+              advance(k);
+            }}
             onClear={onClear}
           />
         ))}

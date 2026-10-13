@@ -9,7 +9,7 @@ const dayMonth = (key) => `${key.slice(8, 10)}/${key.slice(5, 7)}`;
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const weekday = (key) => WEEKDAYS[new Date(`${key}T12:00:00Z`).getUTCDay()];
 
-// Atividade: minutes of exercise per day (bars, value on top; colored by the
+// Exercício: minutes of exercise per day (bars, value on top; colored by the
 // main workout when workouts are known), with 7d / 30d moving averages and
 // the latest workouts below. Energy and steps have their own cards.
 // `activity.days` is activityDays() output: the last 31 days, oldest first.
@@ -87,7 +87,7 @@ export default function ActivityCard({ activity, showMa7, showMa30, onToggleFlag
     <div className={styles.card}>
       <div className={`${styles.header} ${styles.oneLine}`}>
         <div className={styles.headerLeft}>
-          <span className={styles.title} data-tip="Atividade: minutos de exercício de cada dia (anel verde do Apple Watch; barra na cor do treino principal quando o treino é conhecido). Tracejadas: médias móveis de 7 e 30 dias. O número grande são os minutos de hoje; 7 e 30 comparam a média móvel de hoje com a de ontem. Embaixo, os últimos treinos.">Atividade</span>
+          <span className={styles.title} data-tip="Exercício: minutos de exercício de cada dia (anel verde do Apple Watch; barra na cor do treino principal quando o treino é conhecido). Tracejadas: médias móveis de 7 e 30 dias. O número grande são os minutos de hoje; 7 e 30 comparam a média móvel de hoje com a de ontem. Embaixo, os últimos treinos.">Exercício</span>
           <span className={styles.bigValue}>
             {today.exMin}
             <span className={styles.unit}> min</span>
