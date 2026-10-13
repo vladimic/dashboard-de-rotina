@@ -228,12 +228,20 @@
   text-align: center;
 }
 
+/* UOL link on the left, the actual data source on the right. */
+.usdFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 8px;
+}
+
 .usdSource {
   display: block;
   font: 500 9px Inter, sans-serif;
   color: #c3b3c9;
-  margin-top: 8px;
-  text-align: right;
+  white-space: nowrap;
   text-decoration: underline;
   cursor: pointer;
 }
