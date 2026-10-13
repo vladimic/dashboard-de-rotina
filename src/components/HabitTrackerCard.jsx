@@ -175,9 +175,15 @@ export default function HabitTrackerCard({
           <div className={styles.pend}>
             {pend}/{total}
           </div>
-          <div className={styles.editLink} onClick={handleEditClick}>
-            {edit ? 'Concluir' : 'Editar'}
-          </div>
+          {edit ? (
+            <div className={styles.editLink} onClick={handleEditClick}>
+              Concluir
+            </div>
+          ) : (
+            <button type="button" className={styles.editBtn} onClick={handleEditClick} title="Editar os hábitos" aria-label="Editar os hábitos">
+              ✎
+            </button>
+          )}
         </div>
       </div>
 
