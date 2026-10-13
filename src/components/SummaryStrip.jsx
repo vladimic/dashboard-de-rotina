@@ -46,35 +46,41 @@ function Sparkline({ values }) {
   );
 }
 
-// One Saúde header tile: title, today's value, the 30-day sparkline and the
-// 7 / 30 arrows (green when moving the good way for that metric).
+// One Saúde header tile, two lines: title + 7 / 30 arrows (green when moving
+// the good way for that metric), then today's value + the 30-day sparkline.
 function MetricTile({ metric }) {
   return (
     <div className={`${styles.card} ${styles.saudeCard} ${styles.metric}`}>
-      <div className={styles.cardTitle} data-tip={metric.tip} data-tip-align={metric.tipAlign}>
-        {metric.title}
-        {metric.pending > 0 && (
-          <span className={styles.pendingDot} title={`${metric.pending} dia(s) sem registro nos últimos 35 — preencha pelo lápis do card`} />
-        )}
+      <div className={styles.metricTop}>
+        <div className={styles.cardTitle} data-tip={metric.tip} data-tip-align={metric.tipAlign}>
+          {metric.title}
+          {metric.pending > 0 && (
+            <span className={styles.pendingDot} title={`${metric.pending} dia(s) sem registro nos últimos 35 — preencha pelo lápis do card`} />
+          )}
+        </div>
+        <div className={styles.metricTrends}>
+          {metric.trends.map((t) => (
+            <span
+              key={t.days}
+              className={styles.metricTrend}
+              data-tone={!t.direction || t.direction === 'stable' ? 'flat' : t.direction === metric.good ? 'good' : 'bad'}
+              data-tip={t.tip}
+              data-tip-align={metric.tipAlign}
+            >
+              {t.days}
+              <b>{t.direction ? TREND_UI[t.direction].symbol : '–'}</b>
+            </span>
+          ))}
+        </div>
       </div>
-      <div className={styles.cardValue}>
-        {metric.value ?? '–'}
-        {metric.value != null && metric.unit && <span className={styles.cardSuffix}>{metric.unit}</span>}
-      </div>
-      <Sparkline values={metric.series} />
-      <div className={styles.metricTrends}>
-        {metric.trends.map((t) => (
-          <span
-            key={t.days}
-            className={styles.metricTrend}
-            data-tone={!t.direction || t.direction === 'stable' ? 'flat' : t.direction === metric.good ? 'good' : 'bad'}
-            data-tip={t.tip}
-            data-tip-align={metric.tipAlign}
-          >
-            {t.days}
-            <b>{t.direction ? TREND_UI[t.direction].symbol : '–'}</b>
-          </span>
-        ))}
+      <div className={styles.metricBottom}>
+        <div className={styles.cardValue}>
+          {metric.value ?? '–'}
+          {metric.value != null && metric.unit && <span className={styles.cardSuffix}>{metric.unit}</span>}
+        </div>
+        <div className={styles.sparkCell}>
+          <Sparkline values={metric.series} />
+        </div>
       </div>
     </div>
   );
@@ -111,8 +117,8 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
               <div className={styles.geralValue}>{counts.geralTotal}</div>
             </div>
           </div>
-          <StatCard title="Starting Day" value={counts.manhaPend} className={styles.hojeCard} done={counts.manhaPend === 0} />
-          <StatCard title="Ending Day" value={counts.noitePend} className={styles.hojeCard} done={counts.noitePend === 0} />
+          <StatCard title="Starting" value={counts.manhaPend} className={styles.hojeCard} done={counts.manhaPend === 0} />
+          <StatCard title="Ending" value={counts.noitePend} className={styles.hojeCard} done={counts.noitePend === 0} />
           <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} done={lists.ticktickTotal === 0} />
           <StatCard title="Hábitos" value={counts.habitosPend} className={styles.hojeCard} done={counts.habitosPend === 0} />
         </div>
