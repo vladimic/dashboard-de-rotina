@@ -51,7 +51,7 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           activity={activity}
           field="kcal"
           unit="kcal"
-          color="#e08a3c"
+          color="#d9534f"
           fmt={int}
           stableBelow={5}
           yStep={300}

@@ -633,22 +633,6 @@
   color: #7fa693;
 }
 
-.actStrip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(63, 107, 87, 0.12);
-  font: 500 11px Inter, sans-serif;
-  color: #7fa693;
-}
-
-.actStrip b {
-  color: #3f6b57;
-  font-weight: 600;
-}
-
 /* Sleep stage key in the card header (names shrink to short forms, then to
    bare swatches, as the card gets narrower). */
 .stageKey {

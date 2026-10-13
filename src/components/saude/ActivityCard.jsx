@@ -82,8 +82,6 @@ export default function ActivityCard({ activity, showMa7, showMa30, onToggleFlag
     .filter((d) => d.workouts.length)
     .slice(0, 3)
     .flatMap((d) => d.workouts.map((w) => ({ ...w, key: d.key, isToday: d === today })));
-  const week = all.slice(-7).reduce((a, d) => a + d.exMin, 0);
-  const month = days.reduce((a, d) => a + d.exMin, 0);
 
   return (
     <div className={styles.card}>
@@ -131,14 +129,6 @@ export default function ActivityCard({ activity, showMa7, showMa30, onToggleFlag
         ))}
       </div>
       )}
-      <div className={styles.actStrip}>
-        <span>
-          7 dias: <b>{week}</b> min
-        </span>
-        <span>
-          30 dias: <b>{month}</b> min
-        </span>
-      </div>
     </div>
   );
 }

@@ -263,7 +263,50 @@ a.habitLabel {
   box-sizing: border-box;
 }
 
+/* Saúde: good habits and habits to avoid side by side, with a smaller day
+   strip so the labels keep some room in a third-width card. */
+.twoCols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.group {
+  min-width: 0;
+}
+
+.twoCols .habitRow {
+  gap: 6px;
+}
+
+.twoCols .days {
+  gap: 3px;
+}
+
+.twoCols .cell,
+.twoCols .dayLetter {
+  width: 11px;
+}
+
+.twoCols .cell {
+  height: 11px;
+  border-radius: 3px;
+}
+
+.twoCols .groupLabel,
+.twoCols .groupLabelBad {
+  white-space: nowrap;
+}
+
+.twoCols .habitLabel {
+  font-size: 11.5px;
+}
+
 @media (max-width: 680px) {
+  .twoCols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .checkbox {
     width: 20px;
     height: 20px;

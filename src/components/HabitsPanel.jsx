@@ -26,7 +26,8 @@ function useHabitListHandlers(dispatch, listKey, newTextKey, newLinkKey, confirm
 
 // The Hábitos card wired to the dashboard state — the same panel (same
 // marks, same edit mode) on Hoje and on Saúde. `alwaysOpen` drops the
-// collapse toggle (Saúde shows it as a fixed-size grid cell).
+// collapse toggle and splits the two lists into columns (Saúde shows it as
+// a fixed-size grid cell).
 export default function HabitsPanel({ state, dispatch, habitTracker, alwaysOpen = false }) {
   const confirm = useConfirm();
   const bons = useHabitListHandlers(dispatch, 'habitosBons', 'newHabitoBomText', 'newHabitoBomLink', confirm);
@@ -37,6 +38,7 @@ export default function HabitsPanel({ state, dispatch, habitTracker, alwaysOpen 
     <HabitTrackerCard
       open={alwaysOpen || state.habitosOpen}
       collapsible={!alwaysOpen}
+      twoColumns={alwaysOpen}
       edit={state.habitosEdit}
       onToggleOpen={() => dispatch({ type: 'TOGGLE_FLAG', key: 'habitosOpen' })}
       onToggleEdit={() => dispatch({ type: 'TOGGLE_FLAG', key: 'habitosEdit' })}

@@ -130,7 +130,8 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
   const daily = useMemo(() => dailyWeights(samples), [samples]);
   const ma7 = useMemo(() => movingAverage(daily, 7), [daily]);
   const ma30 = useMemo(() => movingAverage(daily, 30), [daily]);
-  const trends = useMemo(() => weightTrends(daily), [daily]);
+  // Only 7 and 30 days here; the longer windows were noise on this chart.
+  const trends = useMemo(() => weightTrends(daily).filter((t) => t.days <= 30), [daily]);
 
   const latest = samples.at(-1);
   // Memoized so the chart config (and the chart itself) isn't rebuilt on
