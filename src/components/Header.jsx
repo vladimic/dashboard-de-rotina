@@ -26,6 +26,8 @@ const RED = '#c4506a';
 
 const USD_SOURCE_LABEL = 'Yahoo Finance';
 const USD_SOURCE_URL = 'https://finance.yahoo.com/quote/USDBRL=X';
+const USD_UOL_LABEL = 'Dolar Comercial - Site Uol';
+const USD_UOL_URL = 'https://economia.uol.com.br/cotacoes/cambio/';
 
 function fmtBRL(v) {
   return `R$ ${v.toFixed(3).replace('.', ',')}`;
@@ -160,15 +162,14 @@ function UsdPopover({ series, period, onPeriodChange }) {
       ) : (
         <div className={styles.usdChartEmpty}>Sem dados suficientes ainda.</div>
       )}
-      <a
-        className={styles.usdSource}
-        href={USD_SOURCE_URL}
-        target="_blank"
-        rel="noreferrer"
-        onClick={(e) => e.stopPropagation()}
-      >
-        fonte: {USD_SOURCE_LABEL}
-      </a>
+      <div className={styles.usdFooter}>
+        <a className={styles.usdSource} href={USD_UOL_URL} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+          {USD_UOL_LABEL}
+        </a>
+        <a className={styles.usdSource} href={USD_SOURCE_URL} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+          fonte: {USD_SOURCE_LABEL}
+        </a>
+      </div>
     </div>
   );
 }

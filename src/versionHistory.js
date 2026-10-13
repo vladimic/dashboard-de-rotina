@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 171, date: '2026-10-13', summary: 'Gráfico do dólar: no rodapé, à esquerda, link "Dolar Comercial - Site Uol" para a página de câmbio do UOL; a fonte dos dados (Yahoo Finance) continua à direita' },
   { version: 170, date: '2026-10-13', summary: 'IAH e Qualidade do sono: ao clicar no lápis, o painel já abre com o cursor no primeiro dia em branco; ao dar OK ou "Sem info" o cursor pula para o próximo em branco. O card Atividade passa a se chamar Exercício, como no cabeçalho' },
   { version: 169, date: '2026-10-13', summary: 'Peso: o gráfico de linha fica sem os marcadores nos pontos; ao lado das setas de 7 e 30 dias (no card e no cabeçalho) passa a aparecer quanto o peso variou na janela (ex.: −1,1), e não mais a média' },
   { version: 168, date: '2026-10-13', summary: 'Peso: volta o gráfico em linha da v166 (as colunas saem); ficam as setas de 7 e 30 dias com a média de peso de cada janela' },
