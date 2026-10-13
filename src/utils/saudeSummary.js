@@ -58,8 +58,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
     };
   });
 
-  const weightByKey = new Map(weightDaily.map((p) => [p.key, p.value]));
-
   return [
     {
       id: 'peso',
@@ -71,15 +69,15 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       // the first weigh-in in it), like the weight chart.
       trends: [7, 30].map((days) => {
         const t = weightTrend(weightDaily, days, now.getTime());
-        const avg = dailyTrend((k) => weightByKey.get(k) ?? null, days, 0, now)?.avg;
         return {
           days,
           direction: t?.direction || null,
-          label: avg != null ? formatKg(avg) : null,
+          // Same number the arrow stands for: kg gained / lost over the window.
+          label: t ? `${t.diff > 0 ? '+' : ''}${formatKg(t.diff)}` : null,
           tip: t ? `${days} dias: de ${formatKg(t.start)} para ${formatKg(t.start + t.diff)} kg (${t.diff > 0 ? '+' : ''}${formatKg(t.diff)}) · ${DIR_LABEL[t.direction]}` : `${days} dias: pesagens insuficientes`,
         };
       }),
-      tip: 'Peso: última pesagem do app Saúde. Embaixo, a média dos últimos 7 e 30 dias; a seta é a variação da pesagem mais antiga da janela até a atual (verde = perdeu).',
+      tip: 'Peso: última pesagem do app Saúde. Embaixo, quanto o peso variou em 7 e 30 dias (da pesagem mais antiga da janela até a atual); verde = perdeu.',
     },
     {
       id: 'iah',
