@@ -41,6 +41,19 @@
   text-decoration: underline;
 }
 
+.editBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  border-radius: 8px;
+  border: 1px solid #e3d6e8;
+  font: 600 13px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+}
+
 .dayLetter {
   width: 14px;
   text-align: center;
@@ -277,6 +290,16 @@ a.habitLabel {
 
 .twoCols .habitRow {
   gap: 6px;
+  padding: 1px 0;
+}
+
+.twoCols .groupHeader {
+  padding: 0 0 3px;
+}
+
+.twoCols .checkbox {
+  width: 14px;
+  height: 14px;
 }
 
 .twoCols .days {

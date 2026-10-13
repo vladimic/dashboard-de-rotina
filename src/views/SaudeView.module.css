@@ -30,8 +30,23 @@
   border-radius: 16px;
 }
 
-.fitCell > * {
+.fitCell > div {
   min-height: 100%;
+  /* Tighter than on Hoje so the two lists fit without scrolling. */
+  padding: 10px 14px;
+}
+
+.fitCell > div > div:first-child {
+  margin-bottom: 4px;
+}
+
+/* If a long list still overflows it scrolls, but without a visible bar. */
+.fitCell {
+  scrollbar-width: none;
+}
+
+.fitCell::-webkit-scrollbar {
+  display: none;
 }
 
 @media (max-width: 680px) {

@@ -22,12 +22,11 @@ function habitPercent(log, habitIds, firstKey, key) {
 
 // The nine tiles of the Saúde header, in the same order as the 3×3 grid
 // below it (Peso, IAH, Hábitos / Energia, Exercício, Passos / Dormiu, Sono,
-// Qualidade). Each: today's value, the last 30 days for the sparkline (the
-// last 7 drawn darker) and the 7d / 30d arrows. `good` is the direction
+// Qualidade). Each: today's value and the 7d / 30d arrows, each with its
+// average. `good` is the direction
 // that counts as better (green arrow); the other one is red.
 export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPending = 0, qualityLog, qualityPending = 0, nights, activityDays, habitosLog, habitIds }, now = new Date()) {
   const keys = lastNDateKeys(30, now);
-  const series = (valueOf) => keys.map(valueOf);
   const actByKey = new Map(activityDays.map((d) => [d.key, d]));
   // A day with neither steps nor energy never synced: no data, not zero.
   const act = (field) => (key) => {
@@ -48,11 +47,13 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
   const today = keys.at(-1);
 
   // Rolling-average arrows (today's 7/30-day average vs. yesterday's).
-  const rolling = (valueOf, stableBelow, fmt) => [7, 30].map((days) => {
+  // `short` formats the average printed in the chip (no unit).
+  const rolling = (valueOf, stableBelow, fmt, short = fmt) => [7, 30].map((days) => {
     const t = dailyTrend(valueOf, days, stableBelow, now);
     return {
       days,
       direction: t?.direction || null,
+      label: t ? short(t.avg) : null,
       tip: t ? `Média de ${days} dias: ${fmt(t.avg)} · ontem: ${fmt(t.prevAvg)} · ${DIR_LABEL[t.direction]}` : `${days} dias: dados insuficientes`,
     };
   });
@@ -66,18 +67,19 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: weightLatest != null ? formatKg(weightLatest) : null,
       unit: 'kg',
       good: 'down',
-      series: series((k) => weightByKey.get(k) ?? null),
       // Weight keeps its own arrows: change over the window (latest minus
       // the first weigh-in in it), like the weight chart.
       trends: [7, 30].map((days) => {
         const t = weightTrend(weightDaily, days, now.getTime());
+        const avg = dailyTrend((k) => weightByKey.get(k) ?? null, days, 0, now)?.avg;
         return {
           days,
           direction: t?.direction || null,
+          label: avg != null ? formatKg(avg) : null,
           tip: t ? `${days} dias: de ${formatKg(t.start)} para ${formatKg(t.start + t.diff)} kg (${t.diff > 0 ? '+' : ''}${formatKg(t.diff)}) · ${DIR_LABEL[t.direction]}` : `${days} dias: pesagens insuficientes`,
         };
       }),
-      tip: 'Peso: última pesagem do app Saúde. Linha: média de cada dia nos últimos 30 (os 7 mais recentes em destaque). Setas: variação da pesagem mais antiga da janela até a atual; verde = perdeu.',
+      tip: 'Peso: última pesagem do app Saúde. Embaixo, a média dos últimos 7 e 30 dias; a seta é a variação da pesagem mais antiga da janela até a atual (verde = perdeu).',
     },
     {
       id: 'iah',
@@ -86,7 +88,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       title: 'IAH',
       value: lastOf(iahLog) != null ? num1(lastOf(iahLog)) : null,
       good: 'down',
-      series: series(logged(iahLog)),
       trends: rolling(logged(iahLog), 0.1, num1),
       tip: 'IAH: eventos de apneia por hora da última noite lançada no card IAH. Setas: média de 7 e 30 dias hoje vs. ontem; verde = caindo.',
     },
@@ -96,7 +97,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: habit(today) != null ? int(habit(today)) : null,
       unit: '%',
       good: 'up',
-      series: series(habit),
       trends: rolling(habit, 1, (v) => `${int(v)}%`),
       tip: 'Hábitos: % dos hábitos com ✓ hoje (diários feitos + a evitar evitados). Hoje ainda está em andamento. Setas: média de 7 e 30 dias hoje vs. ontem.',
     },
@@ -106,8 +106,7 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: act('kcal')(today) != null ? int(act('kcal')(today)) : null,
       unit: 'kcal',
       good: 'up',
-      series: series(act('kcal')),
-      trends: rolling(act('kcal'), 5, (v) => `${int(v)} kcal`),
+      trends: rolling(act('kcal'), 5, (v) => `${int(v)} kcal`, int),
       tip: 'Energia ativa de hoje (kcal, app Saúde). Hoje é parcial, então a média de 7 dias tende a cair até o fim do dia. Setas: média de 7 e 30 dias hoje vs. ontem.',
     },
     {
@@ -116,8 +115,7 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: act('exMin')(today) != null ? int(act('exMin')(today)) : null,
       unit: 'min',
       good: 'up',
-      series: series(act('exMin')),
-      trends: rolling(act('exMin'), 1, (v) => `${int(v)} min`),
+      trends: rolling(act('exMin'), 1, (v) => `${int(v)} min`, int),
       tip: 'Minutos de exercício de hoje (anel verde do Apple Watch). Hoje é parcial. Setas: média de 7 e 30 dias hoje vs. ontem.',
     },
     {
@@ -125,7 +123,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       title: 'Passos',
       value: act('steps')(today) != null ? int(act('steps')(today)) : null,
       good: 'up',
-      series: series(act('steps')),
       trends: rolling(act('steps'), 100, int),
       tip: 'Passos de hoje (app Saúde, maior fonte entre iPhone e Watch). Hoje é parcial. Setas: média de 7 e 30 dias hoje vs. ontem.',
     },
@@ -134,9 +131,8 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       title: 'Dormiu',
       value: lastNight ? formatClockSP(lastNight.bedtime) : null,
       good: 'down',
-      series: series(night((n) => bedtimeHour(n.bedtime) * 60)),
       trends: rolling(night((n) => bedtimeHour(n.bedtime) * 60), 1, clockFromMin),
-      tip: 'Dormiu: horário em que pegou no sono na última noite (São Paulo). Linha mais alta = mais tarde. Setas: horário médio de 7 e 30 dias hoje vs. ontem; verde = dormindo mais cedo.',
+      tip: 'Dormiu: horário em que pegou no sono na última noite (São Paulo). Setas: horário médio de 7 e 30 dias hoje vs. ontem; verde = dormindo mais cedo.',
       tipAlign: 'right',
     },
     {
@@ -144,7 +140,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       title: 'Sono',
       value: lastNight ? formatDuration(lastNight.asleepMin) : null,
       good: 'up',
-      series: series(night((n) => n.asleepMin)),
       trends: rolling(night((n) => n.asleepMin), 1, formatDuration),
       tip: 'Sono: tempo dormindo na última noite (sem o acordado). Setas: média de 7 e 30 noites hoje vs. ontem; verde = dormindo mais.',
       tipAlign: 'right',
@@ -155,7 +150,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       title: 'Qualidade',
       value: lastOf(qualityLog) != null ? String(lastOf(qualityLog)) : null,
       good: 'up',
-      series: series(logged(qualityLog)),
       trends: rolling(logged(qualityLog), 1, (v) => int(v)),
       tip: 'Qualidade: nota (0–100) do app Saúde da última noite lançada. Setas: média de 7 e 30 noites hoje vs. ontem; verde = melhorando.',
       tipAlign: 'right',

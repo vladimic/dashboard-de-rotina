@@ -4,11 +4,6 @@ import { TREND_UI } from '../utils/health';
 function StatCard({ title, value, suffix, className, done, tip, tipAlign }) {
   return (
     <div className={`${styles.card} ${className || ''} ${done ? styles.cardDone : ''}`} data-tip={tip} data-tip-align={tipAlign}>
-      {done && (
-        <div className={styles.doneBadge}>
-          <span className={styles.doneBadgeCheck}>✓</span>
-        </div>
-      )}
       <div className={styles.cardTitle}>{title}</div>
       <div className={styles.cardValue}>
         {value}
@@ -18,36 +13,9 @@ function StatCard({ title, value, suffix, className, done, tip, tipAlign }) {
   );
 }
 
-// Last 30 days as a line: the first 23 light, the last 7 dark and thicker
-// ("evolução mensal" + "7 dias" in one), with a dot on the latest value.
-// Gaps (days without data) are bridged.
-function Sparkline({ values }) {
-  const pts = values.map((v, i) => (v == null ? null : [i, v])).filter(Boolean);
-  if (pts.length < 2) return <div className={styles.sparkEmpty}>sem dados</div>;
-  const vs = pts.map((p) => p[1]);
-  const min = Math.min(...vs);
-  const max = Math.max(...vs);
-  const span = max - min || 1;
-  const x = (i) => (i / (values.length - 1)) * 100;
-  const y = (v) => 22 - ((v - min) / span) * 20;
-  const path = (list) => list.map(([i, v], n) => `${n ? 'L' : 'M'}${x(i).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
-  const cut = values.length - 7;
-  const month = pts.filter(([i]) => i <= cut);
-  // The 7-day part starts at the last point before the cut, so it joins the
-  // month line instead of floating.
-  const week = [...month.slice(-1), ...pts.filter(([i]) => i > cut)];
-  const last = pts.at(-1);
-  return (
-    <svg className={styles.spark} viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true">
-      {month.length > 1 && <path d={path(month)} className={styles.sparkMonth} />}
-      {week.length > 1 && <path d={path(week)} className={styles.sparkWeek} />}
-      <path d={`M${x(last[0])},${y(last[1])} l0,0`} className={styles.sparkDot} />
-    </svg>
-  );
-}
-
-// One Saúde header tile, two lines: title + 7 / 30 arrows (green when moving
-// the good way for that metric), then today's value + the 30-day sparkline.
+// One Saúde header tile, two lines: title and today's value, then the 7 and
+// 30-day chips — arrow (green when moving the good way for that metric) and
+// that window's average; the first chip is always 7 days, the second 30.
 function MetricTile({ metric }) {
   return (
     <div className={`${styles.card} ${styles.saudeCard} ${styles.metric}`}>
@@ -58,36 +26,30 @@ function MetricTile({ metric }) {
             <span className={styles.pendingDot} title={`${metric.pending} dia(s) sem registro nos últimos 35 — preencha pelo lápis do card`} />
           )}
         </div>
-        <div className={styles.metricTrends}>
-          {metric.trends.map((t) => (
-            <span
-              key={t.days}
-              className={styles.metricTrend}
-              data-tone={!t.direction || t.direction === 'stable' ? 'flat' : t.direction === metric.good ? 'good' : 'bad'}
-              data-tip={t.tip}
-              data-tip-align={metric.tipAlign}
-            >
-              {t.days}
-              <b>{t.direction ? TREND_UI[t.direction].symbol : '–'}</b>
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className={styles.metricBottom}>
         <div className={styles.cardValue}>
           {metric.value ?? '–'}
           {metric.value != null && metric.unit && <span className={styles.cardSuffix}>{metric.unit}</span>}
         </div>
-        <div className={styles.sparkCell}>
-          <Sparkline values={metric.series} />
-        </div>
+      </div>
+      <div className={styles.metricTrends}>
+        {metric.trends.map((t) => (
+          <span
+            key={t.days}
+            className={styles.metricTrend}
+            data-tone={!t.direction || t.direction === 'stable' ? 'flat' : t.direction === metric.good ? 'good' : 'bad'}
+            data-tip={t.tip}
+            data-tip-align={metric.tipAlign}
+          >
+            <b>{t.direction ? TREND_UI[t.direction].symbol : '–'}</b>
+            {t.label ?? ''}
+          </span>
+        ))}
       </div>
     </div>
   );
 }
 
 export default function SummaryStrip({ page, counts, saude, lists, dayProgressPercent }) {
-  const isHoje = page === 'hoje';
   const isSaude = page === 'saude';
 
   return (
@@ -124,7 +86,7 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
         </div>
       </div>
 
-      <div className={styles.saudeGroup} data-dim={isHoje}>
+      <div className={styles.saudeGroup}>
         {saude.map((m) => (
           <MetricTile key={m.id} metric={m} />
         ))}

@@ -38,42 +38,23 @@
   padding: 8px;
 }
 
-.saudeGroup[data-dim='true'] {
-  background: rgba(63, 107, 87, 0.05);
-  filter: brightness(0.93) saturate(0.85);
-}
-
-/* On Saúde the nine health tiles get a single row and most of the width
-   (sparkline + arrows need room); Hoje's group stays as a compact 5×2. On
-   Hoje they shrink back to title + value in 5 columns. */
-.strip[data-page='saude'] .saudeGroup {
+/* The nine health tiles in one row, on Hoje and on Saúde alike. */
+.saudeGroup {
   flex: 1.9;
   grid-template-columns: repeat(9, minmax(0, 1fr));
-}
-
-.saudeGroup[data-dim='true'] {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.saudeGroup[data-dim='true'] .spark,
-.saudeGroup[data-dim='true'] .sparkEmpty,
-.saudeGroup[data-dim='true'] .metricTrends {
-  display: none;
 }
 
 .card.metric {
   gap: 3px;
   padding-left: 7px;
   padding-right: 7px;
-  /* Lets the tile switch to a stacked layout when it gets narrow. */
-  container-type: inline-size;
 }
 
-.metricTop,
-.metricBottom {
+.metricTop {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -83,88 +64,9 @@
   font-size: 12px;
 }
 
-.metricBottom .cardValue {
+.metricTop .cardValue {
   flex: none;
-  text-align: left;
   white-space: nowrap;
-}
-
-.sparkCell {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Too narrow for two things per line (small laptop, phone): title, value,
-   sparkline and arrows stacked. */
-@container (max-width: 100px) {
-  .metricTop,
-  .metricBottom {
-    display: contents;
-  }
-
-  .metricBottom .cardValue {
-    order: 1;
-  }
-
-  .sparkCell {
-    order: 2;
-  }
-
-  .metricTrends {
-    order: 3;
-  }
-}
-
-/* Dimmed (on Hoje): one line, title left and value right. */
-.saudeGroup[data-dim='true'] .card.metric {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  container-type: normal;
-}
-
-.saudeGroup[data-dim='true'] .metricTop,
-.saudeGroup[data-dim='true'] .metricBottom,
-.saudeGroup[data-dim='true'] .sparkCell {
-  display: contents;
-}
-
-.spark {
-  display: block;
-  width: 100%;
-  height: 20px;
-  overflow: visible;
-}
-
-.spark path {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.sparkMonth {
-  stroke: #a9cbb9;
-  stroke-width: 1.5;
-}
-
-.sparkWeek {
-  stroke: #2f6b52;
-  stroke-width: 2.25;
-}
-
-.sparkDot {
-  stroke: #2f6b52;
-  stroke-width: 5;
-}
-
-.sparkEmpty {
-  height: 20px;
-  justify-content: flex-end;
-  display: flex;
-  align-items: center;
-  font: 500 10px Inter, sans-serif;
-  color: #9dbfae;
 }
 
 /* Same orange dot as on the Saúde tab: a day of the last 35 still blank. */
@@ -180,7 +82,7 @@
 
 .metricTrends {
   display: flex;
-  flex: none;
+  flex-wrap: wrap;
   gap: 2px;
 }
 
@@ -190,8 +92,10 @@
   align-items: center;
   gap: 1px;
   height: 16px;
-  padding: 0 3px;
+  padding: 0 4px;
   border-radius: 5px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   background: #eef3f0;
   color: #7fa693;
   cursor: default;
@@ -199,6 +103,7 @@
 
 .metricTrend b {
   font-size: 12px;
+  margin-right: 2px;
 }
 
 .metricTrend[data-tone='good'] {
@@ -236,31 +141,11 @@
   box-shadow: 0 1px 3px rgba(63, 107, 87, 0.1);
 }
 
-/* A block with nothing pending — 3px mint outline + a small check badge in
-   the top-right corner, in the same #8fd9b6 already used for "done" states
-   (habit checkmarks, the Geral ring) elsewhere in the dashboard. */
+/* A block with nothing pending: 3px mint outline, in the same #8fd9b6
+   already used for "done" states (habit checkmarks, the Geral ring). */
 .cardDone {
-  padding: 6px 8px;
+  padding: 2px 6px;
   border: 3px solid #8fd9b6;
-}
-
-.doneBadge {
-  position: absolute;
-  top: -8px;
-  right: 5px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #8fd9b6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.doneBadgeCheck {
-  font: 700 11px Inter, sans-serif;
-  color: #1f4d3a;
-  line-height: 1;
 }
 
 .cardTitle {
@@ -387,8 +272,7 @@
   /* Whichever group belongs to the page you're not on today just wastes
      vertical space on a phone — the desktop "dim but visible" treatment
      only makes sense when both fit on screen at once. */
-  .hojeGroup[data-dim='true'],
-  .saudeGroup[data-dim='true'] {
+  .hojeGroup[data-dim='true'] {
     display: none;
   }
 
@@ -424,8 +308,7 @@
     scroll-snap-align: start;
   }
 
-  .saudeGroup,
-  .strip[data-page='saude'] .saudeGroup {
+  .saudeGroup {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
