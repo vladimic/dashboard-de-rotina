@@ -55,41 +55,84 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-/* ...which leaves Hoje's Geral tile narrower there: smaller ring and total. */
-.strip[data-page='saude'] .geralRing {
-  width: 34px;
-  height: 34px;
-}
-
-.strip[data-page='saude'] .geralRingInner {
-  inset: 3px;
-  font-size: 9px;
-}
-
-.strip[data-page='saude'] .geralValue {
-  font-size: 30px;
-}
-
 .saudeGroup[data-dim='true'] .spark,
 .saudeGroup[data-dim='true'] .sparkEmpty,
 .saudeGroup[data-dim='true'] .metricTrends {
   display: none;
 }
 
-.metric {
-  justify-content: flex-start;
-  gap: 4px;
+.card.metric {
+  gap: 3px;
+  padding-left: 7px;
+  padding-right: 7px;
+  /* Lets the tile switch to a stacked layout when it gets narrow. */
+  container-type: inline-size;
 }
 
-.metric .cardValue {
+.metricTop,
+.metricBottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.metric .metricTop .cardTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.metricBottom .cardValue {
+  flex: none;
   text-align: left;
   white-space: nowrap;
+}
+
+.sparkCell {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Too narrow for two things per line (small laptop, phone): title, value,
+   sparkline and arrows stacked. */
+@container (max-width: 100px) {
+  .metricTop,
+  .metricBottom {
+    display: contents;
+  }
+
+  .metricBottom .cardValue {
+    order: 1;
+  }
+
+  .sparkCell {
+    order: 2;
+  }
+
+  .metricTrends {
+    order: 3;
+  }
+}
+
+/* Dimmed (on Hoje): one line, title left and value right. */
+.saudeGroup[data-dim='true'] .card.metric {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  container-type: normal;
+}
+
+.saudeGroup[data-dim='true'] .metricTop,
+.saudeGroup[data-dim='true'] .metricBottom,
+.saudeGroup[data-dim='true'] .sparkCell {
+  display: contents;
 }
 
 .spark {
   display: block;
   width: 100%;
-  height: 24px;
+  height: 20px;
   overflow: visible;
 }
 
@@ -116,7 +159,8 @@
 }
 
 .sparkEmpty {
-  height: 24px;
+  height: 20px;
+  justify-content: flex-end;
   display: flex;
   align-items: center;
   font: 500 10px Inter, sans-serif;
@@ -136,7 +180,8 @@
 
 .metricTrends {
   display: flex;
-  gap: 3px;
+  flex: none;
+  gap: 2px;
 }
 
 .metricTrend {
@@ -144,8 +189,8 @@
   display: inline-flex;
   align-items: center;
   gap: 1px;
-  height: 17px;
-  padding: 0 5px;
+  height: 16px;
+  padding: 0 3px;
   border-radius: 5px;
   background: #eef3f0;
   color: #7fa693;
@@ -171,7 +216,7 @@
   min-width: 0;
   background: #fff;
   border-radius: 12px;
-  padding: 7px 9px;
+  padding: 5px 9px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -179,6 +224,11 @@
 }
 
 .hojeCard {
+  /* Title and number on one line, so the strip is one card-line tall. */
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   box-shadow: 0 1px 3px rgba(91, 74, 99, 0.1);
 }
 
@@ -263,6 +313,7 @@
      title+value the same way it does for every card in row 1. */
   grid-template-rows: 1fr 1fr;
   row-gap: 7px;
+  padding: 5px 9px;
 }
 
 .geralTitle {
@@ -276,9 +327,9 @@
 
 .geralTop {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .geralBottom {
@@ -290,21 +341,21 @@
 
 .geralRing {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   flex: none;
 }
 
 .geralRingInner {
   position: absolute;
-  inset: 4px;
+  inset: 3px;
   border-radius: 50%;
   background: #5b4a63;
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 700 11px Inter, sans-serif;
+  font: 700 9px Inter, sans-serif;
   color: #fff;
 }
 
@@ -320,7 +371,7 @@
 .geralValue {
   /* Deliberately its own size, bigger than the shared --fs-kpi-value used by
      every other summary card — this is the one number meant to dominate. */
-  font: 700 44px Inter, sans-serif;
+  font: 700 30px Inter, sans-serif;
   line-height: 1;
   color: #fff;
   font-variant-numeric: tabular-nums;
@@ -361,6 +412,12 @@
     scroll-snap-align: start;
   }
 
+  .hojeCard {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+  }
+
   .geralCard {
     flex: none;
     width: 118px;
@@ -375,6 +432,7 @@
   .saudeGroup .card {
     width: auto;
   }
+
 }
 
 /* Instant explanatory hover tooltip for the health indicators (data-tip on
