@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 173, date: '2026-10-17', summary: 'Hábitos: as médias de 7 e 30 dias também deixam de contar o dia de hoje (ainda em andamento); as setas comparam a média até ontem com a média até anteontem' },
   { version: 172, date: '2026-10-17', summary: 'Energia, Exercício e Passos: as médias de 7 e 30 dias não contam mais o dia de hoje (ainda incompleto) — a janela de 7 dias vai de ontem até 6 dias antes, e a de 30 igual; as setas comparam com a média até anteontem, e a linha tracejada dos gráficos não é desenhada em hoje' },
   { version: 171, date: '2026-10-13', summary: 'Gráfico do dólar: no rodapé, à esquerda, link "Dolar Comercial - Site Uol" para a página de câmbio do UOL; a fonte dos dados (Yahoo Finance) continua à direita' },
   { version: 170, date: '2026-10-13', summary: 'IAH e Qualidade do sono: ao clicar no lápis, o painel já abre com o cursor no primeiro dia em branco; ao dar OK ou "Sem info" o cursor pula para o próximo em branco. O card Atividade passa a se chamar Exercício, como no cabeçalho' },

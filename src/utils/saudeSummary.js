@@ -95,8 +95,8 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: habit(today) != null ? int(habit(today)) : null,
       unit: '%',
       good: 'up',
-      trends: rolling(habit, 1, (v) => `${int(v)}%`),
-      tip: 'Hábitos: % dos hábitos com ✓ hoje (diários feitos + a evitar evitados). Hoje ainda está em andamento. Setas: média de 7 e 30 dias hoje vs. ontem.',
+      trends: rolling(habit, 1, (v) => `${int(v)}%`, (v) => `${int(v)}%`, true),
+      tip: 'Hábitos: % dos hábitos com ✓ hoje (diários feitos + a evitar evitados). Hoje ainda está em andamento e não entra nas médias de 7 e 30 dias, que terminam ontem. Setas: média até ontem vs. até anteontem.',
     },
     {
       id: 'energia',
