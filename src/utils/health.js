@@ -186,7 +186,10 @@ export function bedtimeHour(t) {
 // yesterday: the arrow says whether today's average went up or down vs.
 // yesterday's. Days with no value (null) are left out of an average. null
 // when either window has no values at all.
-export function dailyTrend(valueOf, days, stableBelow, now = new Date()) {
+// `skipToday`: today is still incomplete (energy, exercise, steps), so the
+// windows end yesterday and "prev" ends the day before.
+export function dailyTrend(valueOf, days, stableBelow, now = new Date(), skipToday = false) {
+  if (skipToday) now = new Date(now.getTime() - 86400000);
   const avgOf = (keys) => {
     const vals = keys.map(valueOf).filter((v) => v != null);
     return vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null;
@@ -242,8 +245,11 @@ export function iahTrend(log, days, now = new Date()) {
 // `valueOf(key)` over that day and the days-1 before it (days with no value
 // are left out; null when the whole window is empty). `valueOf` can reach
 // back before the axis starts, so the line is complete from its first day.
-export function rollingByKey(axis, valueOf, days) {
-  return axis.map((d) => {
+// `skipToday`: the last axis day (today) is incomplete, so it gets no
+// average point; earlier days keep their own trailing window.
+export function rollingByKey(axis, valueOf, days, skipToday = false) {
+  return axis.map((d, idx) => {
+    if (skipToday && idx === axis.length - 1) return null;
     let sum = 0;
     let n = 0;
     for (let i = 0; i < days; i++) {

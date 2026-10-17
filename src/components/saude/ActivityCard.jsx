@@ -27,10 +27,10 @@ export default function ActivityCard({ activity, showMa7, showMa30, onToggleFlag
       return d && (d.kcal > 0 || d.steps > 0) ? d.exMin : null;
     };
   }, [all]);
-  const trends = [7, 30].map((n) => ({ days: n, trend: dailyTrend(valueOf, n, 1) }));
+  const trends = [7, 30].map((n) => ({ days: n, trend: dailyTrend(valueOf, n, 1, new Date(), true) }));
 
   const config = useMemo(() => {
-    const ma = { 7: rollingByKey(axis, valueOf, 7), 30: rollingByKey(axis, valueOf, 30) };
+    const ma = { 7: rollingByKey(axis, valueOf, 7, true), 30: rollingByKey(axis, valueOf, 30, true) };
     const tip = maTooltip(ma[7], ma[30], (v) => `${Math.round(v)} min`);
     return {
       type: 'bar',
@@ -98,7 +98,7 @@ export default function ActivityCard({ activity, showMa7, showMa30, onToggleFlag
                 key={n}
                 className={styles.trend}
                 data-tone={!t || t.direction === 'stable' ? 'flat' : t.direction === 'up' ? 'good' : 'bad'}
-                data-tip={t ? `Média dos últimos ${n} dias: ${Math.round(t.avg)} min de exercício. Média de ontem: ${Math.round(t.prevAvg)} min · ${TREND_UI[t.direction].label}` : `${n} dias: dados insuficientes`}
+                data-tip={t ? `Média dos ${n} dias até ontem (hoje não conta): ${Math.round(t.avg)} min de exercício. Média anterior (até anteontem): ${Math.round(t.prevAvg)} min · ${TREND_UI[t.direction].label}` : `${n} dias: dados insuficientes`}
               >
                 {n}
                 <b>{t ? TREND_UI[t.direction].symbol : '–'}</b>

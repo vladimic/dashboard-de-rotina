@@ -20,11 +20,11 @@ export default function DailyBarCard({ title, tip, activity, field, unit, color,
     [byKey, field]
   );
   const today = valueOf(axis.at(-1).key);
-  const trends = [7, 30].map((days) => ({ days, trend: dailyTrend(valueOf, days, stableBelow) }));
+  const trends = [7, 30].map((days) => ({ days, trend: dailyTrend(valueOf, days, stableBelow, new Date(), true) }));
 
   const config = useMemo(() => {
     const values = axis.map((d) => valueOf(d.key));
-    const ma = { 7: rollingByKey(axis, valueOf, 7), 30: rollingByKey(axis, valueOf, 30) };
+    const ma = { 7: rollingByKey(axis, valueOf, 7, true), 30: rollingByKey(axis, valueOf, 30, true) };
     const tipOpts = maTooltip(ma[7], ma[30], (v) => `${fmt(v)} ${unit}`);
     return {
       type: 'bar',
@@ -76,7 +76,7 @@ export default function DailyBarCard({ title, tip, activity, field, unit, color,
                 key={days}
                 className={styles.trend}
                 data-tone={!trend || trend.direction === 'stable' ? 'flat' : trend.direction === 'up' ? 'good' : 'bad'}
-                data-tip={trend ? `Média dos últimos ${days} dias: ${fmt(trend.avg)} ${unit}. Média de ontem: ${fmt(trend.prevAvg)} ${unit} · ${TREND_UI[trend.direction].label}` : `${days} dias: dados insuficientes`}
+                data-tip={trend ? `Média dos ${days} dias até ontem (hoje não conta): ${fmt(trend.avg)} ${unit}. Média anterior (até anteontem): ${fmt(trend.prevAvg)} ${unit} · ${TREND_UI[trend.direction].label}` : `${days} dias: dados insuficientes`}
               >
                 {days}
                 <b>{trend ? TREND_UI[trend.direction].symbol : '–'}</b>

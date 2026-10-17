@@ -48,13 +48,13 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
 
   // Rolling-average arrows (today's 7/30-day average vs. yesterday's).
   // `short` formats the average printed in the chip (no unit).
-  const rolling = (valueOf, stableBelow, fmt, short = fmt) => [7, 30].map((days) => {
-    const t = dailyTrend(valueOf, days, stableBelow, now);
+  const rolling = (valueOf, stableBelow, fmt, short = fmt, skipToday = false) => [7, 30].map((days) => {
+    const t = dailyTrend(valueOf, days, stableBelow, now, skipToday);
     return {
       days,
       direction: t?.direction || null,
       label: t ? short(t.avg) : null,
-      tip: t ? `Média de ${days} dias: ${fmt(t.avg)} · ontem: ${fmt(t.prevAvg)} · ${DIR_LABEL[t.direction]}` : `${days} dias: dados insuficientes`,
+      tip: t ? `Média de ${days} dias${skipToday ? ' até ontem' : ''}: ${fmt(t.avg)} · ${skipToday ? 'anterior' : 'ontem'}: ${fmt(t.prevAvg)} · ${DIR_LABEL[t.direction]}` : `${days} dias: dados insuficientes`,
     };
   });
 
@@ -104,8 +104,8 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: act('kcal')(today) != null ? int(act('kcal')(today)) : null,
       unit: 'kcal',
       good: 'up',
-      trends: rolling(act('kcal'), 5, (v) => `${int(v)} kcal`, int),
-      tip: 'Energia ativa de hoje (kcal, app Saúde). Hoje é parcial, então a média de 7 dias tende a cair até o fim do dia. Setas: média de 7 e 30 dias hoje vs. ontem.',
+      trends: rolling(act('kcal'), 5, (v) => `${int(v)} kcal`, int, true),
+      tip: 'Energia ativa de hoje (kcal, app Saúde). Hoje é parcial e não entra nas médias de 7 e 30 dias, que terminam ontem. Setas: média até ontem vs. até anteontem.',
     },
     {
       id: 'exercicio',
@@ -113,16 +113,16 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
       value: act('exMin')(today) != null ? int(act('exMin')(today)) : null,
       unit: 'min',
       good: 'up',
-      trends: rolling(act('exMin'), 1, (v) => `${int(v)} min`, int),
-      tip: 'Minutos de exercício de hoje (anel verde do Apple Watch). Hoje é parcial. Setas: média de 7 e 30 dias hoje vs. ontem.',
+      trends: rolling(act('exMin'), 1, (v) => `${int(v)} min`, int, true),
+      tip: 'Minutos de exercício de hoje (anel verde do Apple Watch). Hoje é parcial e não entra nas médias de 7 e 30 dias, que terminam ontem. Setas: média até ontem vs. até anteontem.',
     },
     {
       id: 'passos',
       title: 'Passos',
       value: act('steps')(today) != null ? int(act('steps')(today)) : null,
       good: 'up',
-      trends: rolling(act('steps'), 100, int),
-      tip: 'Passos de hoje (app Saúde, maior fonte entre iPhone e Watch). Hoje é parcial. Setas: média de 7 e 30 dias hoje vs. ontem.',
+      trends: rolling(act('steps'), 100, int, int, true),
+      tip: 'Passos de hoje (app Saúde, maior fonte entre iPhone e Watch). Hoje é parcial e não entra nas médias de 7 e 30 dias, que terminam ontem. Setas: média até ontem vs. até anteontem.',
     },
     {
       id: 'dormiu',
