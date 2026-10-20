@@ -254,8 +254,16 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   const summaryCounts = { ...counts, geralTotal: displayGeralTotal };
   const iahPending = pendingEntryKeys(entryKeys(), state.iahLog, state.iahSkip).length;
   const qualityPending = pendingEntryKeys(entryKeys(), state.qualityLog, state.qualitySkip).length;
+  const weightByDay = Object.fromEntries(weightDaily.map((d) => [d.key, d.value]));
+  const nightByDay = Object.fromEntries([...nights.keys()].map((key) => [key, true]));
+  const weightPending = pendingEntryKeys(entryKeys(), weightByDay, state.weightSkip).length;
+  const schedulePending = pendingEntryKeys(entryKeys(), nightByDay, state.scheduleSkip).length;
+  const sleepPending = pendingEntryKeys(entryKeys(), nightByDay, state.sleepSkip).length;
   const saudeSummary = buildSaudeSummary({
     weightDaily,
+    weightPending,
+    schedulePending,
+    sleepPending,
     weightLatest: weight.samples.at(-1)?.value ?? null,
     iahLog: state.iahLog,
     iahPending,
@@ -266,7 +274,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     habitosLog: state.habitosLog,
     habitIds: [...state.habitosBons, ...state.habitosRuins].map((h) => h.id),
   });
-  const entryPending = iahPending + qualityPending;
+  const entryPending = iahPending + qualityPending + weightPending + schedulePending + sleepPending;
 
   const todayLong = formatTodayLong();
   // Only moves on dashboard open and "Atualizar tudo" — individual panel

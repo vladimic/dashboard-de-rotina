@@ -83,6 +83,17 @@ export function dashboardReducer(state, action) {
     case 'CLEAR_ENTRY':
       return setEntry(state, action.logKey, action.skipKey, action.date, undefined, false);
 
+    // Synced indicators (weight, sleep): there's no typed value, only the mark
+    // that a day has no information.
+    case 'SKIP_DAY':
+      return { ...state, [action.skipKey]: { ...(state[action.skipKey] || {}), [action.date]: true } };
+
+    case 'CLEAR_DAY': {
+      const skipped = { ...(state[action.skipKey] || {}) };
+      delete skipped[action.date];
+      return { ...state, [action.skipKey]: skipped };
+    }
+
     case 'TOGGLE_FLAG':
       return { ...state, [action.key]: !state[action.key] };
 

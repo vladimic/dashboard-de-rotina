@@ -544,6 +544,11 @@
   flex: none;
 }
 
+.entryValue {
+  flex: 1;
+  font-weight: 600;
+}
+
 .entrySkipped {
   flex: 1;
   color: #9dbfae;
