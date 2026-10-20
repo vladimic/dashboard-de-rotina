@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale } from './ChartCanvas';
+import EntryEditor, { EditButton } from './EntryEditor';
 import MaToggles, { maDataset, maTooltip } from './MaToggles';
-import { bedtimeHour as nightHour, bedtimeTrend, formatDuration, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
+import { bedtimeHour as nightHour, bedtimeTrend, entryKeys, formatClockSP, formatDuration, pendingEntryKeys, rollingByKey, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // y axis runs bottom-up from 21:00 to 09:00. Evening hours are stored as
@@ -60,8 +61,12 @@ function scheduleOverlay(durations) {
 }
 
 // Last 30 nights: a bar from when you fell asleep to when you woke up.
-export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleFlag }) {
+export default function SleepScheduleCard({ nights, skipped, onSkip, onClear, showMa7, showMa30, onToggleFlag }) {
+  const [editing, setEditing] = useState(false);
   const axis = useMemo(() => thirtyDayAxis(), []);
+  const keys = useMemo(() => entryKeys(), []);
+  const byDay = useMemo(() => Object.fromEntries([...nights].map(([key, n]) => [key, n.bedtime])), [nights]);
+  const pendingCount = pendingEntryKeys(keys, byDay, skipped).length;
   const hasNights = axis.some((d) => nights.has(d.key));
   const trends = [7, 30].map((days) => ({ days, trend: bedtimeTrend(nights, days) }));
 
@@ -145,12 +150,26 @@ export default function SleepScheduleCard({ nights, showMa7, showMa30, onToggleF
         </div>
         <div className={styles.headerRight}>
           <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('scheduleShowMa7')} onToggle30={() => onToggleFlag('scheduleShowMa30')} />
+          <EditButton pendingCount={pendingCount} onClick={() => setEditing(true)} />
         </div>
       </div>
       {hasNights ? (
         <ChartCanvas config={config} height={200} />
       ) : (
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
+      )}
+      {editing && (
+        <EntryEditor
+          title="Horário do sono · acordou em"
+          synced
+          keys={keys}
+          log={byDay}
+          skipped={skipped}
+          format={(t) => `dormiu ${formatClockSP(t)}`}
+          onSkip={onSkip}
+          onClear={onClear}
+          onClose={() => setEditing(false)}
+        />
       )}
     </div>
   );

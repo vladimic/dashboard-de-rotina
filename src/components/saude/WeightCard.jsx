@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import ChartCanvas, { GRID_COLOR } from './ChartCanvas';
-import { dailyWeights, formatKg as kg, movingAverage, TREND_UI, weightTrends } from '../../utils/health';
+import EntryEditor, { EditButton } from './EntryEditor';
+import { dailyWeights, entryKeys, formatKg as kg, movingAverage, pendingEntryKeys, TREND_UI, weightTrends } from '../../utils/health';
 import styles from './Saude.module.css';
 
 const PERIODS = [
@@ -124,10 +125,14 @@ function referenceLines(lines) {
   };
 }
 
-export default function WeightCard({ samples, loading, error, showMa7, showMa30, showCurrent, showMin, onToggleFlag }) {
+export default function WeightCard({ samples, loading, error, skipped, onSkip, onClear, showMa7, showMa30, showCurrent, showMin, onToggleFlag }) {
   const [periodDays, setPeriodDays] = useState(30);
+  const [editing, setEditing] = useState(false);
 
   const daily = useMemo(() => dailyWeights(samples), [samples]);
+  const keys = useMemo(() => entryKeys(), []);
+  const byDay = useMemo(() => Object.fromEntries(daily.map((d) => [d.key, d.value])), [daily]);
+  const pendingCount = pendingEntryKeys(keys, byDay, skipped).length;
   const ma7 = useMemo(() => movingAverage(daily, 7), [daily]);
   const ma30 = useMemo(() => movingAverage(daily, 30), [daily]);
   // Only 7 and 30 days here; the longer windows were noise on this chart.
@@ -267,6 +272,7 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
               </button>
             ))}
           </div>
+          <EditButton pendingCount={pendingCount} onClick={() => setEditing(true)} />
         </div>
       </div>
 
@@ -275,6 +281,19 @@ export default function WeightCard({ samples, loading, error, showMa7, showMa30,
         <div className={styles.empty}>Nenhuma pesagem ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
       {samples.length > 0 && <ChartCanvas config={config} height={200} />}
+      {editing && (
+        <EntryEditor
+          title="Peso · pesado em"
+          synced
+          keys={keys}
+          log={byDay}
+          skipped={skipped}
+          format={(v) => `${kg(v)} kg`}
+          onSkip={onSkip}
+          onClear={onClear}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </div>
   );
 }

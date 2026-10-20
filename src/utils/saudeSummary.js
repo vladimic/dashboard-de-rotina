@@ -25,7 +25,7 @@ function habitPercent(log, habitIds, firstKey, key) {
 // Qualidade). Each: today's value and the 7d / 30d arrows, each with its
 // average. `good` is the direction
 // that counts as better (green arrow); the other one is red.
-export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPending = 0, qualityLog, qualityPending = 0, nights, activityDays, habitosLog, habitIds }, now = new Date()) {
+export function buildSaudeSummary({ weightDaily, weightLatest, weightPending = 0, schedulePending = 0, sleepPending = 0, iahLog, iahPending = 0, qualityLog, qualityPending = 0, nights, activityDays, habitosLog, habitIds }, now = new Date()) {
   const keys = lastNDateKeys(30, now);
   const actByKey = new Map(activityDays.map((d) => [d.key, d]));
   // A day with neither steps nor energy never synced: no data, not zero.
@@ -61,6 +61,7 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
   return [
     {
       id: 'peso',
+      pending: weightPending,
       title: 'Peso',
       value: weightLatest != null ? formatKg(weightLatest) : null,
       unit: 'kg',
@@ -126,6 +127,7 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
     },
     {
       id: 'dormiu',
+      pending: schedulePending,
       title: 'Dormiu',
       value: lastNight ? formatClockSP(lastNight.bedtime) : null,
       good: 'down',
@@ -135,6 +137,7 @@ export function buildSaudeSummary({ weightDaily, weightLatest, iahLog, iahPendin
     },
     {
       id: 'sono',
+      pending: sleepPending,
       title: 'Sono',
       value: lastNight ? formatDuration(lastNight.asleepMin) : null,
       good: 'up',

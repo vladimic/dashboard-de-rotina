@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 174, date: '2026-10-20', summary: 'Saúde: Peso, Horário do sono e Sono ganham o lápis de dias sem registro (como IAH e Qualidade): lista os dias dos últimos 35 sem dado vindo do app Saúde, com "Sem info" / Desfazer; o ponto laranja do cabeçalho e da aba some quando todos os dias têm dado ou marca de sem informação' },
   { version: 173, date: '2026-10-17', summary: 'Hábitos: as médias de 7 e 30 dias também deixam de contar o dia de hoje (ainda em andamento); as setas comparam a média até ontem com a média até anteontem' },
   { version: 172, date: '2026-10-17', summary: 'Energia, Exercício e Passos: as médias de 7 e 30 dias não contam mais o dia de hoje (ainda incompleto) — a janela de 7 dias vai de ontem até 6 dias antes, e a de 30 igual; as setas comparam com a média até anteontem, e a linha tracejada dos gráficos não é desenhada em hoje' },
   { version: 171, date: '2026-10-13', summary: 'Gráfico do dólar: no rodapé, à esquerda, link "Dolar Comercial - Site Uol" para a página de câmbio do UOL; a fonte dos dados (Yahoo Finance) continua à direita' },

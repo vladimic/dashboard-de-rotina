@@ -24,6 +24,9 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           samples={weight.samples}
           loading={weight.loading}
           error={weight.error}
+          skipped={state.weightSkip || {}}
+          onSkip={(date) => dispatch({ type: 'SKIP_DAY', skipKey: 'weightSkip', date })}
+          onClear={(date) => dispatch({ type: 'CLEAR_DAY', skipKey: 'weightSkip', date })}
           showMa7={state.weightShowMa7}
           showMa30={state.weightShowMa30}
           showCurrent={state.weightShowCurrent}
@@ -78,11 +81,22 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           onToggle30={() => toggle('stepsShowMa30')}
         />
 
-        <SleepScheduleCard nights={nights} showMa7={state.scheduleShowMa7} showMa30={state.scheduleShowMa30} onToggleFlag={toggle} />
+        <SleepScheduleCard
+          nights={nights}
+          skipped={state.scheduleSkip || {}}
+          onSkip={(date) => dispatch({ type: 'SKIP_DAY', skipKey: 'scheduleSkip', date })}
+          onClear={(date) => dispatch({ type: 'CLEAR_DAY', skipKey: 'scheduleSkip', date })}
+          showMa7={state.scheduleShowMa7}
+          showMa30={state.scheduleShowMa30}
+          onToggleFlag={toggle}
+        />
         <SleepCard
           nights={nights}
           loading={sleep.loading}
           error={sleep.error}
+          skipped={state.sleepSkip || {}}
+          onSkip={(date) => dispatch({ type: 'SKIP_DAY', skipKey: 'sleepSkip', date })}
+          onClear={(date) => dispatch({ type: 'CLEAR_DAY', skipKey: 'sleepSkip', date })}
           showAwake={state.sleepShowAwake}
           onToggleAwake={() => toggle('sleepShowAwake')}
           showMa7={state.sleepShowMa7}

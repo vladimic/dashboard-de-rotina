@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import ChartCanvas, { GRID_COLOR, dayTitle, thirtyDayScale } from './ChartCanvas';
+import EntryEditor, { EditButton } from './EntryEditor';
 import MaToggles, { maDataset, maTooltip } from './MaToggles';
-import { formatDuration, rollingByKey, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
+import { entryKeys, formatDuration, pendingEntryKeys, rollingByKey, sleepTrend, thirtyDayAxis, TREND_UI } from '../../utils/health';
 import styles from './Saude.module.css';
 
 // Stacked bottom-up in this order; "Dormindo" is sleep logged without stage
@@ -68,7 +69,11 @@ function sleepLabelsPlugin(axis, nights) {
   };
 }
 
-export default function SleepCard({ nights, loading, error, showAwake, onToggleAwake, showMa7, showMa30, onToggleFlag }) {
+export default function SleepCard({ nights, loading, error, skipped, onSkip, onClear, showAwake, onToggleAwake, showMa7, showMa30, onToggleFlag }) {
+  const [editing, setEditing] = useState(false);
+  const keys = useMemo(() => entryKeys(), []);
+  const byDay = useMemo(() => Object.fromEntries([...nights].map(([key, n]) => [key, n.asleepMin])), [nights]);
+  const pendingCount = pendingEntryKeys(keys, byDay, skipped).length;
   const axis = useMemo(() => thirtyDayAxis(), []);
   const trends = [7, 30].map((days) => ({ days, trend: sleepTrend(nights, days) }));
   const hasUnstaged = axis.some((d) => nights.get(d.key)?.stages.asleep > 0);
@@ -160,29 +165,32 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
             })}
           </div>
         </div>
-        {nights.size > 0 && (
-          <div className={styles.headerRight}>
-            {LEGEND.filter((l) => l.key !== 'asleep' || hasUnstaged).map((l) => (
-              <span key={l.key} className={styles.stageKey} title={l.full}>
-                <i style={{ background: l.color }} />
-                <span className={styles.keyFull}>{l.full}</span>
-                <span className={styles.keyShort}>{l.short}</span>
-              </span>
-            ))}
-            <button
-              type="button"
-              className={`${styles.stageKey} ${styles.stageKeyBtn}`}
-              data-on={showAwake}
-              onClick={onToggleAwake}
-              title="Mostrar o tempo acordado em cima das barras"
-            >
-              <i style={{ background: '#2fa39a' }} />
-              <span className={styles.keyFull}>Acordado</span>
-              <span className={styles.keyShort}>Acord.</span>
-            </button>
-            <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('sleepShowMa7')} onToggle30={() => onToggleFlag('sleepShowMa30')} />
-          </div>
-        )}
+        <div className={styles.headerRight}>
+          {nights.size > 0 && (
+            <>
+              {LEGEND.filter((l) => l.key !== 'asleep' || hasUnstaged).map((l) => (
+                <span key={l.key} className={styles.stageKey} title={l.full}>
+                  <i style={{ background: l.color }} />
+                  <span className={styles.keyFull}>{l.full}</span>
+                  <span className={styles.keyShort}>{l.short}</span>
+                </span>
+              ))}
+              <button
+                type="button"
+                className={`${styles.stageKey} ${styles.stageKeyBtn}`}
+                data-on={showAwake}
+                onClick={onToggleAwake}
+                title="Mostrar o tempo acordado em cima das barras"
+              >
+                <i style={{ background: '#2fa39a' }} />
+                <span className={styles.keyFull}>Acordado</span>
+                <span className={styles.keyShort}>Acord.</span>
+              </button>
+              <MaToggles show7={showMa7} show30={showMa30} onToggle7={() => onToggleFlag('sleepShowMa7')} onToggle30={() => onToggleFlag('sleepShowMa30')} />
+            </>
+          )}
+          <EditButton pendingCount={pendingCount} onClick={() => setEditing(true)} />
+        </div>
       </div>
 
       {error && <div className={styles.error}>Não deu pra carregar o sono: {error}</div>}
@@ -190,6 +198,19 @@ export default function SleepCard({ nights, loading, error, showAwake, onToggleA
         <div className={styles.empty}>Nenhuma noite ainda — rode o atalho “Sincronizar Saúde” no iPhone.</div>
       )}
       {nights.size > 0 && <ChartCanvas config={config} height={200} />}
+      {editing && (
+        <EntryEditor
+          title="Sono · acordou em"
+          synced
+          keys={keys}
+          log={byDay}
+          skipped={skipped}
+          format={formatDuration}
+          onSkip={onSkip}
+          onClear={onClear}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </div>
   );
 }

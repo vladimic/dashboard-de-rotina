@@ -126,6 +126,11 @@ export function createSeedState() {
     // night's wake-up date: { 'YYYY-MM-DD': number }.
     qualityLog: {},
     qualitySkip: {},
+    // Days with no information on the synced indicators (weight, bedtime,
+    // sleep), marked by hand: { 'YYYY-MM-DD': true }.
+    weightSkip: {},
+    scheduleSkip: {},
+    sleepSkip: {},
     // Weight chart moving-average toggles, kept across reloads/devices.
     weightShowMa7: true,
     weightShowMa30: true,

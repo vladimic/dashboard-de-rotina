@@ -4,7 +4,7 @@ import styles from './Saude.module.css';
 const dayLabel = (key) =>
   new Date(`${key}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
-function Row({ dayKey, value, skipped, placeholder, format, parse, focused, onSet, onSkip, onClear }) {
+function Row({ dayKey, value, skipped, synced, placeholder, format, parse, focused, onSet, onSkip, onClear }) {
   const [text, setText] = useState(value != null ? format(value) : '');
   const [error, setError] = useState('');
   const inputRef = useRef(null);
@@ -30,10 +30,28 @@ function Row({ dayKey, value, skipped, placeholder, format, parse, focused, onSe
     onSet(dayKey, result.value);
   }
 
+  // Synced days have nothing to type: they either arrived from the Health app
+  // or can be marked "sem info".
+  if (synced && value != null) {
+    return (
+      <div className={styles.entryRow}>
+        <span className={styles.entryDay}>{dayLabel(dayKey)}</span>
+        <span className={styles.entryValue}>{format(value)}</span>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.entryRow} data-skipped={skipped}>
       <span className={styles.entryDay}>{dayLabel(dayKey)}</span>
-      {skipped ? (
+      {synced && !skipped ? (
+        <>
+          <span className={styles.entrySkipped}>sem dado</span>
+          <button type="button" className={styles.entryLink} onClick={() => onSkip(dayKey)}>
+            Sem info
+          </button>
+        </>
+      ) : skipped ? (
         <>
           <span className={styles.entrySkipped}>sem informação</span>
           <button type="button" className={styles.entryLink} onClick={() => onClear(dayKey)}>
@@ -82,10 +100,12 @@ function Row({ dayKey, value, skipped, placeholder, format, parse, focused, onSe
 }
 
 // Overlay over the card for typing/editing a hand-filled daily log over the
-// last 35 days. Shows the blank days first (by default only those), each with
+// last 35 days. `synced` is for logs that come from the Health app: nothing
+// to type, only days without data to mark "sem info" (`log` = the synced
+// values by day, `format` shows them). Shows the blank days first (by default only those), each with
 // OK / "Sem info" (leave blank on purpose), and lets filled days be edited or
 // removed. "Concluir" closes it.
-export default function EntryEditor({ title, keys, log, skipped, placeholder, format, parse, onSet, onSkip, onClear, onClose }) {
+export default function EntryEditor({ title, keys, log, skipped, synced = false, placeholder, format, parse, onSet, onSkip, onClear, onClose }) {
   const [showAll, setShowAll] = useState(false);
   const pending = keys.filter((k) => log[k] == null && !skipped[k]);
   // Days blank when the panel opened stay listed after being filled, so the
@@ -124,6 +144,7 @@ export default function EntryEditor({ title, keys, log, skipped, placeholder, fo
             dayKey={key}
             value={log[key] ?? null}
             skipped={Boolean(skipped[key])}
+            synced={synced}
             placeholder={placeholder}
             format={format}
             parse={parse}
