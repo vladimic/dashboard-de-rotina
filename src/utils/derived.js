@@ -85,7 +85,7 @@ export function computeAgenda(state, calendarData) {
   };
 }
 
-export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notionTotal = 0, ticktickTotal = 0, habitosPend = 0) {
+export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notionTotal = 0, ticktickTotal = 0) {
   const manhaPend = state.manha.filter((m) => !m.done).length;
   const noitePend = state.noite.filter((m) => !m.done).length;
   const noiteTotal = state.noite.length;
@@ -97,8 +97,7 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     hubspotTotal +
     remindersTotal +
     ticktickTotal +
-    notionTotal +
-    habitosPend;
+    notionTotal;
   return {
     meuDiaCount,
     manhaTotal: state.manha.length,
@@ -106,7 +105,6 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     noiteTotal,
     noitePend,
     hubspotTotal,
-    habitosPend,
     geralTotal,
   };
 }

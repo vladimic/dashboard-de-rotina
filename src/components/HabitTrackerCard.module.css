@@ -167,6 +167,11 @@ a.habitLabel {
   border: 1.5px solid #e3d6e8;
 }
 
+/* Each day of a habit row is clickable (past days too), like the box on the left. */
+.habitRow .cell {
+  cursor: pointer;
+}
+
 .cell[data-state='done'] {
   background: #8fd9b6;
   border-color: #8fd9b6;

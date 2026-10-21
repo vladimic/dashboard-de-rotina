@@ -82,7 +82,6 @@ export default function SummaryStrip({ page, counts, saude, lists, dayProgressPe
           <StatCard title="Starting" value={counts.manhaPend} className={styles.hojeCard} done={counts.manhaPend === 0} />
           <StatCard title="Ending" value={counts.noitePend} className={styles.hojeCard} done={counts.noitePend === 0} />
           <StatCard title="TickTick" value={lists.ticktickTotal} className={styles.hojeCard} done={lists.ticktickTotal === 0} />
-          <StatCard title="Hábitos" value={counts.habitosPend} className={styles.hojeCard} done={counts.habitosPend === 0} />
         </div>
       </div>
 

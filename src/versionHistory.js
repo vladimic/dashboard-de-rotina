@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 176, date: '2026-10-21', summary: 'Hábitos saem da aba Hoje (painel e card do cabeçalho; Starting Day e Ending Day sobem) e deixam de somar no Geral. Na Saúde, cada quadradinho de dia — inclusive os dias passados e o de hoje — passa a ser clicável para marcar/desmarcar; a caixa à esquerda continua marcando o dia de hoje' },
   { version: 175, date: '2026-10-20', summary: 'HubSpot - Deals sem Tarefa: os estágios Inbox e Contato Quente deixam de ser excluídos; leads novos no Inbox sem tarefa passam a aparecer no card' },
   { version: 174, date: '2026-10-20', summary: 'Saúde: Peso, Horário do sono e Sono ganham o lápis de dias sem registro (como IAH e Qualidade): lista os dias dos últimos 35 sem dado vindo do app Saúde, com "Sem info" / Desfazer; o ponto laranja do cabeçalho e da aba some quando todos os dias têm dado ou marca de sem informação' },
   { version: 173, date: '2026-10-17', summary: 'Hábitos: as médias de 7 e 30 dias também deixam de contar o dia de hoje (ainda em andamento); as setas comparam a média até ontem com a média até anteontem' },

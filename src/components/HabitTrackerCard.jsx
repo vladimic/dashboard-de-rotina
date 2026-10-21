@@ -111,7 +111,13 @@ function HabitRows({ rows, days, badColor, onCycleMark }) {
         )}
         <div className={styles.days}>
           {days.map((d, i) => (
-            <div key={d} className={styles.cell} data-state={h.marks[i] || 'blank'} />
+            <div
+              key={d}
+              className={styles.cell}
+              data-state={h.marks[i] || 'blank'}
+              title={`${d.slice(8)}/${d.slice(5, 7)}`}
+              onClick={() => onCycleMark(h.id, d)}
+            />
           ))}
         </div>
       </div>
