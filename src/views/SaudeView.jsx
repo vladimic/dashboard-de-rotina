@@ -13,13 +13,17 @@ const int = (v) => Math.round(v).toLocaleString('pt-BR');
 const thousands = (v) => (v >= 1000 ? `${(v / 1000).toFixed(1).replace('.', ',').replace(',0', '')}k` : String(Math.round(v)));
 
 // Three rows of three, in the same order as the nine tiles in the header:
-// body (weight, IAH, habits) / activity (energy, exercise, steps) / sleep
+// body (habits, weight, IAH) / activity (energy, exercise, steps) / sleep
 // (bedtime, duration, quality).
 export default function SaudeView({ state, dispatch, weight, sleep, nights, activity, habitTracker }) {
   const toggle = (key) => dispatch({ type: 'TOGGLE_FLAG', key });
   return (
     <div className={styles.stack}>
       <div className={styles.threeCols}>
+        {/* Its height comes from the charts in the row; long lists scroll. */}
+        <div className={styles.fitCell}>
+          <HabitsPanel state={state} dispatch={dispatch} habitTracker={habitTracker} alwaysOpen />
+        </div>
         <WeightCard
           samples={weight.samples}
           loading={weight.loading}
@@ -43,10 +47,6 @@ export default function SaudeView({ state, dispatch, weight, sleep, nights, acti
           showMa30={state.iahShowMa30}
           onToggleFlag={toggle}
         />
-        {/* Its height comes from the charts in the row; long lists scroll. */}
-        <div className={styles.fitCell}>
-          <HabitsPanel state={state} dispatch={dispatch} habitTracker={habitTracker} alwaysOpen />
-        </div>
 
         <DailyBarCard
           title="Energia"
