@@ -21,7 +21,7 @@ function habitPercent(log, habitIds, firstKey, key) {
 }
 
 // The nine tiles of the Saúde header, in the same order as the 3×3 grid
-// below it (Peso, IAH, Hábitos / Energia, Exercício, Passos / Dormiu, Sono,
+// below it (Hábitos, Peso, IAH / Energia, Exercício, Passos / Dormiu, Sono,
 // Qualidade). Each: today's value and the 7d / 30d arrows, each with its
 // average. `good` is the direction
 // that counts as better (green arrow); the other one is red.
@@ -60,6 +60,15 @@ export function buildSaudeSummary({ weightDaily, weightLatest, weightPending = 0
 
   return [
     {
+      id: 'habitos',
+      title: 'Hábitos',
+      value: habit(today) != null ? int(habit(today)) : null,
+      unit: '%',
+      good: 'up',
+      trends: rolling(habit, 1, (v) => `${int(v)}%`, (v) => `${int(v)}%`, true),
+      tip: 'Hábitos: % dos hábitos com ✓ hoje (diários feitos + a evitar evitados). Hoje ainda está em andamento e não entra nas médias de 7 e 30 dias, que terminam ontem. Setas: média até ontem vs. até anteontem.',
+    },
+    {
       id: 'peso',
       pending: weightPending,
       title: 'Peso',
@@ -89,15 +98,6 @@ export function buildSaudeSummary({ weightDaily, weightLatest, weightPending = 0
       good: 'down',
       trends: rolling(logged(iahLog), 0.1, num1),
       tip: 'IAH: eventos de apneia por hora da última noite lançada no card IAH. Setas: média de 7 e 30 dias hoje vs. ontem; verde = caindo.',
-    },
-    {
-      id: 'habitos',
-      title: 'Hábitos',
-      value: habit(today) != null ? int(habit(today)) : null,
-      unit: '%',
-      good: 'up',
-      trends: rolling(habit, 1, (v) => `${int(v)}%`, (v) => `${int(v)}%`, true),
-      tip: 'Hábitos: % dos hábitos com ✓ hoje (diários feitos + a evitar evitados). Hoje ainda está em andamento e não entra nas médias de 7 e 30 dias, que terminam ontem. Setas: média até ontem vs. até anteontem.',
     },
     {
       id: 'energia',
