@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 178, date: '2026-10-29', summary: 'Hábitos voltam à aba Hoje: painel na coluna do Meu Dia, entre o Meu Dia e o Starting Day; card Hábitos de volta no cabeçalho e hábitos pendentes voltam a somar no Geral' },
   { version: 177, date: '2026-10-21', summary: 'Saúde: Hábitos vai para o primeiro lugar da tela (canto superior esquerdo), empurrando Peso e IAH para a direita; o cabeçalho da Saúde segue a mesma ordem (Hábitos, Peso, IAH, ...)' },
   { version: 176, date: '2026-10-21', summary: 'Hábitos saem da aba Hoje (painel e card do cabeçalho; Starting Day e Ending Day sobem) e deixam de somar no Geral. Na Saúde, cada quadradinho de dia — inclusive os dias passados e o de hoje — passa a ser clicável para marcar/desmarcar; a caixa à esquerda continua marcando o dia de hoje' },
   { version: 175, date: '2026-10-20', summary: 'HubSpot - Deals sem Tarefa: os estágios Inbox e Contato Quente deixam de ser excluídos; leads novos no Inbox sem tarefa passam a aparecer no card' },
