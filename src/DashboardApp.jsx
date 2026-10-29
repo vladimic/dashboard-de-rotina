@@ -191,7 +191,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     hubspot.vencidas + hubspot.hoje + dealsWithoutTasks.total,
     reminders.total,
     notion.total,
-    ticktick.total
+    ticktick.total,
+    habitTracker.bons.pend + habitTracker.ruins.pend
   );
   useAppBadge(counts.geralTotal);
 
@@ -429,6 +430,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           onSyncReminders={syncReminders}
           notion={notion}
           ticktick={ticktick}
+          habitTracker={habitTracker}
         />
       )}
       {state.page === 'saude' && (

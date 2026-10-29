@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useConfirm } from '../components/ConfirmContext';
 import AgendaCard from '../components/AgendaCard';
 import MeuDiaCard from '../components/MeuDiaCard';
+import HabitsPanel from '../components/HabitsPanel';
 import ChecklistCard from '../components/ChecklistCard';
 import HubSpotCard from '../components/HubSpotCard';
 import HubSpotDealsWithoutTasksCard from '../components/HubSpotDealsWithoutTasksCard';
@@ -52,6 +53,7 @@ export default function HojeView({
   onSyncReminders,
   notion,
   ticktick,
+  habitTracker,
 }) {
   const confirm = useConfirm();
   const manhaHandlers = useChecklistHandlers(dispatch, 'manha', 'manhaEdit', 'manhaOpen', 'newManhaText', 'newManhaLink', confirm);
@@ -96,6 +98,7 @@ export default function HojeView({
           open={state.meuDiaOpen}
           onToggleOpen={() => dispatch({ type: 'TOGGLE_FLAG', key: 'meuDiaOpen' })}
         />
+        <HabitsPanel state={state} dispatch={dispatch} habitTracker={habitTracker} />
         <ChecklistCard
           title="Starting Day"
           items={state.manha}
