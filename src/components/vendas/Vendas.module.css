@@ -48,6 +48,12 @@
   color: #fff;
 }
 
+.headRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .chartBox {
   position: relative;
   flex: 1;
@@ -154,6 +160,20 @@
 
 .table .r {
   text-align: right;
+}
+
+.table .totalRow td {
+  font-weight: 700;
+  color: #5b4a63;
+  border-top: 2px solid #ece4f0;
+}
+
+.table .totalRow td[data-tone='up'] {
+  color: #3f9d78;
+}
+
+.table .totalRow td[data-tone='down'] {
+  color: #d9534f;
 }
 
 .table td[data-tone='up'] {
