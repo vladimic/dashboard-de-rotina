@@ -1,8 +1,8 @@
 import styles from './Vendas.module.css';
 
 const spark = (arr, color) => {
-  const w = 70;
-  const h = 18;
+  const w = 90;
+  const h = 20;
   const m = Math.max(...arr, 1);
   const pts = arr.length > 1 ? arr.map((v, i) => `${(i / (arr.length - 1)) * w},${h - 2 - (v / m) * (h - 4)}`).join(' ') : `0,${h - 2 - (arr[0] / m) * (h - 4)} ${w},${h - 2 - (arr[0] / m) * (h - 4)}`;
   return (
@@ -18,6 +18,7 @@ const sign = (n) => (n > 0 ? `+${n}` : String(n));
 // the average days the deals have sat in the stage.
 export default function VendasTable({ rows }) {
   return (
+    <div className={styles.tableWrap}>
     <table className={styles.table}>
       <thead>
         <tr>
@@ -47,5 +48,6 @@ export default function VendasTable({ rows }) {
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
