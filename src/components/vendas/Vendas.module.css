@@ -1,10 +1,12 @@
 .card {
   background: #fff;
   border-radius: 16px;
-  padding: 10px 14px 10px;
+  padding: 12px 14px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .head {
@@ -12,17 +14,18 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  height: 28px;
+  flex: none;
 }
 
 .title {
-  font: var(--fs-card-title);
+  font: 14px Inter, sans-serif;
   color: #5b4a63;
 }
 
 .title b {
   color: #2a2230;
-  font-size: 14px;
+  font-weight: 700;
 }
 
 .pills {
@@ -31,9 +34,9 @@
 }
 
 .pill {
-  font: 600 11px Inter, sans-serif;
+  font: 600 12px Inter, sans-serif;
   color: #8a7f93;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 8px;
   border: 1px solid #e3d6e8;
   cursor: pointer;
@@ -47,22 +50,24 @@
 
 .chartBox {
   position: relative;
+  flex: 1;
+  min-height: 0;
 }
 
 .svg {
-  width: 100%;
-  height: auto;
   display: block;
+  position: absolute;
+  inset: 0;
 }
 
 .axis {
   fill: #8a7f93;
-  font: 10px Inter, sans-serif;
+  font: 11px Inter, sans-serif;
 }
 
 .lab {
   fill: #fff;
-  font: 700 10px Inter, sans-serif;
+  font: 700 12px Inter, sans-serif;
   paint-order: stroke;
   stroke: rgba(0, 0, 0, 0.28);
   stroke-width: 2px;
@@ -70,16 +75,11 @@
 
 .total {
   fill: #2a2230;
-  font: 700 10px Inter, sans-serif;
-}
-
-.totalToday {
-  fill: #2a2230;
-  font: 700 11px Inter, sans-serif;
+  font: 700 12px Inter, sans-serif;
 }
 
 .end {
-  font: 700 10px Inter, sans-serif;
+  font: 700 12px Inter, sans-serif;
 }
 
 .tip {
@@ -93,7 +93,7 @@
   border-radius: 10px;
   padding: 7px 10px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-  font: 11px Inter, sans-serif;
+  font: 12px Inter, sans-serif;
   color: #2a2230;
 }
 
@@ -136,10 +136,17 @@
   color: #2a2230;
 }
 
+.tableWrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .table th,
 .table td {
   text-align: left;
-  padding: 4px 4px;
+  height: 30px;
+  padding: 0 4px;
   border-bottom: 1px solid #ece4f0;
   vertical-align: middle;
 }
@@ -147,7 +154,8 @@
 .table th {
   color: #8a7f93;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 11px;
+  height: 26px;
 }
 
 .table .r {
@@ -169,8 +177,10 @@
 }
 
 .spark {
-  width: 70px;
+  width: 90px;
+  height: 20px;
   display: inline-block;
+  vertical-align: middle;
 }
 
 .empty,

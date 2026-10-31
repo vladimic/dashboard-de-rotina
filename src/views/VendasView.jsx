@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import VendasChart from '../components/vendas/VendasChart';
 import VendasTable from '../components/vendas/VendasTable';
 import { useVendas } from '../hooks/useVendas';
@@ -44,11 +44,24 @@ export default function VendasView() {
   const { data, loading, error } = useVendas(90);
   const [period, setPeriod] = useState(30);
 
+  // Fill the screen under the header: the two funnels split what is left.
+  const stackRef = useRef(null);
+  const [height, setHeight] = useState(null);
+  useEffect(() => {
+    const fit = () => {
+      const top = stackRef.current?.getBoundingClientRect().top;
+      if (top != null) setHeight(Math.max(560, window.innerHeight - top - 14));
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [loading, error]);
+
   if (error) return <div className={cardStyles.card}><div className={cardStyles.error}>Não deu pra carregar o funil: {error}</div></div>;
   if (loading || !data) return <div className={cardStyles.card}><div className={cardStyles.empty}>Carregando o funil…</div></div>;
 
   return (
-    <div className={styles.stack}>
+    <div className={styles.stack} ref={stackRef} style={height ? { height } : undefined}>
       <Funnel title="Funil quente" group="hot" data={data} period={period} onPeriod={setPeriod} />
       <Funnel title="Funil frio" group="cold" data={data} period={period} onPeriod={setPeriod} />
     </div>

@@ -1,18 +1,29 @@
+/* The two funnels share the screen height (no page scroll): the stack is
+   sized in VendasView from the space left under the header. */
 .stack {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 560px;
 }
 
 .row {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 10px;
-  align-items: stretch;
 }
 
 @media (max-width: 760px) {
+  .stack {
+    height: auto !important;
+  }
+
   .row {
+    flex: none;
     grid-template-columns: minmax(0, 1fr);
+    height: 520px;
+    grid-template-rows: 300px 1fr;
   }
 }
