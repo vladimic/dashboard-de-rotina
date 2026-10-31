@@ -7,9 +7,13 @@ import styles from './VendasView.module.css';
 import cardStyles from '../components/vendas/Vendas.module.css';
 
 const PERIODS = [7, 30, 90];
+const MODES = [
+  { key: 'qty', label: 'Qtd' },
+  { key: 'pct', label: '%' },
+];
 
 // One funnel: the chart (2/3) and its table (1/3).
-function Funnel({ title, group, data, period, onPeriod }) {
+function Funnel({ title, group, data, period, onPeriod, mode, onMode }) {
   const { rows, points } = buildFunnel(data, group, period);
   return (
     <div className={styles.row}>
@@ -18,15 +22,24 @@ function Funnel({ title, group, data, period, onPeriod }) {
           <span className={cardStyles.title}>
             <b>{title}</b> · deals por estágio
           </span>
-          <div className={cardStyles.pills}>
+          <div className={cardStyles.headRight}>
+            <div className={cardStyles.pills}>
+              {MODES.map((m) => (
+                <button key={m.key} type="button" className={cardStyles.pill} data-on={mode === m.key} onClick={() => onMode(m.key)} title={m.key === 'qty' ? 'Quantidade de deals' : 'Percentual de cada estágio no funil (fecha em 100%)'}>
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <div className={cardStyles.pills}>
             {PERIODS.map((d) => (
               <button key={d} type="button" className={cardStyles.pill} data-on={period === d} onClick={() => onPeriod(d)}>
                 {d}d
               </button>
             ))}
+            </div>
           </div>
         </div>
-        <VendasChart rows={rows} points={points} />
+        <VendasChart rows={rows} points={points} mode={mode} />
       </div>
       <div className={cardStyles.card}>
         <div className={cardStyles.head}>
@@ -43,6 +56,7 @@ function Funnel({ title, group, data, period, onPeriod }) {
 export default function VendasView() {
   const { data, loading, error } = useVendas(90);
   const [period, setPeriod] = useState(30);
+  const [mode, setMode] = useState('qty');
 
   // Fill the screen under the header: the two funnels split what is left.
   const stackRef = useRef(null);
@@ -62,8 +76,8 @@ export default function VendasView() {
 
   return (
     <div className={styles.stack} ref={stackRef} style={height ? { height } : undefined}>
-      <Funnel title="Funil quente" group="hot" data={data} period={period} onPeriod={setPeriod} />
-      <Funnel title="Funil frio" group="cold" data={data} period={period} onPeriod={setPeriod} />
+      <Funnel title="Funil quente" group="hot" data={data} period={period} onPeriod={setPeriod} mode={mode} onMode={setMode} />
+      <Funnel title="Funil frio" group="cold" data={data} period={period} onPeriod={setPeriod} mode={mode} onMode={setMode} />
     </div>
   );
 }

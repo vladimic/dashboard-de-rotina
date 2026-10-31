@@ -13,8 +13,9 @@ const LABEL_GAP = 90; // minimum px between two days that carry value labels
 // Stacked area of deals per stage over the daily photos, drawn at the size of
 // its box. `rows` come in table order (first row = top of the stack). Values
 // sit inside the bands, the total above the stack, today's values in the
-// right margin; hovering a day lists every stage with its count.
-export default function VendasChart({ rows, points }) {
+// right margin; hovering a day lists every stage with its count. In `pct`
+// mode each day is closed at 100% and every stage is its share of that day.
+export default function VendasChart({ rows, points, mode = 'qty' }) {
   const [boxRef, { w: W, h: H }] = useElementSize();
   const tipRef = useRef(null);
   const [hover, setHover] = useState(null);
@@ -26,11 +27,15 @@ export default function VendasChart({ rows, points }) {
   let hp = null;
   if (ready) {
     const list = [...rows].reverse(); // base first
-    const valueOf = (p, s) => p.stages[s.id]?.n ?? 0;
+    const pct = mode === 'pct';
+    const qtyOf = (p, s) => p.stages[s.id]?.n ?? 0;
+    const qtyTotal = (p) => list.reduce((t, s) => t + qtyOf(p, s), 0);
+    const valueOf = (p, s) => (pct ? (qtyTotal(p) ? (qtyOf(p, s) / qtyTotal(p)) * 100 : 0) : qtyOf(p, s));
     const totalOf = (p) => list.reduce((t, s) => t + valueOf(p, s), 0);
-    const maxT = Math.max(...points.map(totalOf), 1);
-    const step = maxT > 150 ? 100 : maxT > 60 ? 20 : maxT > 25 ? 10 : 5;
-    const top = Math.ceil((maxT + 1) / step) * step;
+    const maxT = pct ? 100 : Math.max(...points.map(totalOf), 1);
+    const step = pct ? 20 : maxT > 150 ? 100 : maxT > 60 ? 20 : maxT > 25 ? 10 : 5;
+    const top = pct ? 100 : Math.ceil((maxT + 1) / step) * step;
+    const fmt = (v) => (pct ? `${Math.round(v)}%` : v);
     const n = points.length;
     const t0 = points[0].t;
     const t1 = points.at(-1).t;
@@ -61,7 +66,7 @@ export default function VendasChart({ rows, points }) {
     const rightLabels = [...list]
       .map((s, k) => ({ s, y: (Y(lowOf(lastPoint, k)) + Y(cum(lastPoint, k))) / 2 }))
       .reverse()
-      .filter(({ s }) => valueOf(lastPoint, s) > 0)
+      .filter(({ s }) => qtyOf(lastPoint, s) > 0)
       .map(({ s, y }) => {
         const yy = Math.max(y, lastY + 13);
         lastY = yy;
@@ -85,7 +90,7 @@ export default function VendasChart({ rows, points }) {
           <g key={v}>
             <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="#ece4f0" />
             <text x={L - 6} y={Y(v) + 4} textAnchor="end" className={styles.axis}>
-              {v}
+              {pct ? `${v}%` : v}
             </text>
           </g>
         ))}
@@ -111,13 +116,13 @@ export default function VendasChart({ rows, points }) {
                 const v = valueOf(p, s);
                 const lo = Y(lowOf(p, k));
                 const hi = Y(cum(p, k));
-                return v > 0 && lo - hi >= 14 ? (
+                return qtyOf(p, s) > 0 && lo - hi >= 14 ? (
                   <text key={s.id} x={X(p)} y={(lo + hi) / 2 + 4} textAnchor="middle" className={styles.lab}>
-                    {v}
+                    {fmt(v)}
                   </text>
                 ) : null;
               })}
-              {i < n - 1 && (
+              {!pct && i < n - 1 && (
                 <text x={X(p)} y={Y(totalOf(p)) - 5} textAnchor="middle" className={styles.total}>
                   {totalOf(p)}
                 </text>
@@ -126,12 +131,14 @@ export default function VendasChart({ rows, points }) {
           );
         })}
 
-        <text x={X(lastPoint) + 2} y={Y(totalOf(lastPoint)) - 5} textAnchor="end" className={styles.total}>
-          Total {totalOf(lastPoint)}
-        </text>
+        {!pct && (
+          <text x={X(lastPoint) + 2} y={Y(totalOf(lastPoint)) - 5} textAnchor="end" className={styles.total}>
+            Total {totalOf(lastPoint)}
+          </text>
+        )}
         {rightLabels.map(({ s, y }) => (
           <text key={s.id} x={W - R + 6} y={y + 4} className={styles.end} style={{ fill: s.color }}>
-            {valueOf(lastPoint, s)}
+            {fmt(valueOf(lastPoint, s))}
           </text>
         ))}
 
@@ -149,6 +156,7 @@ export default function VendasChart({ rows, points }) {
 
   const isToday = hp && hp === points.at(-1);
   const totalHover = hp ? rows.reduce((t, s) => t + (hp.stages[s.id]?.n ?? 0), 0) : 0;
+  const pctHover = (n) => (totalHover ? `${Math.round((n / totalHover) * 100)}% · ${n}` : n);
 
   return (
     <div className={styles.chartBox} ref={boxRef}>
@@ -169,7 +177,7 @@ export default function VendasChart({ rows, points }) {
                   <i className={styles.dot} style={{ background: s.color }} />
                   {s.label}
                 </span>
-                <b>{st.n}</b>
+                <b>{mode === 'pct' ? pctHover(st.n) : st.n}</b>
               </div>
             );
           })}
