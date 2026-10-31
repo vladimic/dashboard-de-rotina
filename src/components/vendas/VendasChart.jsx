@@ -13,9 +13,8 @@ const LABEL_GAP = 90; // minimum px between two days that carry value labels
 // Stacked area of deals per stage over the daily photos, drawn at the size of
 // its box. `rows` come in table order (first row = top of the stack). Values
 // sit inside the bands, the total above the stack, today's values in the
-// right margin; hovering a day lists every stage (with the deal names when
-// `names` is on).
-export default function VendasChart({ rows, points, names }) {
+// right margin; hovering a day lists every stage with its count.
+export default function VendasChart({ rows, points }) {
   const [boxRef, { w: W, h: H }] = useElementSize();
   const tipRef = useRef(null);
   const [hover, setHover] = useState(null);
@@ -165,20 +164,12 @@ export default function VendasChart({ rows, points, names }) {
             const st = hp.stages[s.id];
             if (!st) return null;
             return (
-              <div key={s.id}>
-                <div className={styles.tipRow}>
-                  <span>
-                    <i className={styles.dot} style={{ background: s.color }} />
-                    {s.label}
-                  </span>
-                  <b>{st.n}</b>
-                </div>
-                {names && st.names.length > 0 && (
-                  <div className={styles.tipNames}>
-                    {st.names.slice(0, 2).join(', ')}
-                    {st.names.length > 2 ? `, + ${st.names.length - 2}` : ''}
-                  </div>
-                )}
+              <div key={s.id} className={styles.tipRow}>
+                <span>
+                  <i className={styles.dot} style={{ background: s.color }} />
+                  {s.label}
+                </span>
+                <b>{st.n}</b>
               </div>
             );
           })}

@@ -9,10 +9,10 @@
 // else is refused; without it only Vercel's cron user agent is accepted.
 // (One file for both: Vercel's free plan allows 12 functions per deployment.)
 //
-// Returns the last `days` photos as counts per stage, with deal names for the
-// days of the hot funnel, plus today's deals (stage + days in stage).
+// Returns the last `days` photos as counts per stage, plus today's deals
+// (stage + when they entered it, for the days-in-stage column).
 
-import { takeSnapshot, supabaseAdmin, ownerUserId, dayKeySaoPaulo, COLD_STAGE_IDS } from './_lib/vendasSnapshot.js';
+import { takeSnapshot, supabaseAdmin, ownerUserId, dayKeySaoPaulo } from './_lib/vendasSnapshot.js';
 
 const PAGE = 1000;
 const MAX_DAYS = 90;
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await supabase
         .from('deal_snapshots')
-        .select('day, deal_id, deal_name, stage_id, stage_label, entered_stage_at, taken_at')
+        .select('day, deal_id, stage_id, stage_label, entered_stage_at, taken_at')
         .eq('user_id', userId)
         .gte('day', sinceKey)
         .order('day', { ascending: true })
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       if (data.length < PAGE) break;
     }
 
-    // day → stage_id → { n, names[] }, and today's deals.
+    // day → stage_id → { n }, and today's deals.
     const byDay = new Map();
     const labels = {};
     const todayDeals = [];
@@ -87,13 +87,12 @@ export default async function handler(req, res) {
     for (const r of rows) {
       labels[r.stage_id] = r.stage_label;
       const day = byDay.get(r.day) || {};
-      const st = day[r.stage_id] || { n: 0, names: [] };
+      const st = day[r.stage_id] || { n: 0 };
       st.n += 1;
-      if (r.day === today || !COLD_STAGE_IDS.includes(r.stage_id)) st.names.push(r.deal_name);
       day[r.stage_id] = st;
       byDay.set(r.day, day);
       if (r.day === today) {
-        todayDeals.push({ id: r.deal_id, name: r.deal_name, stage: r.stage_id, enteredAt: r.entered_stage_at });
+        todayDeals.push({ id: r.deal_id, stage: r.stage_id, enteredAt: r.entered_stage_at });
         if (!takenAt || r.taken_at > takenAt) takenAt = r.taken_at;
       }
     }
