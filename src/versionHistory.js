@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 181, date: '2026-10-31', summary: 'Vendas: remove o rodapé com a descrição da foto e corrige o "Total" que aparecia sobreposto no gráfico do primeiro dia' },
   { version: 180, date: '2026-10-31', summary: 'Vendas: a foto das 23h passa a rodar dentro da mesma função do /api/vendas (o plano gratuito do Vercel aceita no máximo 12 funções por deploy e a v179 passava de 12, então não foi publicada)' },
   { version: 179, date: '2026-10-31', summary: 'Nova aba Vendas (depois de Hoje): foto diária do funil do HubSpot, por deal, salva todo dia às ~23h pelo servidor (e na hora, se faltar a de hoje). Funil quente (8 estágios) e funil frio (Remarketing, Morno, Frio), cada um com gráfico de áreas empilhadas (valores nas faixas, total acima, hover com os deals por estágio) e tabela com Hoje, Δ 7d, período e dias no estágio. Inbox, Won e Lost ficam de fora' },
   { version: 178, date: '2026-10-29', summary: 'Hábitos voltam à aba Hoje: painel na coluna do Meu Dia, entre o Meu Dia e o Starting Day; card Hábitos de volta no cabeçalho e hábitos pendentes voltam a somar no Geral' },
