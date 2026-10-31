@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import VendasChart from '../components/vendas/VendasChart';
 import VendasTable from '../components/vendas/VendasTable';
-import { useVendas } from '../hooks/useVendas';
 import { buildFunnel } from '../utils/vendas';
+import { formatClock } from '../utils/format';
 import styles from './VendasView.module.css';
 import cardStyles from '../components/vendas/Vendas.module.css';
 
@@ -13,7 +13,7 @@ const MODES = [
 ];
 
 // One funnel: the chart (2/3) and its table (1/3).
-function Funnel({ title, group, data, period, onPeriod, mode, onMode }) {
+function Funnel({ title, group, data, period, onPeriod, mode, onMode, onRefresh, refreshing, error }) {
   const { rows, points } = buildFunnel(data, group, period);
   return (
     <div className={styles.row}>
@@ -52,6 +52,12 @@ function Funnel({ title, group, data, period, onPeriod, mode, onMode }) {
       <div className={cardStyles.card}>
         <div className={cardStyles.head}>
           <span className={cardStyles.title}>{title} · hoje por estágio</span>
+          <span className={cardStyles.refreshBox}>
+            {data.takenAt && <span className={cardStyles.updated}>{formatClock(data.takenAt)}</span>}
+            <button type="button" className={cardStyles.refresh} data-busy={refreshing} data-error={Boolean(error)} onClick={onRefresh} disabled={refreshing} title={error ? `Falhou: ${error}` : 'Atualizar: tira uma nova foto do funil agora'} aria-label="Atualizar o funil">
+              ↻
+            </button>
+          </span>
         </div>
         <VendasTable rows={rows} />
       </div>
@@ -61,8 +67,8 @@ function Funnel({ title, group, data, period, onPeriod, mode, onMode }) {
 
 // Vendas tab: a daily photo of the HubSpot funnel — hot (8 stages) above,
 // cold (Remarketing, Morno, Frio) below, each with its chart and table.
-export default function VendasView() {
-  const { data, loading, error } = useVendas(90);
+export default function VendasView({ vendas }) {
+  const { data, loading, refreshing, error, refresh } = vendas;
   const [period, setPeriod] = useState(30);
   const [mode, setMode] = useState('qty');
 
@@ -79,13 +85,13 @@ export default function VendasView() {
     return () => window.removeEventListener('resize', fit);
   }, [loading, error]);
 
-  if (error) return <div className={cardStyles.card}><div className={cardStyles.error}>Não deu pra carregar o funil: {error}</div></div>;
+  if (error && !data) return <div className={cardStyles.card}><div className={cardStyles.error}>Não deu pra carregar o funil: {error}</div></div>;
   if (loading || !data) return <div className={cardStyles.card}><div className={cardStyles.empty}>Carregando o funil…</div></div>;
 
   return (
     <div className={styles.stack} ref={stackRef} style={height ? { height } : undefined}>
-      <Funnel title="Funil quente" group="hot" data={data} period={period} onPeriod={setPeriod} mode={mode} onMode={setMode} />
-      <Funnel title="Funil frio" group="cold" data={data} period={period} onPeriod={setPeriod} mode={mode} onMode={setMode} />
+      <Funnel title="Funil quente" group="hot" data={data} period={period} onPeriod={setPeriod} mode={mode} onMode={setMode} onRefresh={refresh} refreshing={refreshing} error={error} />
+      <Funnel title="Funil frio" group="cold" data={data} period={period} onPeriod={setPeriod} mode={mode} onMode={setMode} onRefresh={refresh} refreshing={refreshing} error={error} />
     </div>
   );
 }

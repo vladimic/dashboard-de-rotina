@@ -64,6 +64,42 @@
   color: #fff;
 }
 
+.refreshBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.updated {
+  font: 11px Inter, sans-serif;
+  color: #8a7f93;
+}
+
+.refresh {
+  font: 600 19px Inter, sans-serif;
+  color: #8a7f93;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.refresh[data-error='true'] {
+  color: #d9534f;
+}
+
+.refresh:disabled {
+  cursor: default;
+}
+
+.refresh[data-busy='true'] {
+  animation: vendas-spin 0.9s linear infinite;
+}
+
+@keyframes vendas-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .headRight {
   display: flex;
   align-items: center;

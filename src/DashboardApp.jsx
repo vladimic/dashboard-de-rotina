@@ -21,6 +21,7 @@ import SummaryStrip from './components/SummaryStrip';
 import HojeView from './views/HojeView';
 import SaudeView from './views/SaudeView';
 import VendasView from './views/VendasView';
+import { useVendas } from './hooks/useVendas';
 import BacklogView from './views/BacklogView';
 import styles from './App.module.css';
 
@@ -59,6 +60,12 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     [steps.samples, energy.samples, exercise.samples, workouts.samples, steps.loading, energy.loading, exercise.loading, workouts.loading, steps.error, energy.error, exercise.error, workouts.error]
   );
   const weightDaily = useMemo(() => dailyWeights(weight.samples), [weight.samples]);
+  // Vendas: loaded the first time its tab is opened, then kept until refreshed.
+  const [vendasOpened, setVendasOpened] = useState(false);
+  useEffect(() => {
+    if (state.page === 'vendas') setVendasOpened(true);
+  }, [state.page]);
+  const vendas = useVendas(90, vendasOpened || state.page === 'vendas');
   const confirm = useConfirm();
 
   // Fires the Atalho, re-fetches the cache it just filled, and polls a few
@@ -397,6 +404,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           energy.refresh();
           exercise.refresh();
           workouts.refresh();
+          if (vendasOpened) vendas.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -434,7 +442,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           habitTracker={habitTracker}
         />
       )}
-      {state.page === 'vendas' && <VendasView />}
+      {state.page === 'vendas' && <VendasView vendas={vendas} />}
       {state.page === 'saude' && (
         <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}

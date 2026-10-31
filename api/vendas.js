@@ -9,6 +9,9 @@
 // else is refused; without it only Vercel's cron user agent is accepted.
 // (One file for both: Vercel's free plan allows 12 functions per deployment.)
 //
+// With ?refresh=1 (the refresh button / "Atualizar tudo") it takes a new
+// photo of now, replacing today's.
+//
 // Returns the last `days` photos as counts per stage, plus today's deals
 // (stage + when they entered it, for the days-in-stage column).
 
@@ -59,7 +62,10 @@ export default async function handler(req, res) {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('day', today);
-    if (!todayRows) {
+    if (req.query?.refresh === '1') {
+      await takeSnapshot({ force: true });
+      ensured = true;
+    } else if (!todayRows) {
       await takeSnapshot();
       ensured = true;
     }
