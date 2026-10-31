@@ -20,6 +20,7 @@ import Header from './components/Header';
 import SummaryStrip from './components/SummaryStrip';
 import HojeView from './views/HojeView';
 import SaudeView from './views/SaudeView';
+import VendasView from './views/VendasView';
 import BacklogView from './views/BacklogView';
 import styles from './App.module.css';
 
@@ -433,6 +434,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           habitTracker={habitTracker}
         />
       )}
+      {state.page === 'vendas' && <VendasView />}
       {state.page === 'saude' && (
         <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}

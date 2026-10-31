@@ -7,6 +7,7 @@ import styles from './Header.module.css';
 
 const TABS = [
   { key: 'hoje', label: 'Hoje' },
+  { key: 'vendas', label: 'Vendas' },
   { key: 'saude', label: 'Saúde' },
   { key: 'backlog', label: 'Backlog' },
 ];
