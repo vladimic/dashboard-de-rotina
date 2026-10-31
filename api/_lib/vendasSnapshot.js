@@ -7,15 +7,12 @@ import { searchAll } from './hubspotShared.js';
 
 const TIMEZONE = 'America/Sao_Paulo';
 
-// The user's own deals in the main pipeline ("VENDAS"), in every stage but
-// Inbox, Closed won and Closed lost.
+// Every deal of the main pipeline ("VENDAS") in every stage but Inbox, Closed
+// won and Closed lost. No owner filter: the account has a single user and many
+// old deals have no owner at all (counting only the user's own left hundreds
+// out of the cold funnel).
 export const VENDAS_PIPELINE = 'default';
 export const EXCLUDED_STAGE_IDS = ['967209303', 'closedwon', 'closedlost'];
-const DEFAULT_OWNER_ID = '81367379';
-
-// Cold funnel (Remarketing, Contato Morno, Contato Frio): hundreds of deals,
-// so /api/vendas sends names only for today.
-export const COLD_STAGE_IDS = ['121424252', '31607681', '31607680'];
 
 // A photo taken less than this long ago isn't taken again, so the endpoints
 // can't be used to hammer the HubSpot API.
@@ -52,7 +49,6 @@ async function fetchStageLabels(token) {
 export async function takeSnapshot({ force = false } = {}) {
   const token = process.env.HUBSPOT_TOKEN;
   if (!token) throw new Error('HUBSPOT_TOKEN not configured on the server.');
-  const owner = process.env.HUBSPOT_OWNER_ID || DEFAULT_OWNER_ID;
   const userId = ownerUserId();
   const supabase = supabaseAdmin();
   const day = dayKeySaoPaulo();
@@ -78,7 +74,6 @@ export async function takeSnapshot({ force = false } = {}) {
         filterGroups: [
           {
             filters: [
-              { propertyName: 'hubspot_owner_id', operator: 'EQ', value: owner },
               { propertyName: 'pipeline', operator: 'EQ', value: VENDAS_PIPELINE },
               { propertyName: 'dealstage', operator: 'NOT_IN', values: EXCLUDED_STAGE_IDS },
             ],

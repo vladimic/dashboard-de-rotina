@@ -26,7 +26,7 @@ function Funnel({ title, group, data, period, onPeriod }) {
             ))}
           </div>
         </div>
-        <VendasChart rows={rows} points={points} names={group === 'hot'} />
+        <VendasChart rows={rows} points={points} />
       </div>
       <div className={cardStyles.card}>
         <div className={cardStyles.head}>

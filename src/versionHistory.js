@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 183, date: '2026-10-31', summary: 'Vendas: a contagem passa a incluir os deals sem dono no HubSpot (eram excluídos: Contato Frio mostrava 122 em vez de 271, Remarketing 248 em vez de 273 etc.); o pop-up do gráfico mostra só estágio e quantidade, sem os nomes dos deals' },
   { version: 182, date: '2026-10-31', summary: 'Vendas: nova disposição (opção A) — funil quente em cima e frio embaixo, cada linha com gráfico de 2/3 e tabela de 1/3, ocupando a altura da tela sem rolagem. O gráfico agora é desenhado no tamanho real da área, então a fonte (12 px) é a mesma do gráfico e da tabela' },
   { version: 181, date: '2026-10-31', summary: 'Vendas: remove o rodapé com a descrição da foto e corrige o "Total" que aparecia sobreposto no gráfico do primeiro dia' },
   { version: 180, date: '2026-10-31', summary: 'Vendas: a foto das 23h passa a rodar dentro da mesma função do /api/vendas (o plano gratuito do Vercel aceita no máximo 12 funções por deploy e a v179 passava de 12, então não foi publicada)' },
