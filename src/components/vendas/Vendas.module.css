@@ -14,8 +14,24 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  height: 28px;
+  min-height: 28px;
   flex: none;
+}
+
+/* Color + stage name, between the title and the Qtd/% switch. */
+.legend {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 12px;
+  font: 11px Inter, sans-serif;
+  color: #5b4a63;
+}
+
+.legend span {
+  white-space: nowrap;
 }
 
 .title {

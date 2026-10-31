@@ -1,4 +1,5 @@
 export const VERSION_HISTORY = [
+  { version: 185, date: '2026-10-31', summary: 'Vendas: legenda (cor + nome do estágio) no cabeçalho de cada gráfico, à esquerda do seletor Qtd | %' },
   { version: 184, date: '2026-10-31', summary: 'Vendas: tabela ganha a coluna "% hoje" (parte de cada estágio no funil) e a linha Total (soma, 100%, Δ 7d, período e dias no estágio ponderado); no cabeçalho dos gráficos, botão Qtd | % à esquerda do 7d/30d/90d — no modo % cada dia fecha em 100% e cada estágio mostra seu percentual' },
   { version: 183, date: '2026-10-31', summary: 'Vendas: a contagem passa a incluir os deals sem dono no HubSpot (eram excluídos: Contato Frio mostrava 122 em vez de 271, Remarketing 248 em vez de 273 etc.); o pop-up do gráfico mostra só estágio e quantidade, sem os nomes dos deals' },
   { version: 182, date: '2026-10-31', summary: 'Vendas: nova disposição (opção A) — funil quente em cima e frio embaixo, cada linha com gráfico de 2/3 e tabela de 1/3, ocupando a altura da tela sem rolagem. O gráfico agora é desenhado no tamanho real da área, então a fonte (12 px) é a mesma do gráfico e da tabela' },
