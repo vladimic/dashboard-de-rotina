@@ -3,6 +3,12 @@
 // answers for the owner of the photos. If today's photo is missing it takes
 // one first (the 23h cron overwrites it later with the day's final one).
 //
+// With ?snapshot=1 it is the Vercel cron (see vercel.json) that takes the day's
+// final photo at ~23h São Paulo instead. When CRON_SECRET is set on the
+// project Vercel sends it as "Authorization: Bearer <secret>" and anything
+// else is refused; without it only Vercel's cron user agent is accepted.
+// (One file for both: Vercel's free plan allows 12 functions per deployment.)
+//
 // Returns the last `days` photos as counts per stage, with deal names for the
 // days of the hot funnel, plus today's deals (stage + days in stage).
 
@@ -13,6 +19,23 @@ const MAX_DAYS = 90;
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+
+  if (req.query?.snapshot === '1') {
+    const secret = process.env.CRON_SECRET;
+    const fromCron = String(req.headers['user-agent'] || '').startsWith('vercel-cron/');
+    if (!(secret ? req.headers.authorization === `Bearer ${secret}` : fromCron)) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    try {
+      // The scheduled run is the day's final photo: it replaces an earlier one.
+      res.status(200).json(await takeSnapshot({ force: true }));
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: err.message || 'Could not take the photo.' });
+    }
+    return;
+  }
 
   try {
     const supabase = supabaseAdmin();

@@ -5,14 +5,11 @@
     },
     "api/vendas.js": {
       "maxDuration": 30
-    },
-    "api/vendas-snapshot.js": {
-      "maxDuration": 30
     }
   },
   "crons": [
     {
-      "path": "/api/vendas-snapshot",
+      "path": "/api/vendas?snapshot=1",
       "schedule": "0 2 * * *"
     }
   ]

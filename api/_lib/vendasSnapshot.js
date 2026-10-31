@@ -1,4 +1,4 @@
-// Shared by /api/vendas-snapshot (cron) and /api/vendas (takes today's photo
+// Shared by /api/vendas?snapshot=1 (cron) and /api/vendas (takes today's photo
 // when it's missing). Reads the open sales funnel from HubSpot and stores one
 // row per deal in Supabase (deal_snapshots), keyed by the São Paulo day.
 
