@@ -111,9 +111,11 @@ export default function VendasChart({ rows, points, names }) {
                   </text>
                 ) : null;
               })}
-              <text x={X(p)} y={Y(totalOf(p)) - 4} textAnchor="middle" className={styles.total}>
-                {totalOf(p)}
-              </text>
+              {i < n - 1 && (
+                <text x={X(p)} y={Y(totalOf(p)) - 4} textAnchor="middle" className={styles.total}>
+                  {totalOf(p)}
+                </text>
+              )}
             </g>
           );
         })}

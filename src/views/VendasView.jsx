@@ -3,7 +3,6 @@ import VendasChart from '../components/vendas/VendasChart';
 import VendasTable from '../components/vendas/VendasTable';
 import { useVendas } from '../hooks/useVendas';
 import { buildFunnel } from '../utils/vendas';
-import { formatClock } from '../utils/format';
 import styles from './VendasView.module.css';
 import cardStyles from '../components/vendas/Vendas.module.css';
 
@@ -52,10 +51,6 @@ export default function VendasView() {
     <div className={styles.stack}>
       <Funnel title="Funil quente" group="hot" data={data} period={period} onPeriod={setPeriod} />
       <Funnel title="Funil frio" group="cold" data={data} period={period} onPeriod={setPeriod} />
-      <div className={cardStyles.note}>
-        Foto do funil (seus deals, pipeline VENDAS, sem Inbox, Won e Lost) salva todo dia às ~23h · {data.days.length} dia(s) com foto
-        {data.takenAt ? ` · hoje às ${formatClock(data.takenAt)}` : ''}. O gráfico se preenche a partir do primeiro dia.
-      </div>
     </div>
   );
 }
