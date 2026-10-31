@@ -22,6 +22,14 @@ function Funnel({ title, group, data, period, onPeriod, mode, onMode }) {
           <span className={cardStyles.title}>
             <b>{title}</b> · deals por estágio
           </span>
+          <div className={cardStyles.legend}>
+            {rows.map((s) => (
+              <span key={s.id}>
+                <i className={cardStyles.dot} style={{ background: s.color }} />
+                {s.label}
+              </span>
+            ))}
+          </div>
           <div className={cardStyles.headRight}>
             <div className={cardStyles.pills}>
               {MODES.map((m) => (
