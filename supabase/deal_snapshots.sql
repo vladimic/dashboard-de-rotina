@@ -1,5 +1,5 @@
 -- Daily photo of the HubSpot sales funnel, one row per deal per day, written
--- by /api/vendas-snapshot (Vercel cron, ~23h São Paulo) and by /api/vendas
+-- by /api/vendas?snapshot=1 (Vercel cron, ~23h São Paulo) and by /api/vendas
 -- when today's photo is missing. Re-taking a day overwrites it: the rows of
 -- the day that are not in the new photo are deleted (see api/_lib/vendasSnapshot.js).
 --
