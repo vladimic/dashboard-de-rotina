@@ -5,61 +5,38 @@ import { dateKeySaoPaulo } from '../../utils/format';
 import { daysSince } from '../../utils/instagram';
 import styles from './PhotoAlbums.module.css';
 
-const MAX_COLUMNS = 16; // the biggest albums get a column; the rest are summed in "Outros"
+const MAX_BARS = 10; // the biggest albums get a bar; the rest are summed in "Outros"
 const dm = (key) => `${key.slice(8)}/${key.slice(5, 7)}`;
 const fmtInt = (n) => n.toLocaleString('pt-BR');
 const shorten = (s, n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
-// A "nice" axis step (1, 2, 5 × 10^k) so the scale has about four ticks.
-function niceStep(max) {
-  const raw = max / 4;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  return ([1, 2, 5, 10].find((m) => m * mag >= raw) || 10) * mag;
-}
-
-// Column chart: one column per album, the biggest first.
+// Horizontal bar chart: the biggest albums on top, the rest summed in "Outros".
 function AlbumChart({ albums }) {
   const [ref, { w: W, h: H }] = useElementSize();
-  const L = 46;
-  const R = 8;
-  const T = 20;
-  const B = 76;
+  const L = 150;
+  const R = 70;
   let body = null;
   if (W > 0 && H > 0 && albums.length > 0) {
-    const top = albums.slice(0, MAX_COLUMNS).map((a) => ({ name: a.name, items: a.items, bytes: a.bytes }));
-    const rest = albums.slice(MAX_COLUMNS);
+    const top = albums.slice(0, MAX_BARS).map((a) => ({ name: a.name, items: a.items, bytes: a.bytes }));
+    const rest = albums.slice(MAX_BARS);
     if (rest.length) top.push({ name: `Outros (${rest.length})`, items: rest.reduce((t, a) => t + a.items, 0), bytes: rest.reduce((t, a) => t + a.bytes, 0), other: true });
-    const unit = Math.max(...top.map((a) => a.bytes)) >= 1e9 ? { div: 1e9, label: 'GB' } : { div: 1e6, label: 'MB' };
-    const maxV = Math.max(...top.map((a) => a.bytes)) / unit.div || 1;
-    const step = niceStep(maxV);
-    const topV = Math.ceil(maxV / step) * step;
-    const cw = (W - L - R) / top.length;
-    const Y = (v) => T + (1 - v / topV) * (H - T - B);
+    const maxB = Math.max(...top.map((a) => a.bytes)) || 1;
+    const rh = H / top.length;
+    const bh = Math.min(18, rh * 0.62);
     body = (
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={styles.svg} role="img">
-        {Array.from({ length: Math.round(topV / step) + 1 }, (_, i) => i * step).map((v) => (
-          <g key={v}>
-            <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="#ece4f0" />
-            <text x={L - 6} y={Y(v) + 4} textAnchor="end" className={styles.axis}>
-              {`${v.toLocaleString('pt-BR')} ${unit.label}`}
-            </text>
-          </g>
-        ))}
         {top.map((a, i) => {
-          const x = L + i * cw + cw * 0.15;
-          const bw = cw * 0.7;
-          const y = Y(a.bytes / unit.div);
+          const y = i * rh + (rh - bh) / 2;
+          const bw = Math.max(1, ((W - L - R) * a.bytes) / maxB);
           return (
             <g key={a.name}>
               <title>{`${a.name} — ${fmtInt(a.items)} itens — ${formatBytes(a.bytes)}`}</title>
-              <rect x={x} y={y} width={bw} height={Math.max(0, H - B - y)} rx="2" fill={a.other ? '#c9bfd6' : '#7a6fc0'} />
-              {cw >= 36 && (
-                <text x={x + bw / 2} y={y - 5} textAnchor="middle" className={styles.val}>
-                  {formatBytes(a.bytes)}
-                </text>
-              )}
-              <text transform={`translate(${x + bw / 2 + 4},${H - B + 10}) rotate(-40)`} textAnchor="end" className={styles.cat}>
-                {shorten(a.name, 18)}
+              <text x={L - 8} y={y + bh / 2 + 4} textAnchor="end" className={styles.cat}>
+                {shorten(a.name, 24)}
+              </text>
+              <rect x={L} y={y} width={bw} height={bh} rx="2" fill={a.other ? '#c9bfd6' : '#7a6fc0'} />
+              <text x={L + bw + 6} y={y + bh / 2 + 4} className={styles.val}>
+                {formatBytes(a.bytes)}
               </text>
             </g>
           );
@@ -119,9 +96,9 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
         <span className={styles.title}>Fotos - Álbuns</span>
         <span className={styles.tools}>
           {day && (
-            <span className={styles.updated} title={`Última importação: ${dm(day)}`}>
-              importado {dm(day)}
-              {age === 0 ? ' · hoje' : ` · há ${age} dia${age === 1 ? '' : 's'}`}
+            <span className={styles.updated} title={`Última atualização: ${dm(day)}`}>
+              atualizado {dm(day)}
+              {age === 0 ? ' - hoje' : ` - há ${age} dia${age === 1 ? '' : 's'}`}
             </span>
           )}
           <button type="button" className={styles.icon} onClick={() => fileRef.current?.click()} title="Importar o arquivo dos álbuns (JSON ou CSV)" aria-label="Importar o arquivo dos álbuns">
@@ -175,7 +152,6 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
                 ))}
             </tbody>
           </table>
-          {library && <div className={styles.empty}>Um item pode estar em vários álbuns: os álbuns não somam o total da biblioteca.</div>}
         </>
       )}
 
