@@ -1,9 +1,43 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.summaryCard {
+  width: 270px;
+}
+
+.delta {
+  margin-left: 8px;
+  font-weight: 700;
+}
+
+.delta[data-tone='good'] {
+  color: #3f9d78;
+}
+
+.delta[data-tone='bad'] {
+  color: #d9534f;
+}
+
+.delta[data-tone='flat'] {
+  color: #8a7f93;
+}
+
 .row {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 10px;
   height: 400px;
   margin-bottom: 16px;
+}
+
+@media (max-width: 680px) {
+  .summaryCard {
+    width: 100%;
+  }
 }
 
 @media (max-width: 760px) {
