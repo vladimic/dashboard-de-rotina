@@ -15,7 +15,7 @@
 // Returns the last `days` photos as counts per stage, plus today's deals
 // (stage + when they entered it, for the days-in-stage column).
 
-import { takeSnapshot, supabaseAdmin, ownerUserId, dayKeySaoPaulo } from './_lib/vendasSnapshot.js';
+import { takeSnapshot, supabaseAdmin, ownerUserId, dayKeySaoPaulo } from '../vendasSnapshot.js';
 
 const PAGE = 1000;
 const MAX_DAYS = 90;

@@ -9,9 +9,11 @@ const CHUNK = 500;
 export function usePhotoAlbums() {
   const [state, setState] = useState({ day: null, importedAt: null, albums: [] });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
     setError(null);
     try {
       const { data: last, error: e1 } = await supabase.from('photo_albums').select('day').order('day', { ascending: false }).limit(1);
@@ -31,6 +33,7 @@ export function usePhotoAlbums() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -56,5 +59,5 @@ export function usePhotoAlbums() {
     [refresh]
   );
 
-  return { ...state, loading, error, refresh, save };
+  return { ...state, loading, refreshing, error, refresh, save };
 }

@@ -3,7 +3,7 @@
 // involved (all open tasks, all deals), each capped at 3000 records — a
 // very large account could still see this miss records beyond that cap.
 
-import { hubspotFetch, searchAll, chunk, fetchStageLabelMap, sortByStage, dealLink, normalizeStageName, DEALS_OBJECT_TYPE } from './_lib/hubspotShared.js';
+import { hubspotFetch, searchAll, chunk, fetchStageLabelMap, sortByStage, dealLink, normalizeStageName, DEALS_OBJECT_TYPE } from '../hubspotShared.js';
 
 const OTHER_STAGE_LABEL = 'Outro estágio';
 
