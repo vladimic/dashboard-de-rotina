@@ -8,6 +8,12 @@
 // unreliable via the API (empty even when visibly set in the Notion UI —
 // likely a sync-lag quirk of this specific two-way relation), while the
 // project-side property reliably lists its related tasks.
+//
+// With ?scope=backlog it returns instead every open task (any deadline),
+// counted per category / project by where its deadline falls — the Backlog
+// tab's "Notion - Atividades Abertas" table.
+
+import { summarizeBacklog } from './_lib/notionBacklog.js';
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NO_PROJECT_LABEL = 'Sem Projeto';
@@ -16,6 +22,7 @@ const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
 const STATUS_PROPERTY = 'Status';
 const REVERSE_TASKS_PROPERTY = '[A] Atividades';
+const CATEGORY_PROPERTY = 'Categoria';
 // Prefixes, not full words — matches "concluído"/"concluída"/"concluídos"
 // and "cancelado"/"cancelada"/etc. regardless of grammatical gender/plural.
 const EXCLUDED_STATUS_PREFIXES = ['conclu', 'cancel'];
@@ -127,9 +134,10 @@ async function fetchRelationIds(pageId, propertyId, token) {
 }
 
 // Queries the Projetos database and builds taskPageId -> projectName by
-// reading each project's "[A] Atividades" relation.
-async function buildProjectByTaskId(token, projectsDbId) {
+// reading each project's "[A] Atividades" relation, plus projectName -> category.
+async function buildProjectIndex(token, projectsDbId) {
   const map = new Map();
+  const categoryByProject = new Map();
   let cursor;
   do {
     const res = await notionFetch(`https://api.notion.com/v1/databases/${projectsDbId}/query`, {
@@ -148,6 +156,8 @@ async function buildProjectByTaskId(token, projectsDbId) {
     const data = await res.json();
     for (const projectPage of data.results || []) {
       const projectName = pageTitle(projectPage) || NO_PROJECT_LABEL;
+      const categoryProp = findProperty(projectPage.properties || {}, CATEGORY_PROPERTY, 'categoria');
+      categoryByProject.set(projectName, categoryProp?.select?.name || null);
       const reverseProp = findProperty(projectPage.properties || {}, REVERSE_TASKS_PROPERTY, 'atividades');
       if (reverseProp?.type !== 'relation') continue;
       const taskIds = await fetchRelationIds(projectPage.id, reverseProp.id, token);
@@ -155,7 +165,52 @@ async function buildProjectByTaskId(token, projectsDbId) {
     }
     cursor = data.has_more ? data.next_cursor : null;
   } while (cursor);
-  return map;
+  return { projectByTaskId: map, categoryByProject };
+}
+
+// Day (YYYY-MM-DD) of a task's deadline, or null when it has none.
+function dueKey(page) {
+  const prop = findProperty(page.properties || {}, DUE_PROPERTY, 'prazo');
+  const start = prop?.date?.start;
+  return start ? String(start).slice(0, 10) : null;
+}
+
+// Every task that isn't done or cancelled, whatever its deadline. The Notion
+// filter only narrows what is fetched; the status is checked again below, so
+// a renamed option can't let finished tasks through.
+async function fetchOpenTasks(token, databaseId) {
+  const run = async (filter) => {
+    const results = [];
+    let cursor;
+    do {
+      const response = await notionFetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...(filter ? { filter } : {}), page_size: 100, start_cursor: cursor }),
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw Object.assign(notionError('Notion query failed', response.status, text), { status: response.status });
+      }
+      const data = await response.json();
+      results.push(...(data.results || []));
+      cursor = data.has_more ? data.next_cursor : null;
+    } while (cursor);
+    return results;
+  };
+  let pages;
+  try {
+    pages = await run({
+      and: [
+        { property: STATUS_PROPERTY, status: { does_not_equal: 'Concluído' } },
+        { property: STATUS_PROPERTY, status: { does_not_equal: 'Cancelado' } },
+      ],
+    });
+  } catch (err) {
+    if (err.status !== 400) throw err; // filter not accepted (e.g. the property is a select): read all, filter here
+    pages = await run(null);
+  }
+  return pages.filter((page) => !isExcludedStatus(statusName(page)));
 }
 
 export default async function handler(req, res) {
@@ -177,6 +232,14 @@ export default async function handler(req, res) {
     // (= 02:59 UTC the *next* day) let tomorrow's date-only tasks slip in as
     // "on or before today", which is exactly the stale-looking bug reported.
     const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
+
+    if (req.query?.scope === 'backlog') {
+      const openPages = await fetchOpenTasks(token, databaseId);
+      const index = projectsDbId ? await buildProjectIndex(token, projectsDbId) : { projectByTaskId: new Map(), categoryByProject: new Map() };
+      const tasks = openPages.map((page) => ({ project: index.projectByTaskId.get(page.id) || NO_PROJECT_LABEL, due: dueKey(page) }));
+      res.status(200).json({ updatedAt: new Date().toISOString(), ...summarizeBacklog(tasks, index.categoryByProject, todayStr) });
+      return;
+    }
 
     // A filtered query can return fewer rows than page_size while still
     // reporting has_more: Notion scans the database in chunks and hands back
@@ -219,7 +282,7 @@ export default async function handler(req, res) {
         res.status(200).json({ debug: 'NOTION_PROJECTS_DATABASE_ID not configured' });
         return;
       }
-      const projectByTaskId = await buildProjectByTaskId(token, projectsDbId);
+      const { projectByTaskId } = await buildProjectIndex(token, projectsDbId);
       const counts = {};
       for (const name of projectByTaskId.values()) counts[name] = (counts[name] || 0) + 1;
       const openTaskIds = new Set(openPages.map((p) => p.id));
@@ -236,7 +299,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const projectByTaskId = projectsDbId ? await buildProjectByTaskId(token, projectsDbId) : new Map();
+    const projectByTaskId = projectsDbId ? (await buildProjectIndex(token, projectsDbId)).projectByTaskId : new Map();
 
     // notion:// opens the page directly in the Notion app instead of a
     // browser tab.

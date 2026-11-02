@@ -1,9 +1,10 @@
 import StatFolderCard from '../components/StatFolderCard';
 import InstagramSaved, { InstagramTotalCard } from '../components/backlog/InstagramSaved';
+import NotionBacklog from '../components/backlog/NotionBacklog';
 import { formatClock } from '../utils/format';
 import styles from './BacklogView.module.css';
 
-export default function BacklogView({ state, dispatch, instagram }) {
+export default function BacklogView({ state, dispatch, instagram, notionBacklog }) {
   const refresh = (key) => dispatch({ type: 'REFRESH', key });
   const toggle = (key) => dispatch({ type: 'TOGGLE_FLAG', key });
 
@@ -71,6 +72,13 @@ export default function BacklogView({ state, dispatch, instagram }) {
         <div className={styles.spacer} />
       </div>
       <InstagramSaved instagram={instagram} />
+      <div className={styles.half}>
+        <NotionBacklog
+          notion={notionBacklog}
+          collapsed={state.notionBacklogCollapsed || {}}
+          onCollapsedChange={(value) => dispatch({ type: 'SET_FLAG', key: 'notionBacklogCollapsed', value })}
+        />
+      </div>
     </>
   );
 }

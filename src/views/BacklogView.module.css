@@ -12,6 +12,11 @@
   flex: none;
 }
 
+.half {
+  width: calc(50% - 5px);
+  margin-top: 16px;
+}
+
 .spacer {
   flex: 1;
 }
@@ -27,5 +32,9 @@
 
   .spacer {
     display: none;
+  }
+
+  .half {
+    width: 100%;
   }
 }
