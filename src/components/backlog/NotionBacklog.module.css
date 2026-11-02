@@ -127,6 +127,16 @@
   padding-left: 30px !important;
 }
 
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: #5b4a63;
+  text-decoration: underline;
+}
+
 .cat td {
   background: #f1ecf4;
   font-weight: 700;

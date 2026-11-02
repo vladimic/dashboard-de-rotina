@@ -85,7 +85,7 @@ export function InstagramTotalCard({ instagram }) {
   return (
     <div className={folder.card} style={{ background: '#fbe3ec' }}>
       <div className={folder.title} style={{ color: '#b5546b' }}>
-        Posts salvos · Instagram
+        Instagram - Posts Salvos
       </div>
       <div className={folder.count} style={{ color: '#8a3b52' }}>
         {total ?? '—'}
@@ -154,7 +154,7 @@ export default function InstagramSaved({ instagram }) {
       <div className={vendas.card}>
         <div className={vendas.head}>
           <span className={vendas.title}>
-            <b>Posts salvos</b> · Instagram
+            <b>Instagram - Posts Salvos</b>
           </span>
           <div className={vendas.legend}>
             {QUEUES.map((q) => (

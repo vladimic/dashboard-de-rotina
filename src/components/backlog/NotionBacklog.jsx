@@ -19,13 +19,13 @@ function heat(key, v) {
 const sumRows = (rows) => rows.reduce((t, r) => ({ open: t.open + r.open, ...Object.fromEntries(COLUMNS.map((c) => [c, t[c] + r[c]])) }), { open: 0, ...Object.fromEntries(COLUMNS.map((c) => [c, 0])) });
 
 // Backlog tab, half width: "Notion - Atividades Abertas". Every open task by
-// category (collapsible) and project, split by the week of its deadline.
-export default function NotionBacklog({ notion, collapsed, onCollapsedChange }) {
+// category (collapsible, all closed to start with) and project (opens it in
+// Notion), split by the week of its deadline. `opened` = { [category]: true }.
+export default function NotionBacklog({ notion, opened, onOpenedChange }) {
   const { data, loading, refreshing, error, refresh } = notion;
   const groups = data?.groups || [];
-  const isCollapsed = (category) => Boolean(collapsed[category]);
-  const toggle = (category) => onCollapsedChange({ ...collapsed, [category]: !collapsed[category] });
-  const setAll = (value) => onCollapsedChange(Object.fromEntries(groups.map((g) => [g.category, value])));
+  const toggle = (category) => onOpenedChange({ ...opened, [category]: !opened[category] });
+  const setAll = (value) => onOpenedChange(Object.fromEntries(groups.map((g) => [g.category, value])));
   const total = sumRows(groups.flatMap((g) => g.projects));
   const heads = { overdue: 'Vencidas', w0: 'Esta semana', w1: data && dm(data.weeks[1]), w2: data && dm(data.weeks[2]), w3: data && dm(data.weeks[3]), later: 'Depois', none: 'Sem prazo' };
 
@@ -34,10 +34,10 @@ export default function NotionBacklog({ notion, collapsed, onCollapsedChange }) 
       <div className={styles.head}>
         <span className={styles.title}>Notion - Atividades Abertas</span>
         <span className={styles.tools}>
-          <button type="button" className={styles.icon} onClick={() => setAll(true)} title="Recolher todas as categorias" aria-label="Recolher todas as categorias">
+          <button type="button" className={styles.icon} onClick={() => setAll(false)} title="Recolher todas as categorias" aria-label="Recolher todas as categorias">
             ⊟
           </button>
-          <button type="button" className={styles.icon} onClick={() => setAll(false)} title="Expandir todas as categorias" aria-label="Expandir todas as categorias">
+          <button type="button" className={styles.icon} onClick={() => setAll(true)} title="Expandir todas as categorias" aria-label="Expandir todas as categorias">
             ⊞
           </button>
           {data?.updatedAt && <span className={styles.updated}>atualizado {formatClock(data.updatedAt)}</span>}
@@ -67,7 +67,7 @@ export default function NotionBacklog({ notion, collapsed, onCollapsedChange }) 
               {groups.map((g) => {
                 const color = CATEGORY_COLORS[g.category] || CATEGORY_COLORS['Sem categoria'];
                 const s = sumRows(g.projects);
-                const open = !isCollapsed(g.category);
+                const open = Boolean(opened[g.category]);
                 return [
                   <tr key={g.category} className={styles.cat}>
                     <td>
@@ -87,8 +87,14 @@ export default function NotionBacklog({ notion, collapsed, onCollapsedChange }) 
                   ...(open
                     ? g.projects.map((p) => (
                         <tr key={`${g.category}/${p.name}`}>
-                          <td className={styles.project} title={p.name}>
-                            {p.name}
+                          <td className={styles.project}>
+                            {p.id ? (
+                              <a className={styles.link} href={`notion://www.notion.so/${p.id.replace(/-/g, '')}`} title={`Abrir ${p.name} no Notion`}>
+                                {p.name}
+                              </a>
+                            ) : (
+                              <span title={p.name}>{p.name}</span>
+                            )}
                           </td>
                           <td className={styles.r}>
                             <b>{p.open}</b>
