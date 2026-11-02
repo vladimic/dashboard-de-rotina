@@ -4,7 +4,7 @@ import styles from './Saude.module.css';
 const dayLabel = (key) =>
   new Date(`${key}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 
-function Row({ dayKey, value, skipped, synced, placeholder, format, parse, focused, onSet, onSkip, onClear }) {
+function Row({ dayKey, value, skipped, synced, placeholder, format, parse, focused, onSet, onSkip, onClear, onAdvance }) {
   const [text, setText] = useState(value != null ? format(value) : '');
   const [error, setError] = useState('');
   const inputRef = useRef(null);
@@ -20,14 +20,26 @@ function Row({ dayKey, value, skipped, synced, placeholder, format, parse, focus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  function save() {
-    const result = parse(text);
-    if (result.error) {
-      setError(result.error);
-      return;
+  // Saves whatever is typed: valid and different → stored; emptied → removed;
+  // invalid → marked in red and left as is. Runs when the field is left
+  // (`fromEnter` also moves on to the next blank day).
+  function commit(fromEnter) {
+    const typed = text.trim();
+    let done = true;
+    if (typed === '') {
+      if (value != null) onClear(dayKey);
+      setError('');
+    } else {
+      const result = parse(typed);
+      if (result.error) {
+        setError(result.error);
+        done = false;
+      } else {
+        setError('');
+        if (result.value !== value) onSet(dayKey, result.value);
+      }
     }
-    setError('');
-    onSet(dayKey, result.value);
+    if (fromEnter && done) onAdvance(dayKey);
   }
 
   // Synced days have nothing to type: they either arrived from the Health app
@@ -68,26 +80,20 @@ function Row({ dayKey, value, skipped, synced, placeholder, format, parse, focus
             placeholder={placeholder}
             value={text}
             data-invalid={Boolean(error)}
-            title={error || undefined}
+            title={error || 'Digite e saia do campo: salva sozinho'}
             onChange={(e) => {
               setText(e.target.value);
               setError('');
             }}
+            onBlur={() => commit(false)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                save();
+                commit(true);
               }
             }}
           />
-          <button type="button" className={styles.saveBtn} onClick={save}>
-            {value != null ? 'Salvar' : 'OK'}
-          </button>
-          {value != null ? (
-            <button type="button" className={styles.entryLink} onClick={() => onClear(dayKey)}>
-              Remover
-            </button>
-          ) : (
+          {value == null && (
             <button type="button" className={styles.entryLink} onClick={() => onSkip(dayKey)}>
               Sem info
             </button>
@@ -100,11 +106,12 @@ function Row({ dayKey, value, skipped, synced, placeholder, format, parse, focus
 }
 
 // Overlay over the card for typing/editing a hand-filled daily log over the
-// last 35 days. `synced` is for logs that come from the Health app: nothing
-// to type, only days without data to mark "sem info" (`log` = the synced
-// values by day, `format` shows them). Shows the blank days first (by default only those), each with
-// OK / "Sem info" (leave blank on purpose), and lets filled days be edited or
-// removed. "Concluir" closes it.
+// last 35 days. Shows the blank days first (by default only those); whatever
+// is typed saves by itself when the field is left (emptying a field removes
+// the entry), and "Sem info" marks a day left blank on purpose. `synced` is
+// for logs that come from the Health app: nothing to type, only days without
+// data to mark "sem info" (`log` = the synced values by day, `format` shows
+// them). "Concluir" closes it.
 export default function EntryEditor({ title, keys, log, skipped, synced = false, placeholder, format, parse, onSet, onSkip, onClear, onClose }) {
   const [showAll, setShowAll] = useState(false);
   const pending = keys.filter((k) => log[k] == null && !skipped[k]);
@@ -113,11 +120,11 @@ export default function EntryEditor({ title, keys, log, skipped, synced = false,
   const [openedBlank] = useState(() => new Set(pending));
   const visible = showAll ? keys : keys.filter((k) => openedBlank.has(k) || pending.includes(k));
 
-  // Opens straight on the first blank day's input; after OK / "Sem info" the
-  // cursor moves to the next blank one (listed order, newest first).
+  // Opens straight on the first blank day's input; after Enter or "Sem info"
+  // the cursor moves to the next blank one (listed order, newest first).
   const [focusKey, setFocusKey] = useState(() => keys.find((k) => log[k] == null && !skipped[k]) ?? null);
   const advance = (fromKey) => {
-    const after = keys.slice(keys.indexOf(fromKey) + 1).find((k) => log[k] == null && !skipped[k]);
+    const after = keys.slice(keys.indexOf(fromKey) + 1).find((k) => log[k] == null && !skipped[k] && k !== fromKey);
     const before = keys.find((k) => k !== fromKey && log[k] == null && !skipped[k]);
     setFocusKey(after ?? before ?? null);
   };
@@ -128,6 +135,7 @@ export default function EntryEditor({ title, keys, log, skipped, synced = false,
         <span className={styles.title}>{title}</span>
         <span className={styles.muted}>
           {pending.length === 0 ? 'tudo em dia' : `${pending.length} em branco · últimos ${keys.length} dias`}
+          {!synced && ' · salva ao sair do campo'}
         </span>
         <button type="button" className={styles.entryLink} onClick={() => setShowAll((v) => !v)}>
           {showAll ? 'Só em branco' : 'Ver todos'}
@@ -149,15 +157,13 @@ export default function EntryEditor({ title, keys, log, skipped, synced = false,
             format={format}
             parse={parse}
             focused={focusKey === key}
-            onSet={(k, v) => {
-              onSet(k, v);
-              if (log[k] == null) advance(k);
-            }}
+            onSet={onSet}
             onSkip={(k) => {
               onSkip(k);
               advance(k);
             }}
             onClear={onClear}
+            onAdvance={advance}
           />
         ))}
       </div>
