@@ -196,6 +196,18 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     notion.loading ||
     ticktick.loading;
 
+  // "Carregando informações..." stays on while any tab is (re)loading.
+  const syncing =
+    anyLoading ||
+    vendas.loading ||
+    vendas.refreshing ||
+    notionBacklog.loading ||
+    notionBacklog.refreshing ||
+    instagram.loading ||
+    instagram.refreshing ||
+    photoAlbums.loading ||
+    photoAlbums.refreshing;
+
   const agenda = computeAgenda(state, calendar);
   const habitDays = lastNDateKeys(7);
   const habitTracker = {
@@ -393,7 +405,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         page={state.page}
         todayLong={todayLong}
         updatedAt={updatedAt}
-        loading={anyLoading}
+        loading={syncing}
         userEmail={userEmail}
         onGoPage={(page) => dispatch({ type: 'GO_PAGE', page })}
         saudePending={entryPending}

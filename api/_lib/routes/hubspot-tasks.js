@@ -3,7 +3,7 @@
 // task's associated deal (pipeline stage + name), and groups tasks by stage
 // so the dashboard can render them without touching the HubSpot API itself.
 
-import { hubspotFetch, fetchStageLabelMap, sortByStage, dealLink } from './_lib/hubspotShared.js';
+import { hubspotFetch, fetchStageLabelMap, sortByStage, dealLink } from '../hubspotShared.js';
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NO_DEAL_LABEL = 'Sem negócio';

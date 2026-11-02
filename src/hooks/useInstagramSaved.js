@@ -11,9 +11,11 @@ const CHUNK = 500;
 export function useInstagramSaved() {
   const [imports, setImports] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
     setError(null);
     try {
       const since = dateKeySaoPaulo(new Date(Date.now() - HISTORY_DAYS * 86400000));
@@ -31,6 +33,7 @@ export function useInstagramSaved() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -72,5 +75,5 @@ export function useInstagramSaved() {
     [refresh]
   );
 
-  return { imports, loading, error, refresh, previewDiff, save };
+  return { imports, loading, refreshing, error, refresh, previewDiff, save };
 }

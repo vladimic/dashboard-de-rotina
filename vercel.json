@@ -1,15 +1,21 @@
 {
   "functions": {
-    "api/hubspot-deals-without-tasks.js": {
-      "maxDuration": 30
-    },
-    "api/vendas.js": {
+    "api/hubspot.js": {
       "maxDuration": 30
     },
     "api/notion-tasks.js": {
       "maxDuration": 30
     }
   },
+  "rewrites": [
+    { "source": "/api/ticktick-tasks", "destination": "/api/ticktick?action=tasks" },
+    { "source": "/api/ticktick-auth-start", "destination": "/api/ticktick?action=start" },
+    { "source": "/api/ticktick-auth-callback", "destination": "/api/ticktick?action=callback" },
+    { "source": "/api/reminders-webhook", "destination": "/api/reminders?action=webhook" },
+    { "source": "/api/hubspot-tasks", "destination": "/api/hubspot?action=tasks" },
+    { "source": "/api/hubspot-deals-without-tasks", "destination": "/api/hubspot?action=deals-without-tasks" },
+    { "source": "/api/vendas", "destination": "/api/hubspot?action=vendas" }
+  ],
   "crons": [
     {
       "path": "/api/vendas?snapshot=1",
