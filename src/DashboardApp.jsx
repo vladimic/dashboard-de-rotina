@@ -24,6 +24,7 @@ import VendasView from './views/VendasView';
 import { useVendas } from './hooks/useVendas';
 import { useInstagramSaved } from './hooks/useInstagramSaved';
 import { useNotionBacklog } from './hooks/useNotionBacklog';
+import { usePhotoAlbums } from './hooks/usePhotoAlbums';
 import { daysSince, STALE_AFTER_DAYS } from './utils/instagram';
 import BacklogView from './views/BacklogView';
 import styles from './App.module.css';
@@ -63,18 +64,12 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     [steps.samples, energy.samples, exercise.samples, workouts.samples, steps.loading, energy.loading, exercise.loading, workouts.loading, steps.error, energy.error, exercise.error, workouts.error]
   );
   const weightDaily = useMemo(() => dailyWeights(weight.samples), [weight.samples]);
-  // Vendas: loaded the first time its tab is opened, then kept until refreshed.
-  const [vendasOpened, setVendasOpened] = useState(false);
-  useEffect(() => {
-    if (state.page === 'vendas') setVendasOpened(true);
-  }, [state.page]);
-  const vendas = useVendas(90, vendasOpened || state.page === 'vendas');
-  // Backlog tab's Notion table: loaded the first time the tab is opened, then kept.
-  const [backlogOpened, setBacklogOpened] = useState(false);
-  useEffect(() => {
-    if (state.page === 'backlog') setBacklogOpened(true);
-  }, [state.page]);
-  const notionBacklog = useNotionBacklog(backlogOpened || state.page === 'backlog');
+  // Every tab loads with the app (and again on "Atualizar tudo"), so nothing
+  // waits for a tab to be opened. The backlog call starts after Hoje's Notion
+  // call finishes: both build the same project index.
+  const vendas = useVendas(90, true);
+  const notionBacklog = useNotionBacklog(!notion.loading);
+  const photoAlbums = usePhotoAlbums();
   // Saved Instagram posts (Backlog tab): small read, loaded with the app so the
   // tab can flag a stale count.
   const instagram = useInstagramSaved();
@@ -410,7 +405,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           dealsWithoutTasks.refresh();
           calendar.refresh();
           syncReminders();
-          notion.refresh();
+          notion.refresh().finally(() => notionBacklog.refresh());
           ticktick.refresh();
           usdQuote.refresh();
           weight.refresh();
@@ -419,9 +414,9 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           energy.refresh();
           exercise.refresh();
           workouts.refresh();
-          if (vendasOpened) vendas.refresh();
+          vendas.refresh();
           instagram.refresh();
-          if (backlogOpened) notionBacklog.refresh();
+          photoAlbums.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -463,7 +458,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
       {state.page === 'saude' && (
         <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}
-      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} notionBacklog={notionBacklog} />}
+      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} notionBacklog={notionBacklog} photoAlbums={photoAlbums} />}
     </div>
   );
 }

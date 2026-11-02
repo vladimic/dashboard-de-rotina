@@ -1,0 +1,216 @@
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px 14px;
+  min-width: 0;
+  /* Takes the width of the Notion table above it instead of widening the column. */
+  contain: inline-size;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.title {
+  font: 700 14px Inter, sans-serif;
+  color: #2a2230;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.updated {
+  font: 11px Inter, sans-serif;
+  color: #8a7f93;
+}
+
+.icon {
+  font: 600 19px Inter, sans-serif;
+  color: #8a7f93;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.icon:hover {
+  color: #5b4a63;
+}
+
+.chartBox {
+  position: relative;
+  height: 270px;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.axis {
+  fill: #8a7f93;
+  font: 10px Inter, sans-serif;
+}
+
+.val {
+  fill: #2a2230;
+  font: 700 10px Inter, sans-serif;
+}
+
+.cat {
+  fill: #2a2230;
+  font: 10px Inter, sans-serif;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 11px Inter, sans-serif;
+  color: #2a2230;
+  margin-top: 4px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0 7px;
+  height: 20px;
+  border-bottom: 1px solid #ece4f0;
+  white-space: nowrap;
+}
+
+.table th {
+  color: #8a7f93;
+  font-weight: 600;
+  font-size: 10px;
+  height: 24px;
+}
+
+.r {
+  text-align: right !important;
+}
+
+.total td {
+  background: #f1ecf4;
+  font-weight: 700;
+  color: #3f3548;
+}
+
+.album {
+  padding-left: 30px !important;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border: 1px solid #d9cde0;
+  border-radius: 5px;
+  font-size: 9px;
+  color: #5b4a63;
+  background: #fff;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.empty,
+.error {
+  font: 12px Inter, sans-serif;
+  color: #8a7f93;
+  padding: 10px 2px;
+}
+
+.error {
+  color: #d9534f;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(42, 34, 48, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.dialog {
+  width: 440px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  font: 13px Inter, sans-serif;
+  color: #2a2230;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+.dialogTitle {
+  font: 700 15px Inter, sans-serif;
+  margin-bottom: 8px;
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid #ece4f0;
+}
+
+.line b {
+  text-align: right;
+  word-break: break-all;
+}
+
+.warn {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #c58a1f;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.primary {
+  background: #5b4a63;
+  color: #fff;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font: 600 13px Inter, sans-serif;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.secondary {
+  font: 600 13px Inter, sans-serif;
+  color: #8a7f93;
+  cursor: pointer;
+}
+
+.hint {
+  font-size: 11px;
+  color: #8a7f93;
+}
