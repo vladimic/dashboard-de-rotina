@@ -15,7 +15,9 @@ const LABEL_GAP = 90; // minimum px between two days that carry value labels
 // sit inside the bands, the total above the stack, today's values in the
 // right margin; hovering a day lists every stage with its count. In `pct`
 // mode each day is closed at 100% and every stage is its share of that day.
-export default function VendasChart({ rows, points, mode = 'qty' }) {
+// With `staircase` the points are counts that hold until the next one (days
+// without a count repeat the previous), drawn as steps.
+export default function VendasChart({ rows, points, mode = 'qty', staircase = false }) {
   const [boxRef, { w: W, h: H }] = useElementSize();
   const tipRef = useRef(null);
   const [hover, setHover] = useState(null);
@@ -58,6 +60,16 @@ export default function VendasChart({ rows, points, mode = 'qty' }) {
       });
     }
 
+    // Where the value labels go: on the points, or (staircase) in the middle of
+    // each step wide enough to hold them.
+    const spots = staircase
+      ? points
+          .slice(0, -1)
+          .map((p, i) => ({ p, x: (X(p) + X(points[i + 1])) / 2, wide: X(points[i + 1]) - X(p) }))
+          .filter((s) => s.wide >= 56)
+          .map((s) => ({ ...s, total: s.x + 30 < X(lastPoint) - 55 }))
+      : labelIdx.map((i) => ({ p: points[i], x: X(points[i]), total: i < n - 1 }));
+
     // Day ticks on the axis: first, middle and last.
     const tickIdx = n === 1 ? [0] : [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
 
@@ -78,7 +90,7 @@ export default function VendasChart({ rows, points, mode = 'qty' }) {
       const x = e.clientX - r.left;
       let best = 0;
       points.forEach((p, i) => {
-        if (Math.abs(X(p) - x) < Math.abs(X(points[best]) - x)) best = i;
+        if (staircase ? X(p) <= x : Math.abs(X(p) - x) < Math.abs(X(points[best]) - x)) best = i;
       });
       setHover({ i: best, x, y: e.clientY - r.top });
     };
@@ -99,31 +111,27 @@ export default function VendasChart({ rows, points, mode = 'qty' }) {
           ? list.map((s, k) => (
               <rect key={s.id} x={X(lastPoint) - SINGLE_BAR / 2} width={SINGLE_BAR} y={Y(cum(lastPoint, k))} height={Math.max(0, Y(lowOf(lastPoint, k)) - Y(cum(lastPoint, k)))} fill={s.color} />
             ))
-          : list.map((s, k) => (
-              <polygon
-                key={s.id}
-                fill={s.color}
-                opacity="0.93"
-                points={[...points.map((p) => `${X(p)},${Y(cum(p, k))}`), ...[...points].reverse().map((p) => `${X(p)},${Y(lowOf(p, k))}`)].join(' ')}
-              />
-            ))}
+          : list.map((s, k) => {
+              // Staircase: the previous value holds up to each new point.
+              const edge = (fn) => points.flatMap((p, i) => (staircase && i ? [`${X(p)},${Y(fn(points[i - 1]))}`, `${X(p)},${Y(fn(p))}`] : [`${X(p)},${Y(fn(p))}`]));
+              return <polygon key={s.id} fill={s.color} opacity="0.93" points={[...edge((p) => cum(p, k)), ...edge((p) => lowOf(p, k)).reverse()].join(' ')} />;
+            })}
 
-        {labelIdx.map((i) => {
-          const p = points[i];
+        {spots.map(({ p, x, total }) => {
           return (
-            <g key={i}>
+            <g key={p.day}>
               {list.map((s, k) => {
                 const v = valueOf(p, s);
                 const lo = Y(lowOf(p, k));
                 const hi = Y(cum(p, k));
                 return qtyOf(p, s) > 0 && lo - hi >= 14 ? (
-                  <text key={s.id} x={X(p)} y={(lo + hi) / 2 + 4} textAnchor="middle" className={styles.lab}>
+                  <text key={s.id} x={x} y={(lo + hi) / 2 + 4} textAnchor="middle" className={styles.lab}>
                     {fmt(v)}
                   </text>
                 ) : null;
               })}
-              {!pct && i < n - 1 && (
-                <text x={X(p)} y={Y(totalOf(p)) - 5} textAnchor="middle" className={styles.total}>
+              {!pct && total && (
+                <text x={x} y={Y(totalOf(p)) - 5} textAnchor="middle" className={styles.total}>
                   {totalOf(p)}
                 </text>
               )}
@@ -148,7 +156,7 @@ export default function VendasChart({ rows, points, mode = 'qty' }) {
           </text>
         ))}
 
-        {hp && <line x1={X(hp)} x2={X(hp)} y1={T} y2={H - B} stroke="#2a2230" strokeDasharray="3 3" />}
+        {hp && <line x1={staircase ? hover.x : X(hp)} x2={staircase ? hover.x : X(hp)} y1={T} y2={H - B} stroke="#2a2230" strokeDasharray="3 3" />}
         <rect x={L} y={T} width={W - L - R} height={H - T - B} fill="transparent" onMouseMove={onMove} onMouseLeave={() => setHover(null)} />
       </svg>
     );
@@ -165,8 +173,8 @@ export default function VendasChart({ rows, points, mode = 'qty' }) {
       {hp && (
         <div ref={tipRef} className={styles.tip} style={{ left: Math.min(hover.x + 14, W - 270), top: Math.max(0, Math.min(hover.y - 20, H - 260)) }}>
           <div className={styles.tipHead}>
-            {fmtDay(hp.day)}
-            {isToday ? ' · hoje' : ''}
+            {staircase ? `Contagem de ${fmtDay(hp.from ?? hp.day)}` : fmtDay(hp.day)}
+            {!staircase && isToday ? ' · hoje' : ''}
           </div>
           {rows.map((s) => {
             const st = hp.stages[s.id];

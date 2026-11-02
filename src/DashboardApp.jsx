@@ -22,6 +22,8 @@ import HojeView from './views/HojeView';
 import SaudeView from './views/SaudeView';
 import VendasView from './views/VendasView';
 import { useVendas } from './hooks/useVendas';
+import { useInstagramSaved } from './hooks/useInstagramSaved';
+import { daysSince, STALE_AFTER_DAYS } from './utils/instagram';
 import BacklogView from './views/BacklogView';
 import styles from './App.module.css';
 
@@ -66,6 +68,11 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     if (state.page === 'vendas') setVendasOpened(true);
   }, [state.page]);
   const vendas = useVendas(90, vendasOpened || state.page === 'vendas');
+  // Saved Instagram posts (Backlog tab): small read, loaded with the app so the
+  // tab can flag a stale count.
+  const instagram = useInstagramSaved();
+  const instagramAge = daysSince(instagram.imports.at(-1)?.day, dateKeySaoPaulo());
+  const instagramStale = !instagram.loading && !instagram.error && instagramAge != null && instagramAge > STALE_AFTER_DAYS;
   const confirm = useConfirm();
 
   // Fires the Atalho, re-fetches the cache it just filled, and polls a few
@@ -388,6 +395,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
         userEmail={userEmail}
         onGoPage={(page) => dispatch({ type: 'GO_PAGE', page })}
         saudePending={entryPending}
+        backlogStale={instagramStale}
         onRefreshAll={() => {
           setRefreshedAt(Date.now());
           dispatch({ type: 'REFRESH_ALL' });
@@ -405,6 +413,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           exercise.refresh();
           workouts.refresh();
           if (vendasOpened) vendas.refresh();
+          instagram.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -446,7 +455,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
       {state.page === 'saude' && (
         <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}
-      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} />}
+      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} />}
     </div>
   );
 }

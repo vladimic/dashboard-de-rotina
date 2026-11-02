@@ -183,6 +183,7 @@ export default function Header({
   userEmail,
   onGoPage,
   saudePending,
+  backlogStale,
   onRefreshAll,
   onSignOut,
   onExportData,
@@ -229,6 +230,7 @@ export default function Header({
             onClick={() => onGoPage(tab.key)}
           >
             {tab.label}
+            {tab.key === 'backlog' && backlogStale && <span className={styles.tabDot} title="Posts salvos do Instagram: a última contagem tem mais de 3 dias" />}
             {tab.key === 'saude' && saudePending > 0 && (
               <span className={styles.tabDot} title={`${saudePending} dia(s) sem IAH ou qualidade do sono`} />
             )}
