@@ -23,6 +23,7 @@ import SaudeView from './views/SaudeView';
 import VendasView from './views/VendasView';
 import { useVendas } from './hooks/useVendas';
 import { useInstagramSaved } from './hooks/useInstagramSaved';
+import { useNotionBacklog } from './hooks/useNotionBacklog';
 import { daysSince, STALE_AFTER_DAYS } from './utils/instagram';
 import BacklogView from './views/BacklogView';
 import styles from './App.module.css';
@@ -68,6 +69,12 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     if (state.page === 'vendas') setVendasOpened(true);
   }, [state.page]);
   const vendas = useVendas(90, vendasOpened || state.page === 'vendas');
+  // Backlog tab's Notion table: loaded the first time the tab is opened, then kept.
+  const [backlogOpened, setBacklogOpened] = useState(false);
+  useEffect(() => {
+    if (state.page === 'backlog') setBacklogOpened(true);
+  }, [state.page]);
+  const notionBacklog = useNotionBacklog(backlogOpened || state.page === 'backlog');
   // Saved Instagram posts (Backlog tab): small read, loaded with the app so the
   // tab can flag a stale count.
   const instagram = useInstagramSaved();
@@ -414,6 +421,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           workouts.refresh();
           if (vendasOpened) vendas.refresh();
           instagram.refresh();
+          if (backlogOpened) notionBacklog.refresh();
         }}
         onSignOut={onSignOut}
         onExportData={handleExportData}
@@ -455,7 +463,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
       {state.page === 'saude' && (
         <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}
-      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} />}
+      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} notionBacklog={notionBacklog} />}
     </div>
   );
 }

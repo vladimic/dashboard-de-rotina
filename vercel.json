@@ -5,6 +5,9 @@
     },
     "api/vendas.js": {
       "maxDuration": 30
+    },
+    "api/notion-tasks.js": {
+      "maxDuration": 30
     }
   },
   "crons": [
