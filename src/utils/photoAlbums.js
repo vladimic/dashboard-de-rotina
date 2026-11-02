@@ -57,9 +57,17 @@ function sizeOf(o) {
 export function parseAlbumsFile(text, fileName, now = new Date()) {
   const today = dateKeySaoPaulo(now);
   let raw;
+  let library = null; // the whole library, when the file has it: albums overlap, so they must not be summed
+  let generatedDay = null;
   try {
     const json = JSON.parse(text.replace(/^﻿/, ''));
-    raw = Array.isArray(json) ? json : json?.albums || json?.albuns || json?.items;
+    raw = Array.isArray(json) ? json : json?.por_album || json?.albums || json?.albuns || json?.items;
+    if (json && !Array.isArray(json) && json.biblioteca) {
+      const bytes = sizeOf(json.biblioteca);
+      const items = toNumber(pick(json.biblioteca, ['total', 'itens', 'items']));
+      if (bytes != null || items != null) library = { items: Math.max(0, Math.round(items ?? 0)), bytes: Math.max(0, bytes ?? 0) };
+    }
+    generatedDay = String(json?.gerado_em ?? '').match(/^(\d{4}-\d{2}-\d{2})/)?.[1] ?? null;
   } catch {
     raw = parseCsv(text.replace(/^﻿/, ''));
   }
@@ -69,7 +77,7 @@ export function parseAlbumsFile(text, fileName, now = new Date()) {
   let skipped = 0;
   for (const o of raw) {
     const name = String(pick(o, ['album', 'nome', 'name', 'title', 'titulo']) ?? '').trim();
-    const items = toNumber(pick(o, ['itens', 'items', 'qtd', 'quantidade', 'count', 'fotos', 'total']));
+    const items = toNumber(pick(o, ['itens', 'items', 'qtd', 'quantidade', 'count', 'total', 'fotos']));
     const bytes = sizeOf(o);
     if (!name || (items == null && bytes == null)) {
       skipped++;
@@ -83,8 +91,11 @@ export function parseAlbumsFile(text, fileName, now = new Date()) {
   const albums = [...byName.values()];
   if (albums.length === 0) return { error: 'Nenhum álbum com nome, itens ou tamanho no arquivo.' };
   const fromName = String(fileName || '').match(/(\d{4}-\d{2}-\d{2})/)?.[1];
-  const day = fromName && fromName <= today ? fromName : today;
-  return { albums, skipped, day, items: albums.reduce((t, a) => t + a.items, 0), bytes: albums.reduce((t, a) => t + a.bytes, 0) };
+  const fileDay = fromName || generatedDay;
+  const day = fileDay && fileDay <= today ? fileDay : today;
+  const items = library ? library.items : albums.reduce((t, a) => t + a.items, 0);
+  const bytes = library ? library.bytes : albums.reduce((t, a) => t + a.bytes, 0);
+  return { albums, library, skipped, day, items, bytes };
 }
 
 // Decimal units, as the Mac shows them: "12,3 GB", "850 MB".

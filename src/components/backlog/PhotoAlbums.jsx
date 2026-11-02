@@ -77,15 +77,17 @@ function AlbumChart({ albums }) {
 // Backlog tab: "Fotos - Álbuns" — the Photos app's albums by size on disk, as a
 // column chart and a table whose Total row folds the albums away.
 export default function PhotoAlbums({ photos, open, onOpenChange }) {
-  const { albums, day, loading, error, save } = photos;
+  const { albums, library, day, loading, error, save } = photos;
   const [pending, setPending] = useState(null);
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState('');
   const fileRef = useRef(null);
 
   const sorted = bySizeDesc(albums);
-  const totalItems = sorted.reduce((t, a) => t + a.items, 0);
-  const totalBytes = sorted.reduce((t, a) => t + a.bytes, 0);
+  // Albums overlap (one photo can be in several), so the Total is the library's
+  // own figure when the file has it; otherwise the sum of the albums.
+  const totalItems = library ? library.items : sorted.reduce((t, a) => t + a.items, 0);
+  const totalBytes = library ? library.bytes : sorted.reduce((t, a) => t + a.bytes, 0);
   const age = daysSince(day, dateKeySaoPaulo());
 
   async function onFile(e) {
@@ -102,7 +104,7 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
     setSaving(true);
     setProblem('');
     try {
-      await save(pending.parsed.day, pending.parsed.albums);
+      await save(pending.parsed.day, pending.parsed.albums, pending.parsed.library);
       setPending(null);
     } catch (err) {
       setProblem(err.message);
@@ -152,7 +154,7 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
                   <button type="button" className={styles.caret} onClick={() => onOpenChange(!open)} aria-expanded={open} aria-label={open ? 'Recolher os álbuns' : 'Expandir os álbuns'}>
                     {open ? '▾' : '▸'}
                   </button>
-                  Total · {sorted.length} álbuns
+                  {library ? 'Biblioteca' : 'Total'} · {sorted.length} álbuns
                 </td>
                 <td className={styles.r}>{fmtInt(totalItems)}</td>
                 <td className={styles.r}>{formatBytes(totalBytes)}</td>
@@ -173,6 +175,7 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
                 ))}
             </tbody>
           </table>
+          {library && <div className={styles.empty}>Um item pode estar em vários álbuns: os álbuns não somam o total da biblioteca.</div>}
         </>
       )}
 
@@ -193,7 +196,7 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
               <b>{fmtInt(pending.parsed.items)}</b>
             </div>
             <div className={styles.line}>
-              <span>Tamanho total</span>
+              <span>{pending.parsed.library ? 'Tamanho da biblioteca' : 'Tamanho total'}</span>
               <b>{formatBytes(pending.parsed.bytes)}</b>
             </div>
             <div className={styles.line}>
