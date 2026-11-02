@@ -16,6 +16,9 @@ function heat(key, v) {
   return { background: `rgba(${HEAT[key]},${alpha})`, color: alpha > 0.5 ? '#fff' : undefined };
 }
 
+// Opens a Notion page in the app.
+const notionUrl = (id) => `notion://www.notion.so/${String(id).replace(/-/g, '')}`;
+
 const sumRows = (rows) => rows.reduce((t, r) => ({ open: t.open + r.open, ...Object.fromEntries(COLUMNS.map((c) => [c, t[c] + r[c]])) }), { open: 0, ...Object.fromEntries(COLUMNS.map((c) => [c, 0])) });
 
 // Backlog tab, half width: "Notion - Atividades Abertas". Every open task by
@@ -101,7 +104,13 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                           </td>
                           {COLUMNS.map((c) => (
                             <td key={c} className={styles.cell} style={heat(c, p[c])}>
-                              {p[c] || ''}
+                              {c === 'none' && p.none && p.id ? (
+                                <a className={styles.numLink} href={notionUrl(p.id)} title={`Abrir ${p.name} no Notion para programar`}>
+                                  {p.none}
+                                </a>
+                              ) : (
+                                p[c] || ''
+                              )}
                             </td>
                           ))}
                         </tr>
@@ -114,7 +123,13 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                 <td className={styles.r}>{total.open}</td>
                 {COLUMNS.map((c) => (
                   <td key={c} className={styles.c} data-col={c}>
-                    {total[c]}
+                    {c === 'none' && total.none && data.databaseId ? (
+                      <a className={styles.numLink} href={notionUrl(data.databaseId)} title="Abrir as atividades no Notion">
+                        {total.none}
+                      </a>
+                    ) : (
+                      total[c]
+                    )}
                   </td>
                 ))}
               </tr>

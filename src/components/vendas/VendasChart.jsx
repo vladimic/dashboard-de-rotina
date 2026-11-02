@@ -17,7 +17,7 @@ const LABEL_GAP = 90; // minimum px between two days that carry value labels
 // mode each day is closed at 100% and every stage is its share of that day.
 // With `staircase` the points are counts that hold until the next one (days
 // without a count repeat the previous), drawn as steps.
-export default function VendasChart({ rows, points, mode = 'qty', staircase = false }) {
+export default function VendasChart({ rows, points, mode = 'qty', staircase = false, compact = false }) {
   const [boxRef, { w: W, h: H }] = useElementSize();
   const tipRef = useRef(null);
   const [hover, setHover] = useState(null);
@@ -97,7 +97,7 @@ export default function VendasChart({ rows, points, mode = 'qty', staircase = fa
     hp = hover && points[hover.i] ? points[hover.i] : null;
 
     svg = (
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={styles.svg} role="img">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={`${styles.svg} ${compact ? styles.compact : ''}`} role="img">
         {Array.from({ length: top / step + 1 }, (_, i) => i * step).map((v) => (
           <g key={v}>
             <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="#ece4f0" />

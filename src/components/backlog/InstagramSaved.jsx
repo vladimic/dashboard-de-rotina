@@ -102,9 +102,9 @@ export function InstagramTotalCard({ instagram }) {
   );
 }
 
-// Backlog tab, top row: saved Instagram posts waiting to be processed, by
-// queue (Sem coleção, Inbox, Post backlog) — staircase chart on the left, table
-// and the ⬆ import button on the right.
+// Backlog tab: saved Instagram posts waiting to be processed, by queue (Sem
+// coleção, Inbox, Post backlog) — two cards (staircase chart, then the table
+// with the ⬆ import button) that sit in the Backlog tab's three-card row.
 export default function InstagramSaved({ instagram }) {
   const { imports, loading, error, previewDiff, save } = instagram;
   const [period, setPeriod] = useState(30);
@@ -150,9 +150,9 @@ export default function InstagramSaved({ instagram }) {
   }
 
   return (
-    <div className={styles.row}>
-      <div className={vendas.card}>
-        <div className={vendas.head}>
+    <>
+      <div className={`${vendas.card} ${styles.chartCard}`}>
+        <div className={`${vendas.head} ${styles.headWrap}`}>
           <span className={vendas.title}>
             <b>Instagram - Posts Salvos</b>
           </span>
@@ -186,12 +186,12 @@ export default function InstagramSaved({ instagram }) {
         ) : points.length === 0 ? (
           <div className={vendas.empty}>Nenhuma importação neste período. Use o ⬆ ao lado para importar o arquivo dos posts salvos.</div>
         ) : (
-          <VendasChart rows={rows} points={points} mode={mode} staircase />
+          <VendasChart rows={rows} points={points} mode={mode} staircase compact />
         )}
       </div>
 
-      <div className={vendas.card}>
-        <div className={vendas.head}>
+      <div className={`${vendas.card} ${styles.tableCard}`}>
+        <div className={`${vendas.head} ${styles.headWrap}`}>
           <span className={vendas.title}>Hoje por coleção</span>
           <span className={vendas.refreshBox}>
             {latest && (
@@ -212,7 +212,7 @@ export default function InstagramSaved({ instagram }) {
         {error && <div className={vendas.error}>Não deu pra carregar: {error}</div>}
         {problem && !pending && <div className={vendas.error}>{problem}</div>}
         {latest ? (
-          <VendasTable rows={rows} showDays={false} firstColumn="Coleção" />
+          <VendasTable rows={rows} showDays={false} firstColumn="Coleção" compact />
         ) : (
           !loading && <div className={vendas.note}>Sem contagem ainda. O ⬆ importa o arquivo gerado pelo script “exporta salvos”.</div>
         )}
@@ -220,6 +220,6 @@ export default function InstagramSaved({ instagram }) {
       </div>
 
       {pending && <ImportDialog pending={pending} saving={saving} error={problem} onConfirm={confirm} onCancel={() => { setPending(null); setProblem(''); }} />}
-    </div>
+    </>
   );
 }

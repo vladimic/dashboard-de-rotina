@@ -27,19 +27,22 @@
   color: #8a7f93;
 }
 
-.row {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 10px;
+.chartCard {
   height: 400px;
-  margin-top: 16px;
+  min-width: 0;
 }
 
-@media (max-width: 760px) {
-  .row {
-    grid-template-columns: minmax(0, 1fr);
-    height: auto;
-    grid-template-rows: 340px auto;
+.tableCard {
+  min-width: 0;
+}
+
+.headWrap {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1299px) {
+  .chartCard {
+    height: 340px;
   }
 }
 
