@@ -134,10 +134,10 @@ async function fetchRelationIds(pageId, propertyId, token) {
 }
 
 // Queries the Projetos database and builds taskPageId -> projectName by
-// reading each project's "[A] Atividades" relation, plus projectName -> category.
+// reading each project's "[A] Atividades" relation, plus projectName -> { category, id }.
 async function buildProjectIndex(token, projectsDbId) {
   const map = new Map();
-  const categoryByProject = new Map();
+  const projectMeta = new Map();
   let cursor;
   do {
     const res = await notionFetch(`https://api.notion.com/v1/databases/${projectsDbId}/query`, {
@@ -157,7 +157,7 @@ async function buildProjectIndex(token, projectsDbId) {
     for (const projectPage of data.results || []) {
       const projectName = pageTitle(projectPage) || NO_PROJECT_LABEL;
       const categoryProp = findProperty(projectPage.properties || {}, CATEGORY_PROPERTY, 'categoria');
-      categoryByProject.set(projectName, categoryProp?.select?.name || null);
+      projectMeta.set(projectName, { category: categoryProp?.select?.name || null, id: projectPage.id });
       const reverseProp = findProperty(projectPage.properties || {}, REVERSE_TASKS_PROPERTY, 'atividades');
       if (reverseProp?.type !== 'relation') continue;
       const taskIds = await fetchRelationIds(projectPage.id, reverseProp.id, token);
@@ -165,7 +165,7 @@ async function buildProjectIndex(token, projectsDbId) {
     }
     cursor = data.has_more ? data.next_cursor : null;
   } while (cursor);
-  return { projectByTaskId: map, categoryByProject };
+  return { projectByTaskId: map, projectMeta };
 }
 
 // Day (YYYY-MM-DD) of a task's deadline, or null when it has none.
@@ -235,9 +235,9 @@ export default async function handler(req, res) {
 
     if (req.query?.scope === 'backlog') {
       const openPages = await fetchOpenTasks(token, databaseId);
-      const index = projectsDbId ? await buildProjectIndex(token, projectsDbId) : { projectByTaskId: new Map(), categoryByProject: new Map() };
+      const index = projectsDbId ? await buildProjectIndex(token, projectsDbId) : { projectByTaskId: new Map(), projectMeta: new Map() };
       const tasks = openPages.map((page) => ({ project: index.projectByTaskId.get(page.id) || NO_PROJECT_LABEL, due: dueKey(page) }));
-      res.status(200).json({ updatedAt: new Date().toISOString(), ...summarizeBacklog(tasks, index.categoryByProject, todayStr) });
+      res.status(200).json({ updatedAt: new Date().toISOString(), ...summarizeBacklog(tasks, index.projectMeta, todayStr) });
       return;
     }
 

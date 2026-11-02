@@ -158,8 +158,8 @@ export function createSeedState() {
     downloadsCount: 61,
     backlogCount: 128,
     meuDiaOpen: true,
-    // Backlog tab, Notion table: categories the user collapsed ({ [category]: true }).
-    notionBacklogCollapsed: {},
+    // Backlog tab, Notion table: categories the user opened ({ [category]: true }); all start closed.
+    notionBacklogOpen: {},
     habitosOpen: false,
     manhaOpen: false,
     noiteOpen: false,
