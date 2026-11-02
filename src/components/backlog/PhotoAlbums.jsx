@@ -6,28 +6,35 @@ import { daysSince } from '../../utils/instagram';
 import styles from './PhotoAlbums.module.css';
 
 const MAX_BARS = 10; // the biggest albums get a bar; the rest are summed in "Outros"
+const MODES = [
+  { key: 'size', label: 'Tamanho', title: 'Álbuns pelo espaço que ocupam' },
+  { key: 'qty', label: 'Qtd', title: 'Álbuns pela quantidade de itens' },
+];
 const dm = (key) => `${key.slice(8)}/${key.slice(5, 7)}`;
 const fmtInt = (n) => n.toLocaleString('pt-BR');
 const shorten = (s, n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
 // Horizontal bar chart: the biggest albums on top, the rest summed in "Outros".
-function AlbumChart({ albums }) {
+function AlbumChart({ albums, mode }) {
   const [ref, { w: W, h: H }] = useElementSize();
   const L = 150;
   const R = 70;
   let body = null;
   if (W > 0 && H > 0 && albums.length > 0) {
-    const top = albums.slice(0, MAX_BARS).map((a) => ({ name: a.name, items: a.items, bytes: a.bytes }));
-    const rest = albums.slice(MAX_BARS);
+    const byQty = mode === 'qty';
+    const metric = (a) => (byQty ? a.items : a.bytes);
+    const ordered = [...albums].sort((a, b) => metric(b) - metric(a) || a.name.localeCompare(b.name, 'pt-BR'));
+    const top = ordered.slice(0, MAX_BARS).map((a) => ({ name: a.name, items: a.items, bytes: a.bytes }));
+    const rest = ordered.slice(MAX_BARS);
     if (rest.length) top.push({ name: `Outros (${rest.length})`, items: rest.reduce((t, a) => t + a.items, 0), bytes: rest.reduce((t, a) => t + a.bytes, 0), other: true });
-    const maxB = Math.max(...top.map((a) => a.bytes)) || 1;
+    const maxB = Math.max(...top.map(metric)) || 1;
     const rh = H / top.length;
     const bh = Math.min(18, rh * 0.62);
     body = (
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={styles.svg} role="img">
         {top.map((a, i) => {
           const y = i * rh + (rh - bh) / 2;
-          const bw = Math.max(1, ((W - L - R) * a.bytes) / maxB);
+          const bw = Math.max(1, ((W - L - R) * metric(a)) / maxB);
           return (
             <g key={a.name}>
               <title>{`${a.name} — ${fmtInt(a.items)} itens — ${formatBytes(a.bytes)}`}</title>
@@ -36,7 +43,7 @@ function AlbumChart({ albums }) {
               </text>
               <rect x={L} y={y} width={bw} height={bh} rx="2" fill={a.other ? '#c9bfd6' : '#7a6fc0'} />
               <text x={L + bw + 6} y={y + bh / 2 + 4} className={styles.val}>
-                {formatBytes(a.bytes)}
+                {byQty ? fmtInt(a.items) : formatBytes(a.bytes)}
               </text>
             </g>
           );
@@ -58,6 +65,7 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
   const [pending, setPending] = useState(null);
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState('');
+  const [mode, setMode] = useState('size'); // chart: by size (default) or by number of items
   const fileRef = useRef(null);
 
   const sorted = bySizeDesc(albums);
@@ -101,6 +109,13 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
               {age === 0 ? ' - hoje' : ` - há ${age} dia${age === 1 ? '' : 's'}`}
             </span>
           )}
+          <span className={styles.pills}>
+            {MODES.map((m) => (
+              <button key={m.key} type="button" className={styles.pill} data-on={mode === m.key} onClick={() => setMode(m.key)} title={m.title}>
+                {m.label}
+              </button>
+            ))}
+          </span>
           <button type="button" className={styles.icon} onClick={() => fileRef.current?.click()} title="Importar o arquivo dos álbuns (JSON ou CSV)" aria-label="Importar o arquivo dos álbuns">
             ⬆
           </button>
@@ -115,7 +130,7 @@ export default function PhotoAlbums({ photos, open, onOpenChange }) {
 
       {sorted.length > 0 && (
         <>
-          <AlbumChart albums={sorted} />
+          <AlbumChart albums={sorted} mode={mode} />
           <table className={styles.table}>
             <thead>
               <tr>

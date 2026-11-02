@@ -9,7 +9,7 @@ const LIBRARY_ROW = '__biblioteca__';
 // `save` writes an import day: new rows are upserted, then rows of that day from
 // an earlier import (albums that are gone) are removed — never the other way.
 export function usePhotoAlbums() {
-  const [state, setState] = useState({ day: null, importedAt: null, albums: [], library: null });
+  const [state, setState] = useState({ day: null, importedAt: null, albums: [], library: null, history: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -21,12 +21,16 @@ export function usePhotoAlbums() {
       const { data: last, error: e1 } = await supabase.from('photo_albums').select('day').order('day', { ascending: false }).limit(1);
       if (e1) throw new Error(e1.message);
       if (!last?.length) {
-        setState({ day: null, importedAt: null, albums: [], library: null });
+        setState({ day: null, importedAt: null, albums: [], library: null, history: [] });
         return;
       }
       const { data, error: e2 } = await supabase.from('photo_albums').select('album, items, bytes, imported_at').eq('day', last[0].day).limit(5000);
       if (e2) throw new Error(e2.message);
+      // One point per import day (the library row): items and bytes over time.
+      const { data: hist, error: e3 } = await supabase.from('photo_albums').select('day, items, bytes').eq('album', LIBRARY_ROW).order('day', { ascending: true }).limit(2000);
+      if (e3) throw new Error(e3.message);
       setState({
+        history: hist.map((r) => ({ day: r.day, items: r.items, bytes: Number(r.bytes) })),
         day: last[0].day,
         importedAt: data.reduce((m, r) => (r.imported_at > m ? r.imported_at : m), ''),
         albums: data.filter((r) => r.album !== LIBRARY_ROW).map((r) => ({ name: r.album, items: r.items, bytes: Number(r.bytes) })),

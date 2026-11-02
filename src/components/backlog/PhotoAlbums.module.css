@@ -214,3 +214,24 @@
   font-size: 11px;
   color: #8a7f93;
 }
+
+.pills {
+  display: flex;
+  gap: 4px;
+}
+
+.pill {
+  font: 600 12px Inter, sans-serif;
+  color: #8a7f93;
+  padding: 3px 9px;
+  border-radius: 8px;
+  border: 1px solid #e3d6e8;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pill[data-on='true'] {
+  background: #5b4a63;
+  border-color: #5b4a63;
+  color: #fff;
+}

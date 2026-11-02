@@ -2,8 +2,7 @@ import { useRef, useState } from 'react';
 import VendasChart from '../vendas/VendasChart';
 import VendasTable from '../vendas/VendasTable';
 import vendas from '../vendas/Vendas.module.css';
-import folder from '../StatFolderCard.module.css';
-import { buildSavedSeries, daysSince, latestAndPrevious, parseSavedFile, QUEUES, STALE_AFTER_DAYS, totalOf, INSTAGRAM_SAVED_URL } from '../../utils/instagram';
+import { buildSavedSeries, daysSince, parseSavedFile, QUEUES, STALE_AFTER_DAYS, INSTAGRAM_SAVED_URL } from '../../utils/instagram';
 import { dateKeySaoPaulo } from '../../utils/format';
 import styles from './InstagramSaved.module.css';
 
@@ -70,33 +69,6 @@ function ImportDialog({ pending, saving, error, onConfirm, onCancel }) {
           </button>
           <span className={styles.hint}>substitui a contagem do mesmo dia, se houver</span>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Same look as the Downloads / Backlog / Fotos cards: the total of saved posts
-// waiting to be processed (the three queues together) and its change since the
-// previous import (green = fewer posts).
-export function InstagramTotalCard({ instagram }) {
-  const { latest, previous } = latestAndPrevious(instagram.imports, dateKeySaoPaulo());
-  const total = latest ? totalOf(latest.counts) : null;
-  const delta = latest && previous ? total - totalOf(previous.counts) : null;
-  return (
-    <div className={folder.card} style={{ background: '#fbe3ec' }}>
-      <div className={folder.title} style={{ color: '#b5546b' }}>
-        Instagram - Posts Salvos
-      </div>
-      <div className={folder.count} style={{ color: '#8a3b52' }}>
-        {total ?? '—'}
-      </div>
-      <div className={folder.caption} style={{ color: '#c99aa8' }}>
-        a processar
-        {delta != null && (
-          <span className={styles.delta} data-tone={delta < 0 ? 'good' : delta > 0 ? 'bad' : 'flat'}>
-            {delta > 0 ? `+${delta}` : delta < 0 ? `−${-delta}` : '0'} desde {dm(previous.day)}
-          </span>
-        )}
       </div>
     </div>
   );

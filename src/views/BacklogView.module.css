@@ -1,15 +1,8 @@
-.columns {
+/* Two chips: saved Instagram posts and photos. */
+.chips {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.col {
-  width: 270px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  flex: none;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .trio {
@@ -36,21 +29,3 @@
   }
 }
 
-.spacer {
-  flex: 1;
-}
-
-@media (max-width: 680px) {
-  .columns {
-    flex-direction: column;
-  }
-
-  .col {
-    width: 100%;
-  }
-
-  .spacer {
-    display: none;
-  }
-
-}
