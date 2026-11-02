@@ -168,6 +168,12 @@ async function buildProjectIndex(token, projectsDbId) {
   return { projectByTaskId: map, projectMeta };
 }
 
+// True when the task's "Prioridade" (select or status) is "Urgente".
+function isUrgent(page) {
+  const prop = findProperty(page.properties || {}, 'Prioridade', 'prioridade');
+  return normalize(prop?.select?.name || prop?.status?.name) === 'urgente';
+}
+
 // Day (YYYY-MM-DD) of a task's deadline, or null when it has none.
 function dueKey(page) {
   const prop = findProperty(page.properties || {}, DUE_PROPERTY, 'prazo');
@@ -236,7 +242,7 @@ export default async function handler(req, res) {
     if (req.query?.scope === 'backlog') {
       const openPages = await fetchOpenTasks(token, databaseId);
       const index = projectsDbId ? await buildProjectIndex(token, projectsDbId) : { projectByTaskId: new Map(), projectMeta: new Map() };
-      const tasks = openPages.map((page) => ({ project: index.projectByTaskId.get(page.id) || NO_PROJECT_LABEL, due: dueKey(page) }));
+      const tasks = openPages.map((page) => ({ project: index.projectByTaskId.get(page.id) || NO_PROJECT_LABEL, due: dueKey(page), urgent: isUrgent(page) }));
       res.status(200).json({ updatedAt: new Date().toISOString(), databaseId, ...summarizeBacklog(tasks, index.projectMeta, todayStr) });
       return;
     }

@@ -25,14 +25,16 @@ export function bucketOf(dueKey, todayKey) {
 
 const sortKey = (name) => name.replace(/[^\p{L}\p{N} -]/gu, '').trim();
 
-// tasks: [{ project, due }] (open tasks only); projectMeta: Map(project -> { category, id }).
+// tasks: [{ project, due, urgent }] (open tasks only); projectMeta: Map(project -> { category, id }).
 // Categories come in alphabetical order ("Sem categoria" last), projects too.
 export function summarizeBacklog(tasks, projectMeta, todayKey) {
   const byProject = new Map();
   for (const t of tasks) {
-    const row = byProject.get(t.project) || { name: t.project, id: projectMeta.get(t.project)?.id || null, open: 0, overdue: 0, w0: 0, w1: 0, w2: 0, w3: 0, later: 0, none: 0 };
+    const row = byProject.get(t.project) || { name: t.project, id: projectMeta.get(t.project)?.id || null, open: 0, overdue: 0, w0: 0, w1: 0, w2: 0, w3: 0, later: 0, none: 0, noneUrgent: 0 };
     row.open += 1;
-    row[bucketOf(t.due, todayKey)] += 1;
+    const bucket = bucketOf(t.due, todayKey);
+    row[bucket] += 1;
+    if (bucket === 'none' && t.urgent) row.noneUrgent += 1;
     byProject.set(t.project, row);
   }
   const byCategory = new Map();

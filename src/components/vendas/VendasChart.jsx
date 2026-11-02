@@ -90,7 +90,7 @@ export default function VendasChart({ rows, points, mode = 'qty', staircase = fa
       const x = e.clientX - r.left;
       let best = 0;
       points.forEach((p, i) => {
-        if (staircase ? X(p) <= x : Math.abs(X(p) - x) < Math.abs(X(points[best]) - x)) best = i;
+        if (Math.abs(X(p) - x) < Math.abs(X(points[best]) - x)) best = i;
       });
       setHover({ i: best, x, y: e.clientY - r.top });
     };
@@ -156,7 +156,7 @@ export default function VendasChart({ rows, points, mode = 'qty', staircase = fa
           </text>
         ))}
 
-        {hp && <line x1={staircase ? hover.x : X(hp)} x2={staircase ? hover.x : X(hp)} y1={T} y2={H - B} stroke="#2a2230" strokeDasharray="3 3" />}
+        {hp && <line x1={X(hp)} x2={X(hp)} y1={T} y2={H - B} stroke="#2a2230" strokeDasharray="3 3" />}
         <rect x={L} y={T} width={W - L - R} height={H - T - B} fill="transparent" onMouseMove={onMove} onMouseLeave={() => setHover(null)} />
       </svg>
     );

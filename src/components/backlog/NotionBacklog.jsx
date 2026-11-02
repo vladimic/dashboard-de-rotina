@@ -19,7 +19,15 @@ function heat(key, v) {
 // Opens a Notion page in the app.
 const notionUrl = (id) => `notion://www.notion.so/${String(id).replace(/-/g, '')}`;
 
-const sumRows = (rows) => rows.reduce((t, r) => ({ open: t.open + r.open, ...Object.fromEntries(COLUMNS.map((c) => [c, t[c] + r[c]])) }), { open: 0, ...Object.fromEntries(COLUMNS.map((c) => [c, 0])) });
+const sumRows = (rows) =>
+  rows.reduce((t, r) => ({ open: t.open + r.open, noneUrgent: t.noneUrgent + (r.noneUrgent || 0), ...Object.fromEntries(COLUMNS.map((c) => [c, t[c] + r[c]])) }), {
+    open: 0,
+    noneUrgent: 0,
+    ...Object.fromEntries(COLUMNS.map((c) => [c, 0])),
+  });
+
+// A cell's text: "Sem prazo" reads urgent/total (e.g. 3/42), the others the count.
+const cellText = (row, c) => (c === 'none' ? (row.none ? `${row.noneUrgent || 0}/${row.none}` : '') : row[c] || '');
 
 // Backlog tab, half width: "Notion - Atividades Abertas". Every open task by
 // category (collapsible, all closed to start with) and project (opens it in
@@ -83,7 +91,7 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                     <td className={styles.r}>{s.open}</td>
                     {COLUMNS.map((c) => (
                       <td key={c} className={styles.c} data-col={c}>
-                        {s[c] || ''}
+                        {cellText(s, c)}
                       </td>
                     ))}
                   </tr>,
@@ -106,7 +114,7 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                             <td key={c} className={styles.cell} style={heat(c, p[c])}>
                               {p[c] && p.id ? (
                                 <a className={styles.numLink} href={notionUrl(p.id)} title={`Abrir ${p.name} no Notion`}>
-                                  {p[c]}
+                                  {cellText(p, c)}
                                 </a>
                               ) : (
                                 p[c] || ''
@@ -125,10 +133,10 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                   <td key={c} className={styles.c} data-col={c}>
                     {total[c] && data.databaseId ? (
                       <a className={styles.numLink} href={notionUrl(data.databaseId)} title="Abrir as atividades no Notion">
-                        {total[c]}
+                        {cellText(total, c)}
                       </a>
                     ) : (
-                      total[c]
+                      cellText(total, c)
                     )}
                   </td>
                 ))}
