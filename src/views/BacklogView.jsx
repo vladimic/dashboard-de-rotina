@@ -1,5 +1,5 @@
 import StatFolderCard from '../components/StatFolderCard';
-import InstagramSaved from '../components/backlog/InstagramSaved';
+import InstagramSaved, { InstagramTotalCard } from '../components/backlog/InstagramSaved';
 import { formatClock } from '../utils/format';
 import styles from './BacklogView.module.css';
 
@@ -9,8 +9,11 @@ export default function BacklogView({ state, dispatch, instagram }) {
 
   return (
     <>
-      <InstagramSaved instagram={instagram} />
       <div className={styles.columns}>
+        <div className={styles.col}>
+          <InstagramTotalCard instagram={instagram} />
+        </div>
+
         <div className={styles.col}>
           <StatFolderCard
             bg="#eee3f7"
@@ -67,6 +70,7 @@ export default function BacklogView({ state, dispatch, instagram }) {
 
         <div className={styles.spacer} />
       </div>
+      <InstagramSaved instagram={instagram} />
     </>
   );
 }

@@ -155,3 +155,11 @@ export function daysSince(day, today) {
 
 // After this many days without an import the Backlog tab asks for a new one.
 export const STALE_AFTER_DAYS = 3;
+
+// The latest import up to today and the one before it (null when missing).
+export function latestAndPrevious(imports, today) {
+  const sorted = [...imports].filter((i) => i.day <= today).sort((a, b) => a.day.localeCompare(b.day));
+  return { latest: sorted.at(-1) || null, previous: sorted.at(-2) || null };
+}
+
+export const totalOf = (counts) => QUEUES.reduce((t, q) => t + (counts?.[q.id] ?? 0), 0);
