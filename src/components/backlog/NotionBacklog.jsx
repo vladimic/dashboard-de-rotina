@@ -104,9 +104,9 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                           </td>
                           {COLUMNS.map((c) => (
                             <td key={c} className={styles.cell} style={heat(c, p[c])}>
-                              {c === 'none' && p.none && p.id ? (
-                                <a className={styles.numLink} href={notionUrl(p.id)} title={`Abrir ${p.name} no Notion para programar`}>
-                                  {p.none}
+                              {p[c] && p.id ? (
+                                <a className={styles.numLink} href={notionUrl(p.id)} title={`Abrir ${p.name} no Notion`}>
+                                  {p[c]}
                                 </a>
                               ) : (
                                 p[c] || ''
@@ -123,9 +123,9 @@ export default function NotionBacklog({ notion, opened, onOpenedChange }) {
                 <td className={styles.r}>{total.open}</td>
                 {COLUMNS.map((c) => (
                   <td key={c} className={styles.c} data-col={c}>
-                    {c === 'none' && total.none && data.databaseId ? (
+                    {total[c] && data.databaseId ? (
                       <a className={styles.numLink} href={notionUrl(data.databaseId)} title="Abrir as atividades no Notion">
-                        {total.none}
+                        {total[c]}
                       </a>
                     ) : (
                       total[c]
