@@ -237,7 +237,7 @@ export default async function handler(req, res) {
       const openPages = await fetchOpenTasks(token, databaseId);
       const index = projectsDbId ? await buildProjectIndex(token, projectsDbId) : { projectByTaskId: new Map(), projectMeta: new Map() };
       const tasks = openPages.map((page) => ({ project: index.projectByTaskId.get(page.id) || NO_PROJECT_LABEL, due: dueKey(page) }));
-      res.status(200).json({ updatedAt: new Date().toISOString(), ...summarizeBacklog(tasks, index.projectMeta, todayStr) });
+      res.status(200).json({ updatedAt: new Date().toISOString(), databaseId, ...summarizeBacklog(tasks, index.projectMeta, todayStr) });
       return;
     }
 

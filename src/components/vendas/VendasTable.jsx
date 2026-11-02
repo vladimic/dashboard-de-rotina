@@ -19,7 +19,7 @@ const fmtPct = (v) => `${v.toFixed(1).replace('.', ',')}%`;
 // One row per stage: today's count, its share of the funnel, change in 7
 // days, the period's line and the average days the deals have sat in the
 // stage; the last row sums the whole funnel.
-export default function VendasTable({ rows, showDays = true, firstColumn = 'Estágio' }) {
+export default function VendasTable({ rows, showDays = true, firstColumn = 'Estágio', compact = false }) {
   const sum = rows.reduce((t, s) => t + s.today, 0);
   const delta = rows.every((s) => s.delta7 != null) ? rows.reduce((t, s) => t + s.delta7, 0) : null;
   const series = rows[0]?.series.map((_, i) => rows.reduce((t, s) => t + s.series[i], 0)) ?? [];
@@ -29,7 +29,7 @@ export default function VendasTable({ rows, showDays = true, firstColumn = 'Est�
   const avgAll = agedDeals ? Math.round(aged.reduce((t, s) => t + s.avgDays * s.today, 0) / agedDeals) : null;
   return (
     <div className={styles.tableWrap}>
-    <table className={styles.table}>
+    <table className={`${styles.table} ${compact ? styles.tableCompact : ''}`}>
       <thead>
         <tr>
           <th>{firstColumn}</th>

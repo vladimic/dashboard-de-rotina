@@ -71,14 +71,14 @@ export default function BacklogView({ state, dispatch, instagram, notionBacklog 
 
         <div className={styles.spacer} />
       </div>
-      <div className={styles.half}>
+      <div className={styles.trio}>
         <NotionBacklog
           notion={notionBacklog}
           opened={state.notionBacklogOpen || {}}
           onOpenedChange={(value) => dispatch({ type: 'SET_FLAG', key: 'notionBacklogOpen', value })}
         />
+        <InstagramSaved instagram={instagram} />
       </div>
-      <InstagramSaved instagram={instagram} />
     </>
   );
 }

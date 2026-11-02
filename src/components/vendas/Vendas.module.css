@@ -118,6 +118,16 @@
   inset: 0;
 }
 
+.compact .lab,
+.compact .total,
+.compact .end {
+  font-size: 11px;
+}
+
+.compact .axis {
+  font-size: 10px;
+}
+
 .axis {
   fill: #8a7f93;
   font: 11px Inter, sans-serif;
@@ -240,6 +250,26 @@
 
 .table td[data-tone='flat'] {
   color: #8a7f93;
+}
+
+.tableCompact {
+  font-size: 11px;
+}
+
+.tableCompact th,
+.tableCompact td {
+  height: 22px;
+  padding: 0 3px;
+}
+
+.tableCompact th {
+  font-size: 10px;
+  height: 24px;
+}
+
+.tableCompact .spark {
+  width: 64px;
+  height: 18px;
 }
 
 .spark {
