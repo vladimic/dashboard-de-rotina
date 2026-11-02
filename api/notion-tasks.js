@@ -170,7 +170,7 @@ async function buildProjectIndex(token, projectsDbId) {
 
 // True when the task's "Prioridade" (select or status) is "Urgente".
 function isUrgent(page) {
-  const prop = findProperty(page.properties || {}, 'Prioridade', 'prioridade');
+  const prop = findProperty(page.properties || {}, 'Prioridade', 'prior'); // the column is named "<emoji> Prior"
   return normalize(prop?.select?.name || prop?.status?.name) === 'urgente';
 }
 
