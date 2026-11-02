@@ -1,3 +1,15 @@
+.link {
+  font: 600 11px Inter, sans-serif;
+  color: #8a7f93;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.link:hover {
+  color: #5b4a63;
+  text-decoration: underline;
+}
+
 .delta {
   margin-left: 8px;
   font-weight: 700;

@@ -3,7 +3,7 @@ import VendasChart from '../vendas/VendasChart';
 import VendasTable from '../vendas/VendasTable';
 import vendas from '../vendas/Vendas.module.css';
 import folder from '../StatFolderCard.module.css';
-import { buildSavedSeries, daysSince, latestAndPrevious, parseSavedFile, QUEUES, STALE_AFTER_DAYS, totalOf } from '../../utils/instagram';
+import { buildSavedSeries, daysSince, latestAndPrevious, parseSavedFile, QUEUES, STALE_AFTER_DAYS, totalOf, INSTAGRAM_SAVED_URL } from '../../utils/instagram';
 import { dateKeySaoPaulo, formatClock } from '../../utils/format';
 import styles from './InstagramSaved.module.css';
 
@@ -200,6 +200,9 @@ export default function InstagramSaved({ instagram }) {
                 {age === 0 ? ' · hoje' : ` · há ${age} dia${age === 1 ? '' : 's'}`}
               </span>
             )}
+            <a className={styles.link} href={INSTAGRAM_SAVED_URL} target="_blank" rel="noreferrer" title="Abrir os posts salvos no Instagram">
+              Abrir salvos ↗
+            </a>
             <button type="button" className={vendas.refresh} onClick={() => fileRef.current?.click()} title="Importar o arquivo dos posts salvos (JSON ou CSV)" aria-label="Importar o arquivo dos posts salvos">
               ⬆
             </button>

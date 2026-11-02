@@ -9,6 +9,9 @@ export const QUEUES = [
   { id: 'backlog', label: 'Post backlog', color: '#8f86e0' },
 ];
 
+// The saved-posts page on Instagram (opens in the browser or the app).
+export const INSTAGRAM_SAVED_URL = 'https://www.instagram.com/vladimir.michels/saved/';
+
 const DAY_MS = 86400000;
 const dayMs = (key) => new Date(`${key}T12:00:00Z`).getTime();
 
