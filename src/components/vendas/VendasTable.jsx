@@ -19,7 +19,7 @@ const fmtPct = (v) => `${v.toFixed(1).replace('.', ',')}%`;
 // One row per stage: today's count, its share of the funnel, change in 7
 // days, the period's line and the average days the deals have sat in the
 // stage; the last row sums the whole funnel.
-export default function VendasTable({ rows }) {
+export default function VendasTable({ rows, showDays = true, firstColumn = 'Estágio' }) {
   const sum = rows.reduce((t, s) => t + s.today, 0);
   const delta = rows.every((s) => s.delta7 != null) ? rows.reduce((t, s) => t + s.delta7, 0) : null;
   const series = rows[0]?.series.map((_, i) => rows.reduce((t, s) => t + s.series[i], 0)) ?? [];
@@ -32,12 +32,12 @@ export default function VendasTable({ rows }) {
     <table className={styles.table}>
       <thead>
         <tr>
-          <th>Estágio</th>
+          <th>{firstColumn}</th>
           <th className={styles.r}>Hoje</th>
           <th className={styles.r}>% hoje</th>
           <th className={styles.r}>Δ 7d</th>
           <th>Período</th>
-          <th className={styles.r}>Dias no estágio</th>
+          {showDays && <th className={styles.r}>Dias no estágio</th>}
         </tr>
       </thead>
       <tbody>
@@ -55,7 +55,7 @@ export default function VendasTable({ rows }) {
               {s.delta7 == null ? '–' : sign(s.delta7)}
             </td>
             <td>{spark(s.series, s.color)}</td>
-            <td className={styles.r}>{s.avgDays ?? '–'}</td>
+            {showDays && <td className={styles.r}>{s.avgDays ?? '–'}</td>}
           </tr>
         ))}
         <tr className={styles.totalRow}>
@@ -66,7 +66,7 @@ export default function VendasTable({ rows }) {
             {delta == null ? '–' : sign(delta)}
           </td>
           <td>{spark(series, '#5b4a63')}</td>
-          <td className={styles.r}>{avgAll ?? '–'}</td>
+          {showDays && <td className={styles.r}>{avgAll ?? '–'}</td>}
         </tr>
       </tbody>
     </table>
