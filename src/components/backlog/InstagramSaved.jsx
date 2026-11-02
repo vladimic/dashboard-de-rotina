@@ -192,7 +192,9 @@ export default function InstagramSaved({ instagram }) {
 
       <div className={`${vendas.card} ${styles.tableCard}`}>
         <div className={`${vendas.head} ${styles.headWrap}`}>
-          <span className={vendas.title}>Hoje por coleção</span>
+          <span className={vendas.title}>
+            <b>Instagram - Por Coleção</b>
+          </span>
           <span className={vendas.refreshBox}>
             {latest && (
               <span className={styles.updated} data-stale={stale} title={`Última importação: ${dm(latest.day)} às ${formatClock(latest.importedAt)}`}>
