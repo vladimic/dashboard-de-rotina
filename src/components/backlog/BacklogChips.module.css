@@ -1,0 +1,20 @@
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.label {
+  font: 600 12px Inter, sans-serif;
+}
+
+.count {
+  font: 700 20px Inter, sans-serif;
+}
+
+.delta {
+  font: 500 11px Inter, sans-serif;
+}
