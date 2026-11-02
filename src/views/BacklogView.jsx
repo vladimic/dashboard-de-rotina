@@ -1,10 +1,11 @@
 import StatFolderCard from '../components/StatFolderCard';
 import InstagramSaved, { InstagramTotalCard } from '../components/backlog/InstagramSaved';
 import NotionBacklog from '../components/backlog/NotionBacklog';
+import PhotoAlbums from '../components/backlog/PhotoAlbums';
 import { formatClock } from '../utils/format';
 import styles from './BacklogView.module.css';
 
-export default function BacklogView({ state, dispatch, instagram, notionBacklog }) {
+export default function BacklogView({ state, dispatch, instagram, notionBacklog, photoAlbums }) {
   const refresh = (key) => dispatch({ type: 'REFRESH', key });
   const toggle = (key) => dispatch({ type: 'TOGGLE_FLAG', key });
 
@@ -72,11 +73,14 @@ export default function BacklogView({ state, dispatch, instagram, notionBacklog 
         <div className={styles.spacer} />
       </div>
       <div className={styles.trio}>
-        <NotionBacklog
-          notion={notionBacklog}
-          opened={state.notionBacklogOpen || {}}
-          onOpenedChange={(value) => dispatch({ type: 'SET_FLAG', key: 'notionBacklogOpen', value })}
-        />
+        <div className={styles.leftCol}>
+          <NotionBacklog
+            notion={notionBacklog}
+            opened={state.notionBacklogOpen || {}}
+            onOpenedChange={(value) => dispatch({ type: 'SET_FLAG', key: 'notionBacklogOpen', value })}
+          />
+          <PhotoAlbums photos={photoAlbums} open={Boolean(state.fotosAlbumsOpen)} onOpenChange={(value) => dispatch({ type: 'SET_FLAG', key: 'fotosAlbumsOpen', value })} />
+        </div>
         <InstagramSaved instagram={instagram} />
       </div>
     </>

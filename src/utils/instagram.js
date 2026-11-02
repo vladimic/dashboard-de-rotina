@@ -34,7 +34,7 @@ export function queueOf(collection) {
 }
 
 // Minimal CSV reader (comma or semicolon, quoted fields) for the same four columns.
-function parseCsv(text) {
+export function parseCsv(text) {
   const first = text.split(/\r?\n/, 1)[0] || '';
   const sep = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',';
   const rows = [];
