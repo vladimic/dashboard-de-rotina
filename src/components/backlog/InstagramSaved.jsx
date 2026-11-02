@@ -4,7 +4,7 @@ import VendasTable from '../vendas/VendasTable';
 import vendas from '../vendas/Vendas.module.css';
 import folder from '../StatFolderCard.module.css';
 import { buildSavedSeries, daysSince, latestAndPrevious, parseSavedFile, QUEUES, STALE_AFTER_DAYS, totalOf, INSTAGRAM_SAVED_URL } from '../../utils/instagram';
-import { dateKeySaoPaulo, formatClock } from '../../utils/format';
+import { dateKeySaoPaulo } from '../../utils/format';
 import styles from './InstagramSaved.module.css';
 
 const PERIODS = [7, 30, 90];
@@ -196,12 +196,6 @@ export default function InstagramSaved({ instagram }) {
             <b>Instagram - Por Coleção</b>
           </span>
           <span className={vendas.refreshBox}>
-            {latest && (
-              <span className={styles.updated} data-stale={stale} title={`Última importação: ${dm(latest.day)} às ${formatClock(latest.importedAt)}`}>
-                importado {dm(latest.day)}
-                {age > 0 && ` · há ${age} dia${age === 1 ? '' : 's'}`}
-              </span>
-            )}
             <a className={styles.link} href={INSTAGRAM_SAVED_URL} target="_blank" rel="noreferrer" title="Abrir os posts salvos no Instagram">
               Abrir salvos ↗
             </a>
