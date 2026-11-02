@@ -1,4 +1,5 @@
 .card {
+  align-self: start;
   background: #fff;
   border-radius: 16px;
   padding: 12px 14px;
@@ -67,24 +68,20 @@
 }
 
 .table {
-  width: 100%;
+  width: auto;
   border-collapse: collapse;
-  table-layout: fixed;
   font: 11px Inter, sans-serif;
   color: #2a2230;
-  min-width: 540px;
 }
 
 .table th,
 .table td {
   text-align: left;
-  padding: 0 3px;
+  padding: 0 7px;
   height: 20px;
   border-bottom: 1px solid #ece4f0;
   vertical-align: middle;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .table th {
@@ -95,11 +92,7 @@
 }
 
 .table th:first-child {
-  width: 28%;
-}
-
-.table th:nth-child(2) {
-  width: 8%;
+  min-width: 170px;
 }
 
 .r {
@@ -125,6 +118,9 @@
 
 .project {
   padding-left: 26px !important;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .numLink {
