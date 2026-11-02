@@ -3,7 +3,7 @@ import VendasChart from '../vendas/VendasChart';
 import VendasTable from '../vendas/VendasTable';
 import vendas from '../vendas/Vendas.module.css';
 import folder from '../StatFolderCard.module.css';
-import { buildSavedSeries, daysSince, parseSavedFile, QUEUES, STALE_AFTER_DAYS } from '../../utils/instagram';
+import { buildSavedSeries, daysSince, latestAndPrevious, parseSavedFile, QUEUES, STALE_AFTER_DAYS, totalOf } from '../../utils/instagram';
 import { dateKeySaoPaulo, formatClock } from '../../utils/format';
 import styles from './InstagramSaved.module.css';
 
@@ -75,44 +75,29 @@ function ImportDialog({ pending, saving, error, onConfirm, onCancel }) {
   );
 }
 
-// Same look as the Downloads / Backlog / Fotos cards: the total waiting to be
-// processed and each queue, with the change since the previous import.
-const SUMMARY_COLORS = {
-  total: { bg: '#fbe3ec', title: '#b5546b', muted: '#c99aa8', count: '#8a3b52' },
-  none: { bg: '#fde9dd', title: '#b5683a', muted: '#d1a487', count: '#9a4f23' },
-  inbox: { bg: '#dbeaf7', title: '#3f5c78', muted: '#7f9ab5', count: '#3f5c78' },
-  backlog: { bg: '#e8e4f8', title: '#7a6fc0', muted: '#a79fd6', count: '#54489c' },
-};
-
-function SummaryBar({ latest, previous }) {
-  const sum = (c) => (c ? QUEUES.reduce((t, q) => t + (c[q.id] ?? 0), 0) : null);
-  const cards = [
-    { key: 'total', title: 'Posts salvos', caption: 'a processar', value: latest ? sum(latest.counts) : null, delta: latest && previous ? sum(latest.counts) - sum(previous.counts) : null },
-    ...QUEUES.map((q) => ({ key: q.id, title: q.label, caption: 'posts', value: latest ? latest.counts[q.id] : null, delta: latest && previous ? latest.counts[q.id] - previous.counts[q.id] : null })),
-  ];
+// Same look as the Downloads / Backlog / Fotos cards: the total of saved posts
+// waiting to be processed (the three queues together) and its change since the
+// previous import (green = fewer posts).
+export function InstagramTotalCard({ instagram }) {
+  const { latest, previous } = latestAndPrevious(instagram.imports, dateKeySaoPaulo());
+  const total = latest ? totalOf(latest.counts) : null;
+  const delta = latest && previous ? total - totalOf(previous.counts) : null;
   return (
-    <div className={styles.summary}>
-      {cards.map((c) => {
-        const col = SUMMARY_COLORS[c.key];
-        return (
-          <div key={c.key} className={`${folder.card} ${styles.summaryCard}`} style={{ background: col.bg }}>
-            <div className={folder.title} style={{ color: col.title }}>
-              {c.title}
-            </div>
-            <div className={folder.count} style={{ color: col.count }}>
-              {c.value ?? '—'}
-            </div>
-            <div className={folder.caption} style={{ color: col.muted }}>
-              {c.caption}
-              {c.delta != null && (
-                <span className={styles.delta} data-tone={c.delta < 0 ? 'good' : c.delta > 0 ? 'bad' : 'flat'}>
-                  {c.delta > 0 ? `+${c.delta}` : c.delta < 0 ? `−${-c.delta}` : '0'} desde {dm(previous.day)}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
+    <div className={folder.card} style={{ background: '#fbe3ec' }}>
+      <div className={folder.title} style={{ color: '#b5546b' }}>
+        Posts salvos · Instagram
+      </div>
+      <div className={folder.count} style={{ color: '#8a3b52' }}>
+        {total ?? '—'}
+      </div>
+      <div className={folder.caption} style={{ color: '#c99aa8' }}>
+        a processar
+        {delta != null && (
+          <span className={styles.delta} data-tone={delta < 0 ? 'good' : delta > 0 ? 'bad' : 'flat'}>
+            {delta > 0 ? `+${delta}` : delta < 0 ? `−${-delta}` : '0'} desde {dm(previous.day)}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -131,7 +116,6 @@ export default function InstagramSaved({ instagram }) {
 
   const today = dateKeySaoPaulo();
   const { rows, points, latest } = buildSavedSeries(imports, today, period);
-  const previous = latest ? [...imports].filter((i) => i.day < latest.day).at(-1) || null : null;
   const age = daysSince(latest?.day, today);
   const stale = age != null && age > STALE_AFTER_DAYS;
 
@@ -166,76 +150,73 @@ export default function InstagramSaved({ instagram }) {
   }
 
   return (
-    <>
-      <SummaryBar latest={latest} previous={previous} />
-      <div className={styles.row}>
-        <div className={vendas.card}>
-          <div className={vendas.head}>
-            <span className={vendas.title}>
-              <b>Posts salvos</b> · Instagram
-            </span>
-            <div className={vendas.legend}>
-              {QUEUES.map((q) => (
-                <span key={q.id}>
-                  <i className={vendas.dot} style={{ background: q.color }} />
-                  {q.label}
-                </span>
+    <div className={styles.row}>
+      <div className={vendas.card}>
+        <div className={vendas.head}>
+          <span className={vendas.title}>
+            <b>Posts salvos</b> · Instagram
+          </span>
+          <div className={vendas.legend}>
+            {QUEUES.map((q) => (
+              <span key={q.id}>
+                <i className={vendas.dot} style={{ background: q.color }} />
+                {q.label}
+              </span>
+            ))}
+          </div>
+          <div className={vendas.headRight}>
+            <div className={vendas.pills}>
+              {MODES.map((m) => (
+                <button key={m.key} type="button" className={vendas.pill} data-on={mode === m.key} onClick={() => setMode(m.key)} title={m.key === 'qty' ? 'Quantidade de posts' : 'Percentual de cada fila (fecha em 100%)'}>
+                  {m.label}
+                </button>
               ))}
             </div>
-            <div className={vendas.headRight}>
-              <div className={vendas.pills}>
-                {MODES.map((m) => (
-                  <button key={m.key} type="button" className={vendas.pill} data-on={mode === m.key} onClick={() => setMode(m.key)} title={m.key === 'qty' ? 'Quantidade de posts' : 'Percentual de cada fila (fecha em 100%)'}>
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-              <div className={vendas.pills}>
-                {PERIODS.map((d) => (
-                  <button key={d} type="button" className={vendas.pill} data-on={period === d} onClick={() => setPeriod(d)}>
-                    {d}d
-                  </button>
-                ))}
-              </div>
+            <div className={vendas.pills}>
+              {PERIODS.map((d) => (
+                <button key={d} type="button" className={vendas.pill} data-on={period === d} onClick={() => setPeriod(d)}>
+                  {d}d
+                </button>
+              ))}
             </div>
           </div>
-          {loading ? (
-            <div className={vendas.empty}>Carregando…</div>
-          ) : points.length === 0 ? (
-            <div className={vendas.empty}>Nenhuma importação neste período. Use o ⬆ ao lado para importar o arquivo dos posts salvos.</div>
-          ) : (
-            <VendasChart rows={rows} points={points} mode={mode} staircase />
-          )}
         </div>
-
-        <div className={vendas.card}>
-          <div className={vendas.head}>
-            <span className={vendas.title}>Hoje por coleção</span>
-            <span className={vendas.refreshBox}>
-              {latest && (
-                <span className={styles.updated} data-stale={stale} title={`Última importação: ${dm(latest.day)} às ${formatClock(latest.importedAt)}`}>
-                  importado {dm(latest.day)}
-                  {age === 0 ? ' · hoje' : ` · há ${age} dia${age === 1 ? '' : 's'}`}
-                </span>
-              )}
-              <button type="button" className={vendas.refresh} onClick={() => fileRef.current?.click()} title="Importar o arquivo dos posts salvos (JSON ou CSV)" aria-label="Importar o arquivo dos posts salvos">
-                ⬆
-              </button>
-              <input ref={fileRef} type="file" accept=".json,.csv,application/json,text/csv" hidden onChange={onFile} />
-            </span>
-          </div>
-          {error && <div className={vendas.error}>Não deu pra carregar: {error}</div>}
-          {problem && !pending && <div className={vendas.error}>{problem}</div>}
-          {latest ? (
-            <VendasTable rows={rows} showDays={false} firstColumn="Coleção" />
-          ) : (
-            !loading && <div className={vendas.note}>Sem contagem ainda. O ⬆ importa o arquivo gerado pelo script “exporta salvos”.</div>
-          )}
-          {stale && <div className={styles.staleNote}>A última contagem tem mais de {STALE_AFTER_DAYS} dias: gere o arquivo de novo e importe.</div>}
-        </div>
-
-        {pending && <ImportDialog pending={pending} saving={saving} error={problem} onConfirm={confirm} onCancel={() => { setPending(null); setProblem(''); }} />}
+        {loading ? (
+          <div className={vendas.empty}>Carregando…</div>
+        ) : points.length === 0 ? (
+          <div className={vendas.empty}>Nenhuma importação neste período. Use o ⬆ ao lado para importar o arquivo dos posts salvos.</div>
+        ) : (
+          <VendasChart rows={rows} points={points} mode={mode} staircase />
+        )}
       </div>
-    </>
+
+      <div className={vendas.card}>
+        <div className={vendas.head}>
+          <span className={vendas.title}>Hoje por coleção</span>
+          <span className={vendas.refreshBox}>
+            {latest && (
+              <span className={styles.updated} data-stale={stale} title={`Última importação: ${dm(latest.day)} às ${formatClock(latest.importedAt)}`}>
+                importado {dm(latest.day)}
+                {age === 0 ? ' · hoje' : ` · há ${age} dia${age === 1 ? '' : 's'}`}
+              </span>
+            )}
+            <button type="button" className={vendas.refresh} onClick={() => fileRef.current?.click()} title="Importar o arquivo dos posts salvos (JSON ou CSV)" aria-label="Importar o arquivo dos posts salvos">
+              ⬆
+            </button>
+            <input ref={fileRef} type="file" accept=".json,.csv,application/json,text/csv" hidden onChange={onFile} />
+          </span>
+        </div>
+        {error && <div className={vendas.error}>Não deu pra carregar: {error}</div>}
+        {problem && !pending && <div className={vendas.error}>{problem}</div>}
+        {latest ? (
+          <VendasTable rows={rows} showDays={false} firstColumn="Coleção" />
+        ) : (
+          !loading && <div className={vendas.note}>Sem contagem ainda. O ⬆ importa o arquivo gerado pelo script “exporta salvos”.</div>
+        )}
+        {stale && <div className={styles.staleNote}>A última contagem tem mais de {STALE_AFTER_DAYS} dias: gere o arquivo de novo e importe.</div>}
+      </div>
+
+      {pending && <ImportDialog pending={pending} saving={saving} error={problem} onConfirm={confirm} onCancel={() => { setPending(null); setProblem(''); }} />}
+    </div>
   );
 }
