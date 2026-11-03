@@ -77,7 +77,7 @@ function ImportDialog({ pending, saving, error, onConfirm, onCancel }) {
 // Backlog tab: saved Instagram posts waiting to be processed, by queue (Sem
 // coleção, Inbox, Post backlog) — two cards (staircase chart, then the table
 // with the ⬆ import button) that sit in the Backlog tab's three-card row.
-export default function InstagramSaved({ instagram }) {
+export default function InstagramSaved({ instagram, below }) {
   const { imports, loading, error, previewDiff, save } = instagram;
   const [period, setPeriod] = useState(30);
   const [mode, setMode] = useState('qty');
@@ -123,43 +123,46 @@ export default function InstagramSaved({ instagram }) {
 
   return (
     <>
-      <div className={`${vendas.card} ${styles.chartCard}`}>
-        <div className={`${vendas.head} ${styles.headWrap}`}>
-          <span className={vendas.title}>
-            <b>Instagram - Posts Salvos</b>
-          </span>
-          <div className={vendas.legend}>
-            {QUEUES.map((q) => (
-              <span key={q.id}>
-                <i className={vendas.dot} style={{ background: q.color }} />
-                {q.label}
-              </span>
-            ))}
-          </div>
-          <div className={vendas.headRight}>
-            <div className={vendas.pills}>
-              {MODES.map((m) => (
-                <button key={m.key} type="button" className={vendas.pill} data-on={mode === m.key} onClick={() => setMode(m.key)} title={m.key === 'qty' ? 'Quantidade de posts' : 'Percentual de cada fila (fecha em 100%)'}>
-                  {m.label}
-                </button>
+      <div className={styles.midCol}>
+        <div className={`${vendas.card} ${styles.chartCard}`}>
+          <div className={`${vendas.head} ${styles.headWrap}`}>
+            <span className={vendas.title}>
+              <b>Instagram - Posts Salvos</b>
+            </span>
+            <div className={vendas.legend}>
+              {QUEUES.map((q) => (
+                <span key={q.id}>
+                  <i className={vendas.dot} style={{ background: q.color }} />
+                  {q.label}
+                </span>
               ))}
             </div>
-            <div className={vendas.pills}>
-              {PERIODS.map((d) => (
-                <button key={d} type="button" className={vendas.pill} data-on={period === d} onClick={() => setPeriod(d)}>
-                  {d}d
-                </button>
-              ))}
+            <div className={vendas.headRight}>
+              <div className={vendas.pills}>
+                {MODES.map((m) => (
+                  <button key={m.key} type="button" className={vendas.pill} data-on={mode === m.key} onClick={() => setMode(m.key)} title={m.key === 'qty' ? 'Quantidade de posts' : 'Percentual de cada fila (fecha em 100%)'}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <div className={vendas.pills}>
+                {PERIODS.map((d) => (
+                  <button key={d} type="button" className={vendas.pill} data-on={period === d} onClick={() => setPeriod(d)}>
+                    {d}d
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+          {loading ? (
+            <div className={vendas.empty}>Carregando…</div>
+          ) : points.length === 0 ? (
+            <div className={vendas.empty}>Nenhuma importação neste período. Use o ⬆ ao lado para importar o arquivo dos posts salvos.</div>
+          ) : (
+            <VendasChart rows={rows} points={points} mode={mode} staircase compact />
+          )}
         </div>
-        {loading ? (
-          <div className={vendas.empty}>Carregando…</div>
-        ) : points.length === 0 ? (
-          <div className={vendas.empty}>Nenhuma importação neste período. Use o ⬆ ao lado para importar o arquivo dos posts salvos.</div>
-        ) : (
-          <VendasChart rows={rows} points={points} mode={mode} staircase compact />
-        )}
+        {below}
       </div>
 
       <div className={`${vendas.card} ${styles.tableCard}`}>

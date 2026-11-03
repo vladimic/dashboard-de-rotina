@@ -27,7 +27,16 @@
   color: #8a7f93;
 }
 
+.midCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-self: stretch;
+  min-width: 0;
+}
+
 .chartCard {
+  flex: none;
   height: 400px;
   min-width: 0;
 }
