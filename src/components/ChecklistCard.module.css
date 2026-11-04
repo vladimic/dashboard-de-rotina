@@ -41,6 +41,19 @@
   text-decoration: underline;
 }
 
+.editBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  border-radius: 8px;
+  border: 1px solid #e3d6e8;
+  font: 600 13px Inter, sans-serif;
+  color: #8a72a0;
+  cursor: pointer;
+}
+
 .editRow {
   display: flex;
   flex-direction: column;
