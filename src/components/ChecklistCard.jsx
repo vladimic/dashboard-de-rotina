@@ -40,9 +40,15 @@ export default function ChecklistCard({
           <div className={styles.pend}>
             {pend}/{total}
           </div>
-          <div className={styles.editLink} onClick={handleEditClick}>
-            {edit ? 'Concluir' : 'Editar'}
-          </div>
+          {edit ? (
+            <div className={styles.editLink} onClick={handleEditClick}>
+              Concluir
+            </div>
+          ) : (
+            <button type="button" className={styles.editBtn} onClick={handleEditClick} title={`Editar ${title}`} aria-label={`Editar ${title}`}>
+              ✎
+            </button>
+          )}
         </div>
       </div>
 
