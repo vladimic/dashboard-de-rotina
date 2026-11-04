@@ -89,7 +89,10 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
   const manhaPend = state.manha.filter((m) => !m.done).length;
   const noitePend = state.noite.filter((m) => !m.done).length;
   const noiteTotal = state.noite.length;
-  const meuDiaCount = state.notes.length;
+  // "Meu Dia" counts the notes plus what is still open in "Durante o Dia".
+  const diaPend = (state.dia || []).filter((m) => !m.done).length;
+  const diaTotal = (state.dia || []).length;
+  const meuDiaCount = state.notes.length + diaPend;
   const geralTotal =
     meuDiaCount +
     manhaPend +
@@ -105,6 +108,8 @@ export function computeCounts(state, hubspotTotal = 0, remindersTotal = 0, notio
     manhaPend,
     noiteTotal,
     noitePend,
+    diaPend,
+    diaTotal,
     hubspotTotal,
     habitosPend,
     geralTotal,

@@ -167,7 +167,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     }
     askedRef.current = true;
     (async () => {
-      const reset = await confirm('Reiniciar as checklists "Starting Day" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
+      const reset = await confirm('Reiniciar as checklists "Starting Day", "Durante o Dia" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
       dispatch({ type: 'APPLY_DAILY_RESET', reset });
       dailyResetResolvedRef.current = true;
     })();
@@ -371,7 +371,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // loaded by the time the user reaches this menu — no need to wait out the
   // 16-30s source-loading window that a fresh page load has to.
   const handleResetDay = useCallback(async () => {
-    const reset = await confirm('Reiniciar as checklists "Starting Day" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
+    const reset = await confirm('Reiniciar as checklists "Starting Day", "Durante o Dia" e "Ending Day" de hoje?', 'Reiniciar', 'Deixar como está');
     dispatch({ type: 'APPLY_DAILY_RESET', reset });
     dispatch({ type: 'SET_DAY_PROGRESS_BASELINE', date: new Date().toDateString(), baseline: counts.geralTotal });
   }, [confirm, dispatch, counts.geralTotal]);

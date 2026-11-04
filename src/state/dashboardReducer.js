@@ -223,7 +223,7 @@ export function dashboardReducer(state, action) {
     }
 
     // Asked once per day (see DashboardApp's daily-reset effect) — if the
-    // user says yes, Starting Day/Ending Day come back unchecked; if no,
+    // user says yes, Starting Day/Durante o Dia/Ending Day come back unchecked; if no,
     // they're left exactly as they were until the next day's prompt.
     case 'APPLY_DAILY_RESET': {
       const todayKey = new Date().toDateString();
@@ -232,6 +232,7 @@ export function dashboardReducer(state, action) {
         ...state,
         lastResetDate: todayKey,
         manha: state.manha.map((m) => ({ ...m, done: false })),
+        dia: (state.dia || []).map((m) => ({ ...m, done: false })),
         noite: state.noite.map((m) => ({ ...m, done: false })),
       };
     }
