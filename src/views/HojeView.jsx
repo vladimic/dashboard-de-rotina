@@ -57,6 +57,7 @@ export default function HojeView({
 }) {
   const confirm = useConfirm();
   const manhaHandlers = useChecklistHandlers(dispatch, 'manha', 'manhaEdit', 'manhaOpen', 'newManhaText', 'newManhaLink', confirm);
+  const diaHandlers = useChecklistHandlers(dispatch, 'dia', 'diaEdit', 'diaOpen', 'newDiaText', 'newDiaLink', confirm);
   const noiteHandlers = useChecklistHandlers(dispatch, 'noite', 'noiteEdit', 'noiteOpen', 'newNoiteText', 'newNoiteLink', confirm);
   const semanaHandlers = useChecklistHandlers(dispatch, 'semana', 'semanaEdit', 'semanaOpen', 'newSemanaText', 'newSemanaLink', confirm);
   const semanaPend = state.semana.filter((s) => !s.done).length;
@@ -109,6 +110,17 @@ export default function HojeView({
           newText={state.newManhaText}
           newLink={state.newManhaLink}
           {...manhaHandlers}
+        />
+        <ChecklistCard
+          title="Durante o Dia"
+          items={state.dia || []}
+          pend={counts.diaPend}
+          total={counts.diaTotal}
+          open={state.diaOpen}
+          edit={state.diaEdit}
+          newText={state.newDiaText}
+          newLink={state.newDiaLink}
+          {...diaHandlers}
         />
         <ChecklistCard
           title="Ending Day"

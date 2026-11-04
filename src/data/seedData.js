@@ -51,6 +51,9 @@ export function createSeedState() {
       { id: 12, label: 'Craft Inbox', done: false },
     ],
 
+    // "Durante o Dia": things to do along the day, neither first thing nor last (starts empty; added with Editar).
+    dia: [],
+
     semana: [
       { id: 1, label: 'Update iPhone iPad Mac', done: false },
       { id: 2, label: 'Zerar Bateria MAC', done: false },
@@ -165,6 +168,7 @@ export function createSeedState() {
     habitosOpen: false,
     manhaOpen: false,
     noiteOpen: false,
+    diaOpen: false,
     semanaOpen: false,
     downloadsOpen: false,
     backlogOpen: false,
@@ -176,15 +180,18 @@ export function createSeedState() {
 
     manhaEdit: false,
     noiteEdit: false,
+    diaEdit: false,
     semanaEdit: false,
     habitosEdit: false,
     newManhaText: '',
     newNoiteText: '',
+    newDiaText: '',
     newSemanaText: '',
     newHabitoBomText: '',
     newHabitoRuimText: '',
     newManhaLink: '',
     newNoiteLink: '',
+    newDiaLink: '',
     newSemanaLink: '',
     newHabitoBomLink: '',
     newHabitoRuimLink: '',
