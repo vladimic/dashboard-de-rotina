@@ -47,8 +47,8 @@ function Chart({ points }) {
     const step = niceStep((hi - lo) * 1.4 || hi * 0.01 || 10);
     const yMin = Math.floor((lo - (hi - lo) * 0.2) / step) * step;
     const yMax = Math.max(Math.ceil((hi + (hi - lo) * 0.2) / step) * step, yMin + step);
-    const ticks = [];
-    for (let v = yMin; v <= yMax + 1e-6; v += step) ticks.push(v);
+    const yTicks = [];
+    for (let v = yMin; v <= yMax + 1e-6; v += step) yTicks.push(v);
     const t0 = dayMs(points[0].day);
     const t1 = dayMs(points.at(-1).day);
     const n = points.length;
@@ -58,6 +58,21 @@ function Chart({ points }) {
     const line = points.flatMap((p, i) => (i ? [`${X(p)},${Y(points[i - 1].items)}`, `${X(p)},${Y(p.items)}`] : [`${X(p)},${Y(p.items)}`])).join(' ');
     const area = `${X(points[0])},${H - B} ${line} ${X(points.at(-1))},${H - B}`;
     const real = points.filter((p) => p.real);
+    // Every import day gets its count above the dot and its date on the x axis,
+    // thinned only when two would touch (the first and the last always stay).
+    const thin = (list, gap) => {
+      const out = [];
+      let lastX = -999;
+      list.forEach((p, i) => {
+        if (i === 0 || i === list.length - 1 || (X(p) - lastX >= gap && X(list.at(-1)) - X(p) >= gap)) {
+          out.push(p);
+          lastX = X(p);
+        }
+      });
+      return out;
+    };
+    const labelled = thin(real, 44);
+    const ticks = thin([points[0], ...real.filter((p) => p !== points[0]), points.at(-1)].filter((p, i, a) => a.indexOf(p) === i), 44);
     const onMove = (e) => {
       const r = e.currentTarget.ownerSVGElement.getBoundingClientRect();
       const x = e.clientX - r.left;
@@ -73,7 +88,13 @@ function Chart({ points }) {
     body = (
       <>
         <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={styles.svg} role="img">
-          {ticks.map((v) => (
+          <defs>
+            <linearGradient id="photoFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3f7fb5" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#3f7fb5" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          {yTicks.map((v) => (
             <g key={v}>
               <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} stroke="#ece4f0" />
               <text x={L - 6} y={Y(v) + 4} textAnchor="end" className={styles.axis}>
@@ -81,20 +102,18 @@ function Chart({ points }) {
               </text>
             </g>
           ))}
-          <polygon points={area} fill="#dbeaf7" opacity="0.7" />
-          <polyline points={line} fill="none" stroke="#3f7fb5" strokeWidth="2" strokeLinejoin="round" />
-          {real.map((p, i) => (
-            <g key={p.day}>
-              <circle cx={X(p)} cy={Y(p.items)} r="3.5" fill="#3f7fb5" stroke="#fff" strokeWidth="1.5" />
-              {(real.length <= 8 || i === real.length - 1 || i === 0) && (
-                <text x={Math.min(Math.max(X(p), L + 18), W - R - 18)} y={Y(p.items) - 9} textAnchor="middle" className={styles.val}>
-                  {fmtInt(p.items)}
-                </text>
-              )}
-            </g>
+          <polygon points={area} fill="url(#photoFill)" />
+          <polyline points={line} fill="none" stroke="#3f7fb5" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          {real.map((p) => (
+            <circle key={p.day} cx={X(p)} cy={Y(p.items)} r="4" fill="#3f7fb5" stroke="#fff" strokeWidth="2" />
           ))}
-          {[points[0], points.at(-1)].filter((p, i, a) => a.indexOf(p) === i).map((p, i) => (
-            <text key={p.day} x={i === 0 && n > 1 ? X(p) : n === 1 ? X(p) : X(p)} y={H - 6} textAnchor={n === 1 ? 'middle' : i === 0 ? 'start' : 'end'} className={styles.axis}>
+          {labelled.map((p) => (
+            <text key={p.day} x={Math.min(Math.max(X(p), L + 20), W - R - 20)} y={Y(p.items) - 10} textAnchor="middle" className={styles.val}>
+              {fmtInt(p.items)}
+            </text>
+          ))}
+          {ticks.map((p) => (
+            <text key={p.day} x={X(p)} y={H - 6} textAnchor={n > 1 && p === points.at(-1) ? 'end' : n > 1 && p === points[0] ? 'start' : 'middle'} className={styles.axis}>
               {dm(p.day)}
             </text>
           ))}
