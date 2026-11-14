@@ -1,9 +1,7 @@
-/* Fills what is left of the middle column under the Instagram chart: contain:size
-   keeps its content from making the row taller than the left column. */
+/* Top of the Fotos column. */
 .card {
-  flex: 1;
-  min-height: 170px;
-  contain: size;
+  flex: none;
+  height: 300px;
 }
 
 .note {
@@ -41,8 +39,3 @@
   white-space: nowrap;
 }
 
-@media (max-width: 1399px) {
-  .card {
-    min-height: 240px;
-  }
-}
