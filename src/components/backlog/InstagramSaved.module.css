@@ -37,7 +37,7 @@
 
 .chartCard {
   flex: none;
-  height: 340px;
+  height: 300px;
   min-width: 0;
 }
 
@@ -51,7 +51,7 @@
 
 @media (max-width: 1399px) {
   .chartCard {
-    height: 340px;
+    height: 300px;
   }
 }
 

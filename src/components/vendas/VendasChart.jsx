@@ -8,6 +8,7 @@ const R = 46;
 const B = 24;
 const T = 22;
 const SINGLE_BAR = 70;
+const TICK_GAP = 46; // minimum px between two dates on the x axis
 const LABEL_GAP = 90; // minimum px between two days that carry value labels
 
 // Stacked area of deals per stage over the daily photos, drawn at the size of
@@ -70,8 +71,20 @@ export default function VendasChart({ rows, points, mode = 'qty', staircase = fa
           .map((s) => ({ ...s, total: s.x + 30 < X(lastPoint) - 55 }))
       : labelIdx.map((i) => ({ p: points[i], x: X(points[i]), total: i < n - 1 }));
 
-    // Day ticks on the axis: first, middle and last.
-    const tickIdx = n === 1 ? [0] : [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
+    // Day ticks on the axis: every day with a point, thinned so two dates never
+    // touch (the first and the last are always there).
+    const tickIdx = [];
+    if (n === 1) tickIdx.push(0);
+    else {
+      let lastTick = -999;
+      points.forEach((p, i) => {
+        if (i === 0 || (i < n - 1 && X(p) - lastTick >= TICK_GAP && X(lastPoint) - X(p) >= TICK_GAP)) {
+          tickIdx.push(i);
+          lastTick = X(p);
+        }
+      });
+      tickIdx.push(n - 1);
+    }
 
     // Today's values in the right margin, kept apart from each other.
     let lastY = -99;
