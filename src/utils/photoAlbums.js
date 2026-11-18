@@ -1,7 +1,7 @@
 // Albums of the Photos app (Backlog tab, "Fotos - Álbuns"): reading the file
 // made on the Mac and the sizes shown on the chart and table.
 import { dateKeySaoPaulo } from './format';
-import { parseCsv } from './instagram';
+import { dailyCarry, parseCsv } from './instagram';
 
 const norm = (s) =>
   String(s ?? '')
@@ -109,3 +109,19 @@ export function formatBytes(b) {
 }
 
 export const bySizeDesc = (albums) => [...albums].sort((a, b) => b.bytes - a.bytes || a.name.localeCompare(b.name, 'pt-BR'));
+
+const DAY = 86400000;
+
+// Daily points of the library's item count for the funnel-style chart: one
+// stage ("Itens"), days without an import repeating the previous count.
+// `history`: [{ day, items }]; returns { rows, points }.
+export function buildPhotoSeries(history, today, periodDays) {
+  const sorted = [...history].filter((h) => h.day <= today).sort((a, b) => a.day.localeCompare(b.day));
+  const start = new Date(Date.parse(`${today}T12:00:00Z`) - (periodDays - 1) * DAY).toISOString().slice(0, 10);
+  const before = [...sorted].reverse().find((h) => h.day < start);
+  const inside = sorted.filter((h) => h.day >= start);
+  const first = before ? start : inside[0]?.day;
+  const points = first ? dailyCarry(inside, before, first, today, (h) => ({ itens: { n: h.items } })) : [];
+  const rows = [{ id: 'itens', label: 'Itens', color: '#6fa8d6' }];
+  return { rows, points };
+}

@@ -75,7 +75,7 @@ function ImportDialog({ pending, saving, error, onConfirm, onCancel }) {
 }
 
 // Backlog tab: saved Instagram posts waiting to be processed, by queue (Sem
-// coleção, Inbox, Post backlog) — two cards (staircase chart, then the table
+// coleção, Inbox, Post backlog) — two cards (daily chart, then the table
 // with the ⬆ import button) that sit in the Backlog tab's three-card row.
 export default function InstagramSaved({ instagram }) {
   const { imports, loading, error, previewDiff, save } = instagram;
@@ -158,7 +158,7 @@ export default function InstagramSaved({ instagram }) {
         ) : points.length === 0 ? (
           <div className={vendas.empty}>Nenhuma importação neste período. Use o ⬆ ao lado para importar o arquivo dos posts salvos.</div>
         ) : (
-          <VendasChart rows={rows} points={points} mode={mode} staircase compact />
+          <VendasChart rows={rows} points={points} mode={mode} />
         )}
       </div>
 
