@@ -1,41 +1,10 @@
-/* Top of the Fotos column. */
+/* Same height as the Instagram chart beside it. */
 .card {
   flex: none;
   height: 300px;
+  min-width: 0;
 }
 
-.note {
-  font: 11px Inter, sans-serif;
-  color: #8a7f93;
+.headWrap {
+  flex-wrap: wrap;
 }
-
-.svg {
-  display: block;
-  position: absolute;
-  inset: 0;
-}
-
-.axis {
-  fill: #8a7f93;
-  font: 10px Inter, sans-serif;
-}
-
-.val {
-  fill: #2a2230;
-  font: 700 11px Inter, sans-serif;
-}
-
-.tip {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 5px 8px;
-  border-radius: 8px;
-  background: #2a2230;
-  color: #fff;
-  font: 11px Inter, sans-serif;
-  pointer-events: none;
-  white-space: nowrap;
-}
-

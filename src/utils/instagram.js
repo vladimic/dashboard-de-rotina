@@ -122,21 +122,33 @@ export function parseSavedFile(text, fileName, now = new Date()) {
 
 // ---- series ---------------------------------------------------------------
 
+// One point per day from `first` to `today`, each holding the latest entry up
+// to that day (days without an import repeat the previous one). `sorted` is by
+// day; `before` is the entry in force when the period starts, if any.
+export function dailyCarry(sorted, before, first, today, stagesOf) {
+  const points = [];
+  const queue = sorted.slice();
+  let cur = before || null;
+  for (let ms = dayMs(first); ms <= dayMs(today); ms += DAY_MS) {
+    const key = new Date(ms).toISOString().slice(0, 10);
+    while (queue.length && queue[0].day <= key) cur = queue.shift();
+    if (cur) points.push({ day: key, t: ms, stages: stagesOf(cur) });
+  }
+  return points;
+}
+
 // `imports`: [{ day, counts: { none, inbox, backlog }, importedAt }] by day.
-// Days without an import repeat the previous one, so the chart is a staircase:
-// one point per import in the period (plus the value in force when the period
-// starts, and a flat last point at today).
+// Daily points like the funnel's: days without an import repeat the previous
+// count, from the first import in the period (or the one in force when it
+// starts) up to today.
 export function buildSavedSeries(imports, today, periodDays) {
   const sorted = [...imports].sort((a, b) => a.day.localeCompare(b.day));
   const start = dateKeySaoPaulo(new Date(dayMs(today) - (periodDays - 1) * DAY_MS));
   const stagesOf = (i) => Object.fromEntries(QUEUES.map((q) => [q.id, { n: i.counts[q.id] ?? 0 }]));
-  const points = [];
   const before = [...sorted].reverse().find((i) => i.day < start);
   const inside = sorted.filter((i) => i.day >= start && i.day <= today);
-  if (before && !(inside[0] && inside[0].day === start)) points.push({ day: start, from: before.day, t: dayMs(start), stages: stagesOf(before) });
-  inside.forEach((i) => points.push({ day: i.day, from: i.day, t: dayMs(i.day), stages: stagesOf(i) }));
-  const last = points.at(-1);
-  if (last && last.day < today) points.push({ day: today, from: last.from, t: dayMs(today), stages: last.stages });
+  const first = before ? start : inside[0]?.day;
+  const points = first ? dailyCarry(inside, before, first, today, stagesOf) : [];
 
   // Table rows: latest import, change over 7 days, the period's line.
   const latest = sorted.filter((i) => i.day <= today).at(-1) || null;
