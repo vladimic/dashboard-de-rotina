@@ -1,0 +1,9 @@
+.item {
+  max-width: 260px;
+}
+
+.due {
+  margin-left: 8px;
+  color: #8a7f93;
+  font-size: 10px;
+}

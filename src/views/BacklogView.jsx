@@ -1,12 +1,13 @@
 import InstagramSaved from '../components/backlog/InstagramSaved';
 import NotionBacklog from '../components/backlog/NotionBacklog';
+import NotionContent from '../components/backlog/NotionContent';
 import PhotoHistory from '../components/backlog/PhotoHistory';
 import PhotoAlbums from '../components/backlog/PhotoAlbums';
 import styles from './BacklogView.module.css';
 
 // Three columns: Fotos (daily chart, then the albums), Instagram (chart, then
 // the table by collection) and the Notion table.
-export default function BacklogView({ state, dispatch, instagram, notionBacklog, photoAlbums }) {
+export default function BacklogView({ state, dispatch, instagram, notionBacklog, notionContent, photoAlbums }) {
   return (
     <div className={styles.trio}>
       <div className={styles.col}>
@@ -19,6 +20,11 @@ export default function BacklogView({ state, dispatch, instagram, notionBacklog,
           notion={notionBacklog}
           opened={state.notionBacklogOpen || {}}
           onOpenedChange={(value) => dispatch({ type: 'SET_FLAG', key: 'notionBacklogOpen', value })}
+        />
+        <NotionContent
+          content={notionContent}
+          opened={state.notionContentOpen || {}}
+          onOpenedChange={(value) => dispatch({ type: 'SET_FLAG', key: 'notionContentOpen', value })}
         />
       </div>
     </div>
