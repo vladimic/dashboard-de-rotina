@@ -1,6 +1,7 @@
 // "Conteúdo Digital" database (Notion): every idea by Status and Responsável.
 // Pure functions so they can be tested without Notion.
 
+// Fallback only: the real list (and order) comes from the database's Status property.
 const STATUS_ORDER = ['Ideia', 'Triada', 'Roteirizada', 'Com a Ada', 'Produzida', 'Agendada', 'Publicada', 'Descartada'];
 const OWNER_ORDER = ['Vladi', 'Ada', 'Edite'];
 export const NO_OWNER_LABEL = 'Sem responsável';
@@ -24,21 +25,31 @@ export function readContentPage(page) {
   };
 }
 
+// The Status options in the order Notion shows them: [{ name, color }].
+export function statusOptions(database) {
+  const options = database?.properties?.Status?.status?.options || database?.properties?.Status?.select?.options || [];
+  return options.map((o) => ({ name: o.name, color: o.color || 'default' }));
+}
+
 // items: [{ id, title, status, owner, due }] -> rows by status, columns by owner.
-export function summarizeContent(items) {
+// `options` (from statusOptions) gives the statuses to show, even empty, in
+// Notion's order; a status that only items still use is added at the end.
+export function summarizeContent(items, options = []) {
   const owners = [...new Set(items.map((i) => i.owner))].sort((a, b) => {
     const noA = a === NO_OWNER_LABEL;
     const noB = b === NO_OWNER_LABEL;
     return noA - noB || rank(OWNER_ORDER, a) - rank(OWNER_ORDER, b) || a.localeCompare(b, 'pt-BR');
   });
   // Every known status shows up (even empty), in the pipeline's order.
-  const names = [...new Set([...STATUS_ORDER, ...items.map((i) => i.status)])].sort((a, b) => rank(STATUS_ORDER, a) - rank(STATUS_ORDER, b) || a.localeCompare(b, 'pt-BR'));
+  const base = options.length ? options.map((o) => o.name) : STATUS_ORDER;
+  const colors = Object.fromEntries(options.map((o) => [o.name, o.color]));
+  const names = [...new Set([...base, ...items.map((i) => i.status)])];
   const statuses = names.map((name) => {
     const list = items
       .filter((i) => i.status === name)
       .sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.title.localeCompare(b.title, 'pt-BR'));
     const byOwner = Object.fromEntries(owners.map((o) => [o, list.filter((i) => i.owner === o).length]));
-    return { name, total: list.length, byOwner, items: list.map(({ id, title, owner, due }) => ({ id, title, owner, due })) };
+    return { name, color: colors[name] || null, total: list.length, byOwner, items: list.map(({ id, title, owner, due }) => ({ id, title, owner, due })) };
   });
   const byOwner = Object.fromEntries(owners.map((o) => [o, items.filter((i) => i.owner === o).length]));
   return { owners, statuses, total: items.length, byOwner };

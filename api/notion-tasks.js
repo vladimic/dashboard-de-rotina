@@ -14,7 +14,7 @@
 // tab's "Notion - Atividades Abertas" table.
 
 import { summarizeBacklog } from './_lib/notionBacklog.js';
-import { readContentPage, summarizeContent } from './_lib/notionContent.js';
+import { readContentPage, statusOptions, summarizeContent } from './_lib/notionContent.js';
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NO_PROJECT_LABEL = 'Sem Projeto';
@@ -263,7 +263,16 @@ export default async function handler(req, res) {
     if (req.query?.scope === 'content') {
       const contentDb = process.env.NOTION_CONTENT_DATABASE_ID || CONTENT_DATABASE_ID;
       const pages = await fetchAllPages(token, contentDb);
-      res.status(200).json({ updatedAt: new Date().toISOString(), databaseId: contentDb, ...summarizeContent(pages.map(readContentPage)) });
+      // The Status options come from the database itself, so renamed, added and
+      // removed statuses show up without touching the code.
+      let options = [];
+      try {
+        const dbRes = await notionFetch(`https://api.notion.com/v1/databases/${contentDb}`, { headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION } });
+        if (dbRes.ok) options = statusOptions(await dbRes.json());
+      } catch (err) {
+        console.error('Conteúdo Digital: could not read the Status options', err);
+      }
+      res.status(200).json({ updatedAt: new Date().toISOString(), databaseId: contentDb, ...summarizeContent(pages.map(readContentPage), options) });
       return;
     }
 

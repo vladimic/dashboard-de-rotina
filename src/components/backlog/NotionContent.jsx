@@ -3,6 +3,8 @@ import base from './NotionBacklog.module.css';
 import styles from './NotionContent.module.css';
 
 const STATUS_COLORS = { Ideia: '#9a8fa6', Triada: '#4a8fa8', Roteirizada: '#d4a72c', 'Com a Ada': '#e08a3c', Produzida: '#8a6fc0', Agendada: '#d26d8a', Publicada: '#3f9d78', Descartada: '#d9534f' };
+// Notion's option colors.
+const NOTION_COLORS = { default: '#9a8fa6', gray: '#9a8fa6', brown: '#a07a5a', orange: '#e08a3c', yellow: '#d4a72c', green: '#3f9d78', blue: '#4a8fa8', purple: '#8a6fc0', pink: '#d26d8a', red: '#d9534f' };
 const OWNER_COLORS = { Vladi: '90,155,213', Ada: '224,138,60', Edite: '210,109,138' };
 const NO_OWNER_RGB = '154,143,166';
 const dm = (key) => `${key.slice(8)}/${key.slice(5, 7)}`;
@@ -67,7 +69,7 @@ export default function NotionContent({ content, opened, onOpenedChange }) {
                       <button type="button" className={base.caret} onClick={() => toggle(s.name)} aria-label={`${open ? 'Recolher' : 'Expandir'} ${s.name}`} aria-expanded={open} disabled={s.total === 0}>
                         {open ? '▾' : '▸'}
                       </button>
-                      <i className={base.dot} style={{ background: STATUS_COLORS[s.name] || '#b9aec2' }} />
+                      <i className={base.dot} style={{ background: NOTION_COLORS[s.color] || STATUS_COLORS[s.name] || '#b9aec2' }} />
                       {s.name}
                     </td>
                     <td className={base.r}>{s.total || ''}</td>
