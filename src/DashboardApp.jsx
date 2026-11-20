@@ -24,6 +24,7 @@ import VendasView from './views/VendasView';
 import { useVendas } from './hooks/useVendas';
 import { useInstagramSaved } from './hooks/useInstagramSaved';
 import { useNotionBacklog } from './hooks/useNotionBacklog';
+import { useNotionContent } from './hooks/useNotionContent';
 import { usePhotoAlbums } from './hooks/usePhotoAlbums';
 import { daysSince, STALE_AFTER_DAYS } from './utils/instagram';
 import BacklogView from './views/BacklogView';
@@ -69,6 +70,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
   // call finishes: both build the same project index.
   const vendas = useVendas(90, true);
   const notionBacklog = useNotionBacklog(!notion.loading);
+  const notionContent = useNotionContent(!notion.loading);
   const photoAlbums = usePhotoAlbums();
   // Saved Instagram posts (Backlog tab): small read, loaded with the app so the
   // tab can flag a stale count.
@@ -203,6 +205,8 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
     vendas.refreshing ||
     notionBacklog.loading ||
     notionBacklog.refreshing ||
+    notionContent.loading ||
+    notionContent.refreshing ||
     instagram.loading ||
     instagram.refreshing ||
     photoAlbums.loading ||
@@ -417,7 +421,10 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
           dealsWithoutTasks.refresh();
           calendar.refresh();
           syncReminders();
-          notion.refresh().finally(() => notionBacklog.refresh());
+          notion.refresh().finally(() => {
+            notionBacklog.refresh();
+            notionContent.refresh();
+          });
           ticktick.refresh();
           usdQuote.refresh();
           weight.refresh();
@@ -470,7 +477,7 @@ export default function DashboardApp({ userId, userEmail, onSignOut }) {
       {state.page === 'saude' && (
         <SaudeView state={state} dispatch={dispatch} weight={weight} sleep={sleep} nights={nights} activity={activity} habitTracker={habitTracker} />
       )}
-      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} notionBacklog={notionBacklog} photoAlbums={photoAlbums} />}
+      {state.page === 'backlog' && <BacklogView state={state} dispatch={dispatch} instagram={instagram} notionBacklog={notionBacklog} notionContent={notionContent} photoAlbums={photoAlbums} />}
     </div>
   );
 }

@@ -14,9 +14,12 @@
 // tab's "Notion - Atividades Abertas" table.
 
 import { summarizeBacklog } from './_lib/notionBacklog.js';
+import { readContentPage, summarizeContent } from './_lib/notionContent.js';
 
 const TIMEZONE = process.env.HUBSPOT_TIMEZONE || 'America/Sao_Paulo';
 const NO_PROJECT_LABEL = 'Sem Projeto';
+// "Conteúdo Digital" database (override with NOTION_CONTENT_DATABASE_ID).
+const CONTENT_DATABASE_ID = '41e05418-9644-817d-8830-fb069f3e7c26';
 const NOTION_VERSION = '2022-06-28';
 const TITLE_PROPERTY = 'Atividades';
 const DUE_PROPERTY = 'Prazo';
@@ -181,6 +184,24 @@ function dueKey(page) {
   return start ? String(start).slice(0, 10) : null;
 }
 
+// Every page of a database, whatever its filters (used for "Conteúdo Digital").
+async function fetchAllPages(token, databaseId) {
+  const results = [];
+  let cursor;
+  do {
+    const response = await notionFetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page_size: 100, start_cursor: cursor }),
+    });
+    if (!response.ok) throw notionError('Notion query failed', response.status, await response.text());
+    const data = await response.json();
+    results.push(...(data.results || []));
+    cursor = data.has_more ? data.next_cursor : null;
+  } while (cursor);
+  return results;
+}
+
 // Every task that isn't done or cancelled, whatever its deadline. The Notion
 // filter only narrows what is fetched; the status is checked again below, so
 // a renamed option can't let finished tasks through.
@@ -238,6 +259,13 @@ export default async function handler(req, res) {
     // (= 02:59 UTC the *next* day) let tomorrow's date-only tasks slip in as
     // "on or before today", which is exactly the stale-looking bug reported.
     const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(new Date());
+
+    if (req.query?.scope === 'content') {
+      const contentDb = process.env.NOTION_CONTENT_DATABASE_ID || CONTENT_DATABASE_ID;
+      const pages = await fetchAllPages(token, contentDb);
+      res.status(200).json({ updatedAt: new Date().toISOString(), databaseId: contentDb, ...summarizeContent(pages.map(readContentPage)) });
+      return;
+    }
 
     if (req.query?.scope === 'backlog') {
       const openPages = await fetchOpenTasks(token, databaseId);

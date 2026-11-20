@@ -163,6 +163,8 @@ export function createSeedState() {
     meuDiaOpen: true,
     // Backlog tab, Notion table: categories the user opened ({ [category]: true }); all start closed.
     notionBacklogOpen: {},
+    // Backlog tab, Notion - Conteúdo Digital: statuses the user opened ({ [status]: true }); all start closed.
+    notionContentOpen: {},
     // Backlog tab, Fotos - Álbuns: whether the Total row is expanded to list the albums.
     fotosAlbumsOpen: false,
     habitosOpen: false,
